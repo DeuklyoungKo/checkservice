@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import Link from "next/link";
 import {
   IconSparkles,
   IconLayoutDashboard,
@@ -184,9 +185,11 @@ export default async function Home() {
               </CardContent>
 
               <CardFooter className="bg-muted/30 p-4">
-                <Button className="w-full rounded-xl font-bold bg-muted hover:bg-primary hover:text-primary-foreground text-foreground transition-all duration-300" variant="ghost">
-                  심층 분석 데이터 보기
-                </Button>
+                <Link href={`/trend/${trend.id}`} className="w-full">
+                  <Button className="w-full rounded-xl font-bold bg-muted hover:bg-primary hover:text-primary-foreground text-foreground transition-all duration-300" variant="ghost">
+                    심층 분석 데이터 보기
+                  </Button>
+                </Link>
               </CardFooter>
             </Card>
           ))}
