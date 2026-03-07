@@ -27,6 +27,7 @@ export default function RootLayout({
     <html lang="ko" dir="ltr" suppressHydrationWarning>
       <body
         className={`${inter.variable} ${notoSansKR.variable} antialiased font-sans`}
+        suppressHydrationWarning
       >
         {children}
       </body>
