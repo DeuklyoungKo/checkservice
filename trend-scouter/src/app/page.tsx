@@ -16,11 +16,13 @@ import {
   IconSearch,
   IconBulb,
   IconLogout,
-  IconUser
+  IconUser,
+  IconBookmarkFilled
 } from "@tabler/icons-react";
 
 import { createClient } from "@/utils/supabase/server";
 import { signOut } from "./login/actions";
+import { BookmarkButton } from "@/components/BookmarkButton";
 
 export default async function Home() {
   const supabase = await createClient();
@@ -41,6 +43,13 @@ export default async function Home() {
     .order('created_at', { ascending: false })
     .limit(10);
 
+  // 현재 유저의 북마크 목록을 가져옵니다.
+  const { data: userBookmarks } = user
+    ? await supabase.from('bookmarks').select('trend_id').eq('user_id', user.id)
+    : { data: [] };
+
+  const bookmarkedIds = new Set(userBookmarks?.map(b => b.trend_id) || []);
+
   if (error) {
     console.error("Error fetching trends:", error);
   } else {
@@ -59,6 +68,7 @@ export default async function Home() {
       potential: analysis?.score_korea_potential > 70 ? '높음' : analysis?.score_korea_potential > 40 ? '보통' : '낮음',
       description: analysis?.summary || t.description || "설명이 없습니다.",
       tags: t.raw_data?.tags || [t.source],
+      isBookmarked: bookmarkedIds.has(t.id),
     };
   }) || [];
 
@@ -80,6 +90,14 @@ export default async function Home() {
                 <IconLayoutDashboard size={18} />
                 대시보드
               </Button>
+              {user && (
+                <Link href="/workspace">
+                  <Button variant="ghost" size="sm" className="gap-2">
+                    <IconBookmarkFilled size={18} className="text-primary" />
+                    워크스페이스
+                  </Button>
+                </Link>
+              )}
               <Button variant="ghost" size="sm" className="gap-2">
                 <IconReportAnalytics size={18} />
                 리포트
@@ -173,6 +191,9 @@ export default async function Home() {
                   <div className="flex flex-col items-end">
                     <span className="text-2xl font-black text-primary leading-none">{trend.score}</span>
                     <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-tighter">Score</span>
+                    <div className="mt-2">
+                      <BookmarkButton trendId={trend.id} initialIsBookmarked={trend.isBookmarked} />
+                    </div>
                   </div>
                 </div>
                 <CardTitle className="text-2xl group-hover:text-primary transition-colors mb-2">
