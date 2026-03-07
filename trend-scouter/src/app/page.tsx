@@ -14,13 +14,17 @@ import {
   IconClock,
   IconChartBar,
   IconSearch,
-  IconBulb
+  IconBulb,
+  IconLogout,
+  IconUser
 } from "@tabler/icons-react";
 
 import { createClient } from "@/utils/supabase/server";
+import { signOut } from "./login/actions";
 
 export default async function Home() {
   const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
 
   // trends 테이블과 연관된 analysis 데이터를 최신순으로 가져옵니다.
   const { data: rawTrends, error } = await supabase
@@ -80,11 +84,31 @@ export default async function Home() {
                 <IconReportAnalytics size={18} />
                 리포트
               </Button>
-              <Button variant="ghost" size="sm" className="gap-2">
-                <IconSettings size={18} />
-                설정
-              </Button>
+
               <Separator orientation="vertical" className="h-6 mx-2" />
+
+              {user ? (
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2 px-3 py-1.5 bg-muted rounded-full">
+                    <IconUser size={16} className="text-primary" />
+                    <span className="text-xs font-bold truncate max-w-[120px]">{user.email?.split('@')[0]}</span>
+                  </div>
+                  <form action={signOut}>
+                    <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-destructive transition-colors">
+                      <IconLogout size={18} />
+                      로그아웃
+                    </Button>
+                  </form>
+                </div>
+              ) : (
+                <Link href="/login">
+                  <Button variant="ghost" size="sm" className="gap-2">
+                    <IconUser size={18} />
+                    로그인
+                  </Button>
+                </Link>
+              )}
+
               <Button size="sm" className="gap-2 rounded-full font-bold">
                 <IconCrown size={18} />
                 Premium 가입
