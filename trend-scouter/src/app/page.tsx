@@ -3,12 +3,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { 
-  IconSparkles, 
-  IconLayoutDashboard, 
-  IconReportAnalytics, 
-  IconSettings, 
-  IconCrown, 
+import {
+  IconSparkles,
+  IconLayoutDashboard,
+  IconReportAnalytics,
+  IconSettings,
+  IconCrown,
   IconTrendingUp,
   IconClock,
   IconChartBar,
@@ -16,42 +16,49 @@ import {
   IconBulb
 } from "@tabler/icons-react";
 
-export default function Home() {
-  const trends = [
-    {
-      id: 1,
-      title: "AI 기반 PDF 요약 및 시각화 툴",
-      category: "SaaS / Productivity",
-      score: 92,
-      difficulty: "보통",
-      potential: "높음",
-      description: "단순 텍스트 요약을 넘어 핵심 컨셉을 다이어그램으로 자동 시각화해주는 서비스. 북미 Indie Hackers에서 급증 중.",
-      tags: ["AI", "LLM", "B2B"],
-    },
-    {
-      id: 2,
-      title: "커뮤니티 전용 중고 거래 알림이",
-      category: "Tool / Utility",
-      score: 85,
-      difficulty: "쉬움",
-      potential: "보통",
-      description: "네이버 카페, 디스콰이엇 등 흩어진 커뮤니티의 특정 키워드 매물을 실시간 푸시로 모아주는 앱.",
-      tags: ["Crawling", "Local"],
-    },
-    {
-      id: 3,
-      title: "인스타 쇼츠 대본 자동 생성기",
-      category: "Content Tech",
-      score: 88,
-      difficulty: "보통",
-      potential: "높음",
-      description: "특정 키워드만 넣으면 시청 지속 시간을 극대화하는 숏폼 대본과 자막 데이터를 생성.",
-      tags: ["Creator Economy", "AI"],
-    },
-  ];
+import { createClient } from "@/utils/supabase/server";
+
+export default async function Home() {
+  const supabase = await createClient();
+
+  // trends 테이블과 연관된 analysis 데이터를 최신순으로 가져옵니다.
+  const { data: rawTrends, error } = await supabase
+    .from('trends')
+    .select(`
+      *,
+      analysis (
+        score_revenue,
+        score_difficulty,
+        score_korea_potential,
+        summary
+      )
+    `)
+    .order('created_at', { ascending: false })
+    .limit(10);
+
+  if (error) {
+    console.error("Error fetching trends:", error);
+  } else {
+    console.log(`📡 [Server] Fetched ${rawTrends?.length || 0} trends from DB.`);
+  }
+
+  // DB 데이터를 UI 형식에 맞춰 매핑합니다.
+  const trends = rawTrends?.map(t => {
+    const analysis = t.analysis?.[0]; // 최신 분석 결과 1개 사용
+    return {
+      id: t.id,
+      title: t.title,
+      category: t.source === 'reddit' ? 'Community/Reddit' : t.source === 'product-hunt' ? 'SaaS/Product Hunt' : 'General',
+      score: analysis?.score_revenue || 0,
+      difficulty: analysis?.score_difficulty > 70 ? '어려움' : analysis?.score_difficulty > 40 ? '보통' : '쉬움',
+      potential: analysis?.score_korea_potential > 70 ? '높음' : analysis?.score_korea_potential > 40 ? '보통' : '낮음',
+      description: analysis?.summary || t.description || "설명이 없습니다.",
+      tags: t.raw_data?.tags || [t.source],
+    };
+  }) || [];
 
   return (
-    <div className="min-h-screen bg-background text-foreground font-mono selection:bg-primary/20">
+    <div className="min-h-screen bg-background text-foreground font-sans selection:bg-primary/20">
       {/* Navigation */}
       <nav className="border-b bg-background/80 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -62,7 +69,7 @@ export default function Home() {
               </div>
               <span className="text-xl font-bold tracking-tight text-primary">Trend Scouter</span>
             </div>
-            
+
             <div className="hidden md:flex items-center gap-6">
               <Button variant="ghost" size="sm" className="gap-2">
                 <IconLayoutDashboard size={18} />
@@ -123,8 +130,8 @@ export default function Home() {
           </div>
           <div className="relative w-72">
             <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
-            <input 
-              placeholder="카테고리 검색..." 
+            <input
+              placeholder="카테고리 검색..."
               className="w-full bg-muted border rounded-xl py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
             />
           </div>
@@ -150,10 +157,10 @@ export default function Home() {
                   {trend.description}
                 </CardDescription>
               </CardHeader>
-              
+
               <CardContent className="pb-6">
                 <div className="flex flex-wrap gap-2 mb-6">
-                  {trend.tags.map(tag => (
+                  {trend.tags.map((tag: string) => (
                     <Badge key={tag} variant="outline" className="rounded-md border-muted text-muted-foreground text-[10px]">
                       #{tag}
                     </Badge>
@@ -175,7 +182,7 @@ export default function Home() {
                   </div>
                 </div>
               </CardContent>
-              
+
               <CardFooter className="bg-muted/30 p-4">
                 <Button className="w-full rounded-xl font-bold bg-muted hover:bg-primary hover:text-primary-foreground text-foreground transition-all duration-300" variant="ghost">
                   심층 분석 데이터 보기
