@@ -1,11 +1,12 @@
 const { createClient } = require('@supabase/supabase-js');
 const { fetchProductHuntTrends } = require('./scrapers/product_hunt');
 const { fetchRedditTrends } = require('./scrapers/reddit');
+const { fetchIndieHackersTrends } = require('./scrapers/indie_hackers');
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '../.env.local') });
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY; // Use Service Role Key for backend scripts
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!supabaseUrl || !supabaseKey) {
     console.error('❌ Supabase credentials missing in .env.local.');
@@ -29,6 +30,11 @@ async function runScouter() {
     const redditTrends = await fetchRedditTrends();
     allTrends.push(...redditTrends);
 
+    // 3. Fetch from Indie Hackers
+    console.log('📡 Fetching trends from Indie Hackers...');
+    const ihTrends = await fetchIndieHackersTrends();
+    allTrends.push(...ihTrends);
+
     console.log(`📊 Total ${allTrends.length} trends collected.`);
 
     // 3. Save to Supabase
@@ -50,9 +56,12 @@ async function runScouter() {
 
         if (error) {
             console.error('❌ Error saving to Supabase:', error.message);
+            console.error('Details:', JSON.stringify(error, null, 2));
         } else {
-            console.log('✅ Successfully saved all trends.');
+            console.log('✅ Successfully saved all trends to Supabase.');
         }
+    } else {
+        console.warn('⚠️ No trends collected to save.');
     }
 }
 
