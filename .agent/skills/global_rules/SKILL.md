@@ -125,6 +125,14 @@ npx skills add vercel-labs/agent-skills
 
 **These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.
 
+## 8. Centralized Planning & Progress Tracking
+
+**모든 개발 계획과 진행 상황은 `2.PDP.md` 문서에 중앙 집중화하여 관리한다.**
+
+- 개별 `implementation_plan.md`나 `task.md`를 생성하더라도, 최종 승인된 내용은 반드시 `2.PDP.md`에 한글로 반영한다.
+- 작업 완료 후 체크박스 업데이트(`[x]`)는 `2.PDP.md`를 기준으로 수행한다.
+- 차후 모든 개발 로드맵 수정 및 추가 기능 정의는 `2.PDP.md` 내에서 이루어지도록 한다.
+
 ## 7. How to Reuse in Other Projects
 
 To apply these global rules to a new project:
