@@ -18,6 +18,7 @@ import {
 import { createClient } from "@/utils/supabase/server";
 import { signOut } from "./login/actions";
 import { TrendList } from "@/components/TrendList";
+import { NewsletterForm } from "@/components/NewsletterForm";
 
 export default async function Home() {
   const supabase = await createClient();
@@ -137,10 +138,12 @@ export default async function Home() {
                 </Link>
               )}
 
-              <Button size="sm" className="gap-2 rounded-full font-bold shadow-md shadow-primary/10">
-                <IconCrown size={18} />
-                Premium 가입
-              </Button>
+                <Link href="/premium">
+                  <Button size="sm" className="gap-2 rounded-full font-bold shadow-md shadow-primary/10">
+                    <IconCrown size={18} />
+                    Premium 가입
+                  </Button>
+                </Link>
             </div>
           </div>
         </div>
@@ -185,6 +188,27 @@ export default async function Home() {
 
         <TrendList initialTrends={trends} />
       </main>
+
+      {/* Newsletter Section */}
+      <section className="border-y bg-muted/20 relative overflow-hidden">
+        <div className="absolute inset-0 bg-grid-slate-900/[0.04] bg-[size:24px_24px]" />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 relative">
+          <div className="max-w-2xl mx-auto text-center space-y-8">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 rounded-full border border-primary/20">
+              <IconSparkles size={14} className="text-primary" />
+              <span className="text-[10px] font-black uppercase tracking-widest text-primary">Stay Ahead of Trends</span>
+            </div>
+            <h2 className="text-4xl sm:text-5xl font-black tracking-tighter leading-tight text-balance">
+              새로운 비즈니스 기회를<br />
+              <span className="text-primary">가장 먼저</span> 받아보세요
+            </h2>
+            <p className="text-lg text-muted-foreground font-medium leading-relaxed max-w-xl mx-auto">
+              매주 엄선된 글로벌 트렌드 데이터와 한국형 수익화 전략 리포트를 메일함으로 바로 보내드립니다.
+            </p>
+            <NewsletterForm />
+          </div>
+        </div>
+      </section>
 
       {/* Footer */}
       <footer className="border-t py-16 bg-muted/50 text-center">

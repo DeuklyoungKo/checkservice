@@ -20,6 +20,7 @@ import {
     IconBookmark
 } from "@tabler/icons-react";
 import { BookmarkButton } from "@/components/BookmarkButton";
+import { NewsletterForm } from "@/components/NewsletterForm";
 
 interface PageProps {
     params: Promise<{ id: string }>;
@@ -337,9 +338,15 @@ export default async function TrendDetailPage({ params }: PageProps) {
                                     <li>10분 빠른 신규 트렌드 알림</li>
                                 </ul>
                             </div>
-                            <Button size="lg" className="w-full bg-primary font-black shadow-lg shadow-primary/40 h-14 rounded-2xl relative z-10 text-lg hover:scale-[1.03] active:scale-[0.97] transition-all duration-300">
-                                Premium 가입하기
-                            </Button>
+                            <div className="pt-4 border-t border-primary/10">
+                                <p className="text-[10px] text-primary font-black uppercase tracking-widest mb-4 opacity-70">Newsletter Subscription</p>
+                                <NewsletterForm />
+                            </div>
+                            <Link href="/premium" className="block w-full">
+                                <Button size="lg" className="w-full bg-primary font-black shadow-lg shadow-primary/40 h-14 rounded-2xl relative z-10 text-lg hover:scale-[1.03] active:scale-[0.97] transition-all duration-300 mt-6">
+                                    Premium 가입하기
+                                </Button>
+                            </Link>
                         </div>
                     </aside>
                 </div>
