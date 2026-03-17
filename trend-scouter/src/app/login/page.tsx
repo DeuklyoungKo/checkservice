@@ -21,7 +21,7 @@ export default async function LoginPage({
                         <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
                             <IconBulb className="text-primary-foreground w-6 h-6" />
                         </div>
-                        <span className="text-2xl font-black tracking-tight text-primary">Gonsuit Trend Intelligence</span>
+                        <span className="text-2xl font-black tracking-tight text-primary">Trend Intelligence</span>
                     </Link>
                     <h1 className="text-3xl font-extrabold tracking-tight">다시 오신 것을 환영합니다</h1>
                     <p className="text-muted-foreground">인증된 트렌드 정보를 확인하고 나만의 워크스페이스를 관리하세요.</p>
@@ -102,7 +102,7 @@ export default async function LoginPage({
                     </CardContent>
                     <CardFooter className="bg-muted/30 p-4 border-t">
                         <p className="text-xs text-center w-full text-muted-foreground leading-relaxed">
-                            계속 진행함으로써 Gonsuit Trend Intelligence의 <Link href="#" className="underline hover:text-primary">서비스 약관</Link> 및 <Link href="#" className="underline hover:text-primary">개인정보 보호정책</Link>에 동의하게 됩니다.
+                            계속 진행함으로써 Trend Intelligence의 <Link href="#" className="underline hover:text-primary">서비스 약관</Link> 및 <Link href="#" className="underline hover:text-primary">개인정보 보호정책</Link>에 동의하게 됩니다.
                         </p>
                     </CardFooter>
                 </Card>

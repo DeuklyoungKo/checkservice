@@ -11,7 +11,7 @@ import {
 } from "@tabler/icons-react";
 
 export const metadata = {
-    title: "전체 트렌드 — Gonsuit Trend Intelligence",
+    title: "전체 트렌드 — Trend Intelligence",
     description: "AI가 분석한 글로벌 트렌드를 모두 탐색하세요. 검색, 필터, 정렬 기능을 제공합니다.",
 };
 
@@ -82,7 +82,7 @@ export default async function TrendsPage() {
                             <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
                                 <IconBulb className="text-primary-foreground w-6 h-6" />
                             </div>
-                            <span className="text-xl font-bold tracking-tight text-primary">Gonsuit Trend Intelligence</span>
+                            <span className="text-xl font-bold tracking-tight text-primary">Trend Intelligence</span>
                         </Link>
                         <Link href="/">
                             <Button variant="ghost" size="sm" className="gap-2 font-bold">
@@ -129,9 +129,9 @@ export default async function TrendsPage() {
                     <div className="flex flex-col items-center gap-3">
                         <div className="flex items-center gap-2 opacity-50">
                             <IconBulb size={20} />
-                            <span className="text-base font-bold">Gonsuit Trend Intelligence</span>
+                            <span className="text-base font-bold">Trend Intelligence</span>
                         </div>
-                        <p className="text-muted-foreground text-sm">© 2026 Gonsuit Trend Intelligence. Built with Precision & AI.</p>
+                        <p className="text-muted-foreground text-sm">© 2026 Trend Intelligence. Built with Precision & AI.</p>
                     </div>
                 </div>
             </footer>

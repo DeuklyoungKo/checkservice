@@ -45,7 +45,7 @@ export async function generateMetadata({ params }: PageProps) {
     }
 
     return {
-        title: `${displayTitle} - Gonsuit Trend Intelligence`,
+        title: `${displayTitle} - Trend Intelligence`,
         description: analysis?.summary?.split('###')[0]?.trim() || trend.description,
     };
 }
@@ -457,10 +457,10 @@ export default async function TrendDetailPage({ params }: PageProps) {
                         <div className="p-2 bg-foreground rounded-lg">
                             <IconBulb size={24} className="text-background" />
                         </div>
-                        <span className="text-2xl font-black tracking-tighter">Gonsuit Trend Intelligence</span>
+                        <span className="text-2xl font-black tracking-tighter">Trend Intelligence</span>
                     </div>
                     <p className="text-muted-foreground text-xs font-black uppercase tracking-widest opacity-60">
-                        © 2026 Gonsuit Trend Intelligence. Precision Analysis & Global Insights.
+                        © 2026 Trend Intelligence. Precision Analysis & Global Insights.
                     </p>
                 </div>
             </footer>

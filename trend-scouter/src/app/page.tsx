@@ -96,7 +96,7 @@ export default async function Home() {
               <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
                 <IconBulb className="text-primary-foreground w-6 h-6" />
               </div>
-              <span className="text-xl font-bold tracking-tight text-primary">Gonsuit Trend Intelligence</span>
+              <span className="text-xl font-bold tracking-tight text-primary">Trend Intelligence</span>
             </div>
 
             <div className="hidden md:flex items-center gap-6">
@@ -289,10 +289,10 @@ export default async function Home() {
           <div className="flex flex-col items-center gap-4">
             <div className="flex items-center gap-2 opacity-50">
               <IconBulb size={24} />
-              <span className="text-lg font-bold">Gonsuit Trend Intelligence</span>
+              <span className="text-lg font-bold">Trend Intelligence</span>
             </div>
             <p className="text-muted-foreground text-sm">
-              © 2026 Gonsuit Trend Intelligence. Built with Precision & AI.
+              © 2026 Trend Intelligence. Built with Precision & AI.
             </p>
             <div className="flex gap-6 mt-4">
               <Button variant="link" className="text-muted-foreground hover:text-primary p-0">Terms</Button>

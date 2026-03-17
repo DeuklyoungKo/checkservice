@@ -81,7 +81,7 @@ export default async function WorkspacePage() {
                         <div className="w-9 h-9 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
                             <IconBulb className="text-primary-foreground w-5 h-5" />
                         </div>
-                        <span className="text-xl font-black tracking-tight text-primary">Gonsuit Trend Intelligence</span>
+                        <span className="text-xl font-black tracking-tight text-primary">Trend Intelligence</span>
                     </Link>
                     <div className="flex items-center gap-4">
                         <Link href="/">
@@ -201,7 +201,7 @@ export default async function WorkspacePage() {
             <footer className="border-t py-12 bg-muted/20 mt-32">
                 <div className="max-w-7xl mx-auto px-4 flex flex-col items-center gap-4">
                     <p className="text-muted-foreground text-xs font-medium">
-                        © 2026 Gonsuit Trend Intelligence. Your Personalized Opportunity Map.
+                        © 2026 Trend Intelligence. Your Personalized Opportunity Map.
                     </p>
                 </div>
             </footer>

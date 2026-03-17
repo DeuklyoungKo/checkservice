@@ -14,7 +14,7 @@ const notoSansKR = Noto_Sans_KR({
 });
 
 export const metadata: Metadata = {
-  title: "Gonsuit Trend Intelligence - AI 기반 비즈니스 기회 포착 서비스",
+  title: "Trend Intelligence - AI 기반 비즈니스 기회 포착 서비스",
   description: "글로벌 비즈니스 트렌드를 실시간으로 분석하여 성공 가능한 수익화 아이디어를 제안합니다.",
 };
 

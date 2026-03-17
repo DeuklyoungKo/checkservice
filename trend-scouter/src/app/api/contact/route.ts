@@ -28,10 +28,10 @@ export async function POST(request: Request) {
       try {
         // Adjust the from/to emails as needed based on your domain verification in Resend
         await resend.emails.send({
-          from: "Gonsuit Trend Intelligence <info@gonsuit.com>", // You must verify gonsuit.com in your Resend account to use this!
+          from: "Trend Intelligence <info@gonsuit.com>", // You must verify gonsuit.com in your Resend account to use this!
           to: "trend@gonsuit.com", 
           replyTo: data.email, // Replies go straight to the user
-          subject: `[트렌드 스카우터 문의] ${data.subject}`,
+          subject: `[트렌드 인텔리전스 문의] ${data.subject}`,
           html: `
             <h3>새로운 비즈니스 문의/피드백이 접수되었습니다.</h3>
             <p><strong>이름/회사명:</strong> ${data.name}</p>
