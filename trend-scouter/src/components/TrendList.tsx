@@ -13,8 +13,12 @@ import {
     IconSearch,
     IconFilter,
     IconSortDescending,
+    IconChevronLeft,
+    IconChevronRight,
 } from "@tabler/icons-react"
 import { BookmarkButton } from "@/components/BookmarkButton"
+
+const PAGE_SIZE = 9
 
 interface Trend {
     id: string
@@ -36,6 +40,7 @@ export function TrendList({ initialTrends }: TrendListProps) {
     const [searchQuery, setSearchQuery] = useState('')
     const [sortBy, setSortBy] = useState<'score' | 'newest' | 'difficulty'>('newest')
     const [filterCategory, setFilterCategory] = useState<string>('all')
+    const [currentPage, setCurrentPage] = useState(1)
 
     const categories = useMemo(() => {
         const cats = new Set(initialTrends.map(t => t.category))
@@ -45,7 +50,6 @@ export function TrendList({ initialTrends }: TrendListProps) {
     const filteredAndSortedTrends = useMemo(() => {
         let result = [...initialTrends]
 
-        // 1. Filter by Search
         if (searchQuery) {
             const q = searchQuery.toLowerCase()
             result = result.filter(t =>
@@ -55,23 +59,32 @@ export function TrendList({ initialTrends }: TrendListProps) {
             )
         }
 
-        // 2. Filter by Category
         if (filterCategory !== 'all') {
             result = result.filter(t => t.category === filterCategory)
         }
 
-        // 3. Sort
         result.sort((a, b) => {
             if (sortBy === 'score') return b.score - a.score
             if (sortBy === 'difficulty') {
                 const diffMap: Record<string, number> = { '쉬움': 1, '보통': 2, '어려움': 3 }
                 return (diffMap[a.difficulty] || 0) - (diffMap[b.difficulty] || 0)
             }
-            return 0 // default to newest (initial order)
+            return 0
         })
 
         return result
     }, [initialTrends, searchQuery, sortBy, filterCategory])
+
+    // Reset page when filters change
+    const handleSearch = (q: string) => { setSearchQuery(q); setCurrentPage(1) }
+    const handleCategory = (c: string) => { setFilterCategory(c); setCurrentPage(1) }
+    const handleSort = (s: 'score' | 'newest' | 'difficulty') => { setSortBy(s); setCurrentPage(1) }
+
+    const totalPages = Math.max(1, Math.ceil(filteredAndSortedTrends.length / PAGE_SIZE))
+    const paginatedTrends = filteredAndSortedTrends.slice(
+        (currentPage - 1) * PAGE_SIZE,
+        currentPage * PAGE_SIZE
+    )
 
     return (
         <div className="space-y-8">
@@ -81,19 +94,18 @@ export function TrendList({ initialTrends }: TrendListProps) {
                     <IconSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={20} />
                     <input
                         value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onChange={(e) => handleSearch(e.target.value)}
                         placeholder="아이디어, 태그, 카테고리 검색..."
                         className="w-full bg-background border-2 border-muted rounded-2xl py-3 pl-12 pr-4 text-sm focus:outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all shadow-sm"
                     />
                 </div>
 
                 <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
-                    {/* Category Filter */}
                     <div className="flex items-center gap-2 bg-background border-2 border-muted rounded-2xl px-3 py-1.5 shadow-sm">
                         <IconFilter size={18} className="text-muted-foreground" />
                         <select
                             value={filterCategory}
-                            onChange={(e) => setFilterCategory(e.target.value)}
+                            onChange={(e) => handleCategory(e.target.value)}
                             className="bg-transparent text-sm font-bold focus:outline-none cursor-pointer"
                         >
                             {categories.map(cat => (
@@ -102,12 +114,11 @@ export function TrendList({ initialTrends }: TrendListProps) {
                         </select>
                     </div>
 
-                    {/* Sort Control */}
                     <div className="flex items-center gap-2 bg-background border-2 border-muted rounded-2xl px-3 py-1.5 shadow-sm">
                         <IconSortDescending size={18} className="text-muted-foreground" />
                         <select
                             value={sortBy}
-                            onChange={(e) => setSortBy(e.target.value as any)}
+                            onChange={(e) => handleSort(e.target.value as any)}
                             className="bg-transparent text-sm font-bold focus:outline-none cursor-pointer"
                         >
                             <option value="newest">최신순</option>
@@ -115,13 +126,18 @@ export function TrendList({ initialTrends }: TrendListProps) {
                             <option value="difficulty">난이도 낮은순</option>
                         </select>
                     </div>
+
+                    {/* Result count */}
+                    <span className="text-sm text-muted-foreground font-bold hidden md:block">
+                        총 {filteredAndSortedTrends.length}개
+                    </span>
                 </div>
             </div>
 
             {/* Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {filteredAndSortedTrends.length > 0 ? (
-                    filteredAndSortedTrends.map((trend) => (
+                {paginatedTrends.length > 0 ? (
+                    paginatedTrends.map((trend) => (
                         <Card key={trend.id} className="group border-2 hover:border-primary/50 transition-all duration-300 hover:shadow-2xl hover:shadow-primary/10 overflow-hidden rounded-3xl bg-card flex flex-col h-full">
                             <CardHeader className="pb-4">
                                 <div className="flex justify-between items-start mb-4">
@@ -186,6 +202,54 @@ export function TrendList({ initialTrends }: TrendListProps) {
                     </div>
                 )}
             </div>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-2 pt-4">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        className="rounded-full h-10 w-10 p-0"
+                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                        disabled={currentPage === 1}
+                    >
+                        <IconChevronLeft size={18} />
+                    </Button>
+
+                    <div className="flex items-center gap-1">
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                            <button
+                                key={page}
+                                onClick={() => setCurrentPage(page)}
+                                className={`h-10 w-10 rounded-full text-sm font-bold transition-all ${
+                                    currentPage === page
+                                        ? 'bg-primary text-primary-foreground shadow-md shadow-primary/30'
+                                        : 'text-muted-foreground hover:bg-muted'
+                                }`}
+                            >
+                                {page}
+                            </button>
+                        ))}
+                    </div>
+
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        className="rounded-full h-10 w-10 p-0"
+                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                        disabled={currentPage === totalPages}
+                    >
+                        <IconChevronRight size={18} />
+                    </Button>
+                </div>
+            )}
+
+            {/* Page info */}
+            {totalPages > 1 && (
+                <p className="text-center text-xs text-muted-foreground font-bold">
+                    {currentPage} / {totalPages} 페이지 &nbsp;·&nbsp; 총 {filteredAndSortedTrends.length}개
+                </p>
+            )}
         </div>
     )
 }

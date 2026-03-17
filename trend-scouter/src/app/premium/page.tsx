@@ -183,7 +183,7 @@ export default function PremiumPage() {
 
       {/* Mini Footer */}
       <footer className="max-w-7xl mx-auto px-4 text-center py-10 opacity-30">
-        <p className="text-xs font-black uppercase tracking-widest">© 2026 Trend Scouter. Built for Pioneers.</p>
+        <p className="text-xs font-black uppercase tracking-widest">© 2026 Gonsuit Trend Intelligence. Built for Pioneers.</p>
       </footer>
     </div>
   );

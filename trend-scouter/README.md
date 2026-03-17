@@ -1,8 +1,8 @@
-# Trend Scouter 🚀
+# Gonsuit Trend Intelligence 🚀
 
 **AI 기반 비즈니스 기회 포착 서비스**
 
-Trend Scouter는 실시간 트렌드 데이터를 분석하여 1인 개발자나 소규모 팀이 수익화할 수 있는 유망한 비즈니스 아이디어를 제안합니다.
+Gonsuit Trend Intelligence는 실시간 트렌드 데이터를 분석하여 1인 개발자나 소규모 팀이 수익화할 수 있는 유망한 비즈니스 아이디어를 제안합니다.
 
 ## ✨ Key Features
 - **AI 트렌드 분석:** 글로벌 데이터를 기반으로 유망한 사업 기회 매일 업데이트

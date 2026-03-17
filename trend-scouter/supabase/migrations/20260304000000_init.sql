@@ -1,4 +1,4 @@
--- Trend Scouter Database Schema
+-- Gonsuit Trend Intelligence Database Schema
 
 -- 1. Trends Table: Stores raw and basic info of gathered trends
 CREATE TABLE public.trends (

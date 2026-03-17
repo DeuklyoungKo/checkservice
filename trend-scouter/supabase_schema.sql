@@ -1,4 +1,4 @@
--- Trend Scouter Database Schema
+-- Gonsuit Trend Intelligence Database Schema
 
 -- 1. Trends Table: Stores raw and basic info of gathered trends
 CREATE TABLE public.trends (
@@ -88,3 +88,18 @@ CREATE TABLE public.payment_requests (
 ALTER TABLE public.payment_requests ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Public can create payment requests" ON public.payment_requests FOR INSERT WITH CHECK (true);
 CREATE POLICY "Users can view own payment requests" ON public.payment_requests FOR SELECT USING (auth.uid() = user_id);
+
+-- 7. Contacts / Inquiries Table
+CREATE TABLE public.contacts (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    name TEXT NOT NULL,
+    email TEXT NOT NULL,
+    category TEXT NOT NULL,
+    subject TEXT NOT NULL,
+    message TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+ALTER TABLE public.contacts ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow anonymous inserts" ON public.contacts FOR INSERT TO public WITH CHECK (true);
+CREATE POLICY "Allow authenticated read access" ON public.contacts FOR SELECT TO authenticated USING (true);

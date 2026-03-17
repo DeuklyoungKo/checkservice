@@ -20,7 +20,6 @@ import {
     IconBookmark
 } from "@tabler/icons-react";
 import { BookmarkButton } from "@/components/BookmarkButton";
-import { NewsletterForm } from "@/components/NewsletterForm";
 
 interface PageProps {
     params: Promise<{ id: string }>;
@@ -46,7 +45,7 @@ export async function generateMetadata({ params }: PageProps) {
     }
 
     return {
-        title: `${displayTitle} - Trend Scouter`,
+        title: `${displayTitle} - Gonsuit Trend Intelligence`,
         description: analysis?.summary?.split('###')[0]?.trim() || trend.description,
     };
 }
@@ -102,26 +101,33 @@ export default async function TrendDetailPage({ params }: PageProps) {
 
     const gtmStrategy = analysis?.gtm_strategy?.trim() || "한국 시장 특화 전략이 준비 중입니다.";
 
-    // 리스트 형식 최적화 (Tech Stack, Localization용)
-    const formatListText = (text: string | null) => {
-        if (!text) return "";
+    // 기술 스택 파싱: JSON 배열 문자열, 줄바꿈, 쉼표 등 모든 형식 처리
+    const cleanTechStack = (text: string | null): string[] => {
+        if (!text) return [];
         let processed = text.trim();
-        let lines: string[] = [];
-
-        if (processed.includes('\n')) {
-            lines = processed.split('\n').map(l => l.trim()).filter(Boolean);
-        } else if (processed.includes(',') || processed.includes(';')) {
-            const sep = processed.includes(';') ? ';' : ',';
-            lines = processed.split(sep).map(l => l.trim()).filter(Boolean);
-        } else {
-            lines = [processed];
+        // JSON 배열 형태인 경우 파싱 시도
+        if (processed.startsWith('[') && processed.endsWith(']')) {
+            try {
+                const parsed = JSON.parse(processed);
+                if (Array.isArray(parsed)) {
+                    // 각 항목 내의 개행으로 다시 분할
+                    return parsed.flatMap((item: string) =>
+                        item.split('\n').map((s: string) => s.trim()).filter(Boolean)
+                    );
+                }
+            } catch {
+                // JSON 파싱 실패 시 문자 기반 처리로 폴백
+            }
         }
-
-        return lines.map(line => {
-            if (line.startsWith('-') || line.startsWith('*') || /^\d+\./.test(line)) return line;
-            return `- ${line}`;
-        }).join('\n\n');
+        // 따옴표, 대괄호 제거 후 줄바꿈/쉼표 분리
+        return processed
+            .replace(/^\[|\]$/g, '')
+            .replace(/^["']|["']$/gm, '')
+            .split(/[\n,]/) 
+            .map(l => l.replace(/^["']|["'\s,]+$/g, '').trim())
+            .filter(Boolean);
     };
+
 
     // 문장 단위 줄바꿈 최적화 (Reasoning, GTM용: 2-3문장마다 단락 구분)
     // 문장 단위 줄바꿈 최적화 (Reasoning, GTM용: 2-3문장마다 단락 구분)
@@ -198,41 +204,53 @@ export default async function TrendDetailPage({ params }: PageProps) {
                         {displayTitle}
                     </h1>
 
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6 bg-primary/5 p-10 rounded-[56px] border border-primary/10 shadow-sm backdrop-blur-sm">
-                        <div className="relative flex flex-col items-center justify-center border-b md:border-b-0 md:border-r border-primary/10 pb-6 md:pb-0 md:pr-6 min-h-[180px]">
-                            <div className="absolute top-8 left-0 right-0 flex items-center justify-center px-4">
-                                <span className="text-sm text-primary/60 font-black uppercase tracking-widest whitespace-nowrap">종합 수익 점수</span>
+                    <div className="space-y-4 bg-primary/5 p-8 rounded-[56px] border border-primary/10 shadow-sm backdrop-blur-sm">
+                        {/* Row 1: 3 Score Cards */}
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            {/* 종합 수익 점수 */}
+                            <div className="relative bg-background/80 p-8 rounded-[40px] border border-muted/50 shadow-sm flex flex-col items-center justify-center text-center hover:border-primary/30 transition-all duration-300 min-h-[140px]">
+                                <span className="text-xs text-primary/60 font-black uppercase tracking-widest mb-3">종합 수익 점수</span>
+                                <div className="flex items-baseline gap-1">
+                                    <span className="text-6xl font-black text-primary tabular-nums tracking-tighter drop-shadow-sm">{analysis?.score_revenue || 0}</span>
+                                    <span className="text-sm font-bold text-primary/40 pb-1">/ 100</span>
+                                </div>
                             </div>
-                            <div className="flex items-baseline gap-1 mt-6">
-                                <span className="text-7xl font-black text-primary tabular-nums tracking-tighter drop-shadow-sm">{analysis?.score_revenue || 0}</span>
-                                <span className="text-sm font-bold text-primary/40 pb-2">/ 100</span>
+
+                            {/* 실행 난이도 */}
+                            <div className="relative bg-background/80 p-8 rounded-[40px] border border-muted/50 shadow-sm flex flex-col items-center justify-center text-center hover:border-blue-500/30 transition-all duration-300 min-h-[140px]">
+                                <div className="flex items-center justify-center gap-2 mb-3">
+                                    <IconRocket size={16} className="text-blue-500" />
+                                    <span className="text-xs text-muted-foreground uppercase font-black tracking-widest">실행 난이도</span>
+                                </div>
+                                <p className="text-2xl font-black">
+                                    {analysis?.score_difficulty > 70 ? '어려움' : analysis?.score_difficulty > 40 ? '보통' : '쉬움'}
+                                </p>
+                            </div>
+
+                            {/* 한국 잠재력 */}
+                            <div className="relative bg-background/80 p-8 rounded-[40px] border border-muted/50 shadow-sm flex flex-col items-center justify-center text-center hover:border-orange-500/30 transition-all duration-300 min-h-[140px]">
+                                <div className="flex items-center justify-center gap-2 mb-3">
+                                    <IconTrendingUp size={16} className="text-orange-500" />
+                                    <span className="text-xs text-muted-foreground uppercase font-black tracking-widest">한국 잠재력</span>
+                                </div>
+                                <p className="text-2xl font-black text-orange-500">
+                                    {analysis?.score_korea_potential > 70 ? '압도적' : analysis?.score_korea_potential > 40 ? '유망함' : '낮음'}
+                                </p>
                             </div>
                         </div>
 
-                        <div className="md:col-span-3 grid grid-cols-1 sm:grid-cols-3 gap-6">
-                            <div className="relative bg-background/80 p-8 rounded-[40px] border border-muted/50 shadow-sm flex flex-col items-center justify-center text-center hover:border-blue-500/30 transition-all duration-300 min-h-[180px]">
-                                <div className="absolute top-8 left-0 right-0 flex items-center justify-center gap-2 px-4">
-                                    <IconRocket size={16} className="text-blue-500" />
-                                    <span className="text-sm text-muted-foreground uppercase font-black tracking-widest whitespace-nowrap">실행 난이도</span>
-                                </div>
-                                <p className="text-2xl font-black mt-6">{analysis?.score_difficulty > 70 ? '어려움' : analysis?.score_difficulty > 40 ? '보통' : '쉬움'}</p>
+                        {/* Row 2: 비즈니스 모델 (Full Width) */}
+                        <div className="relative bg-background/80 px-10 py-8 rounded-[40px] border border-muted/50 shadow-sm hover:border-green-500/30 transition-all duration-300">
+                            <div className="flex items-center gap-2 mb-4">
+                                <IconChartBar size={16} className="text-green-500" />
+                                <span className="text-xs text-muted-foreground uppercase font-black tracking-widest">비즈니스 모델</span>
                             </div>
-                            <div className="relative bg-background/80 p-8 rounded-[40px] border border-muted/50 shadow-sm flex flex-col items-center justify-center text-center hover:border-orange-500/30 transition-all duration-300 min-h-[180px]">
-                                <div className="absolute top-8 left-0 right-0 flex items-center justify-center gap-2 px-4">
-                                    <IconTrendingUp size={16} className="text-orange-500" />
-                                    <span className="text-sm text-muted-foreground uppercase font-black tracking-widest whitespace-nowrap">한국 잠재력</span>
-                                </div>
-                                <p className="text-2xl font-black text-orange-500 mt-6">{analysis?.score_korea_potential > 70 ? '압도적' : analysis?.score_korea_potential > 40 ? '유망함' : '낮음'}</p>
-                            </div>
-                            <div className="relative bg-background/80 p-10 rounded-[40px] border border-muted/50 shadow-sm flex flex-col items-start justify-center text-left hover:border-green-500/30 transition-all duration-300 min-h-[180px]">
-                                <div className="absolute top-8 left-0 right-0 flex items-center justify-center gap-2 px-4">
-                                    <IconChartBar size={16} className="text-green-500" />
-                                    <span className="text-sm text-muted-foreground uppercase font-black tracking-widest whitespace-nowrap">비즈니스 모델</span>
-                                </div>
-                                <p className="text-xl font-black leading-tight break-words mt-6">{analysis?.business_model || "구독 / 결제"}</p>
-                            </div>
+                            <p className="text-base font-bold leading-relaxed text-foreground/90 whitespace-pre-wrap">
+                                {analysis?.business_model || "구독 / 결제"}
+                            </p>
                         </div>
                     </div>
+
                 </header>
 
                 {/* Content Layout */}
@@ -339,8 +357,15 @@ export default async function TrendDetailPage({ params }: PageProps) {
                                 </ul>
                             </div>
                             <div className="pt-4 border-t border-primary/10">
-                                <p className="text-[10px] text-primary font-black uppercase tracking-widest mb-4 opacity-70">Newsletter Subscription</p>
-                                <NewsletterForm />
+                                <p className="text-[10px] text-primary font-black uppercase tracking-widest mb-4 opacity-70">Business Inquiry</p>
+                                <p className="text-sm text-muted-foreground font-medium mb-4">
+                                    맞춤형 심층 리포트가 필요하신가요? 언제든 편하게 문의해 주세요.
+                                </p>
+                                <Link href="/contact" className="block w-full">
+                                    <Button variant="outline" className="w-full text-primary border-primary/20 hover:bg-primary/5 font-bold h-12 rounded-xl">
+                                        비즈니스 문의하기
+                                    </Button>
+                                </Link>
                             </div>
                             <Link href="/premium" className="block w-full">
                                 <Button size="lg" className="w-full bg-primary font-black shadow-lg shadow-primary/40 h-14 rounded-2xl relative z-10 text-lg hover:scale-[1.03] active:scale-[0.97] transition-all duration-300 mt-6">
@@ -367,8 +392,23 @@ export default async function TrendDetailPage({ params }: PageProps) {
                                         <h3 className="text-3xl font-black tracking-tighter">추천 기술 스택</h3>
                                     </div>
                                 </div>
-                                <div className="prose prose-xl prose-blue dark:prose-invert max-w-none text-muted-foreground leading-relaxed font-medium relative z-10 flex-1">
-                                    <ReactMarkdown>{formatListText(analysis?.tech_stack_suggestion) || "정보를 준비하고 있습니다."}</ReactMarkdown>
+                                <div className="relative z-10 flex-1">
+                                    {(() => {
+                                        const items = cleanTechStack(analysis?.tech_stack_suggestion);
+                                        if (items.length === 0) return <p className="text-muted-foreground">정보를 준비하고 있습니다.</p>;
+                                        return (
+                                            <div className="flex flex-wrap gap-2">
+                                                {items.map((item, i) => (
+                                                    <span
+                                                        key={i}
+                                                        className="inline-flex items-center px-3 py-1.5 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-700 dark:text-blue-300 text-sm font-semibold hover:bg-blue-500/20 transition-colors"
+                                                    >
+                                                        {item}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        );
+                                    })()}
                                 </div>
                             </div>
                         </section>
@@ -386,8 +426,23 @@ export default async function TrendDetailPage({ params }: PageProps) {
                                         <h3 className="text-3xl font-black tracking-tighter">현지화 핵심 포인트</h3>
                                     </div>
                                 </div>
-                                <div className="prose prose-xl prose-purple dark:prose-invert max-w-none text-muted-foreground leading-relaxed font-medium relative z-10 flex-1">
-                                    <ReactMarkdown>{formatNarrativeText(analysis?.korea_localization_tips) || "정보를 준비하고 있습니다."}</ReactMarkdown>
+                                <div className="relative z-10 flex-1 space-y-4">
+                                    {(() => {
+                                        const raw = analysis?.korea_localization_tips;
+                                        if (!raw) return <p className="text-muted-foreground">정보를 준비하고 있습니다.</p>;
+                                        // 줄바꿈 기준, 번호 기준으로 단락 분리
+                                        const paragraphs = raw
+                                            .trim()
+                                            .split(/\n{2,}|(?=\d+\.)/) // 빈줄 or 번호 앞에서 분할
+                                            .map((p: string) => p.trim())
+                                            .filter(Boolean);
+                                        return paragraphs.map((para: string, i: number) => (
+                                            <div key={i} className="flex gap-3">
+                                                <span className="mt-1 flex-shrink-0 w-6 h-6 rounded-full bg-purple-500/15 border border-purple-500/30 flex items-center justify-center text-xs font-black text-purple-600 dark:text-purple-400">{i + 1}</span>
+                                                <p className="text-sm leading-relaxed text-foreground/80 font-medium">{para.replace(/^\d+\.\s*/, '')}</p>
+                                            </div>
+                                        ));
+                                    })()}
                                 </div>
                             </div>
                         </section>
@@ -402,10 +457,10 @@ export default async function TrendDetailPage({ params }: PageProps) {
                         <div className="p-2 bg-foreground rounded-lg">
                             <IconBulb size={24} className="text-background" />
                         </div>
-                        <span className="text-2xl font-black tracking-tighter">Trend Scouter</span>
+                        <span className="text-2xl font-black tracking-tighter">Gonsuit Trend Intelligence</span>
                     </div>
                     <p className="text-muted-foreground text-xs font-black uppercase tracking-widest opacity-60">
-                        © 2026 Trend Scouter. Precision Analysis & Global Insights.
+                        © 2026 Gonsuit Trend Intelligence. Precision Analysis & Global Insights.
                     </p>
                 </div>
             </footer>
