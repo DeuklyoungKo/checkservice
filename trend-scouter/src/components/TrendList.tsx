@@ -23,13 +23,18 @@ const PAGE_SIZE = 9
 interface Trend {
     id: string
     title: string
-    category: string
-    score: number
-    difficulty: string
-    potential: string
+    pain_category: 'Functional' | 'Financial' | 'Emotional'
+    pufe_total: number
     description: string
     tags: string[]
     isBookmarked: boolean
+    upvotes: number
+    analysis?: {
+        pufe_p: number
+        pufe_u: number
+        pufe_f: number
+        pufe_e: number
+    }
 }
 
 interface TrendListProps {
@@ -43,7 +48,7 @@ export function TrendList({ initialTrends }: TrendListProps) {
     const [currentPage, setCurrentPage] = useState(1)
 
     const categories = useMemo(() => {
-        const cats = new Set(initialTrends.map(t => t.category))
+        const cats = new Set(initialTrends.map(t => t.pain_category))
         return ['all', ...Array.from(cats)]
     }, [initialTrends])
 
@@ -54,21 +59,17 @@ export function TrendList({ initialTrends }: TrendListProps) {
             const q = searchQuery.toLowerCase()
             result = result.filter(t =>
                 t.title.toLowerCase().includes(q) ||
-                t.category.toLowerCase().includes(q) ||
+                t.pain_category.toLowerCase().includes(q) ||
                 t.tags.some(tag => tag.toLowerCase().includes(q))
             )
         }
 
         if (filterCategory !== 'all') {
-            result = result.filter(t => t.category === filterCategory)
+            result = result.filter(t => t.pain_category === filterCategory)
         }
 
         result.sort((a, b) => {
-            if (sortBy === 'score') return b.score - a.score
-            if (sortBy === 'difficulty') {
-                const diffMap: Record<string, number> = { '쉬움': 1, '보통': 2, '어려움': 3 }
-                return (diffMap[a.difficulty] || 0) - (diffMap[b.difficulty] || 0)
-            }
+            if (sortBy === 'score') return b.pufe_total - a.pufe_total
             return 0
         })
 
@@ -142,11 +143,11 @@ export function TrendList({ initialTrends }: TrendListProps) {
                             <CardHeader className="pb-4">
                                 <div className="flex justify-between items-start mb-4">
                                     <Badge variant="secondary" className="bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
-                                        {trend.category}
+                                        {trend.pain_category}
                                     </Badge>
                                     <div className="flex flex-col items-end">
-                                        <span className="text-2xl font-black text-primary leading-none">{trend.score}</span>
-                                        <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-tighter">Score</span>
+                                        <span className="text-2xl font-black text-primary leading-none">{trend.pufe_total}</span>
+                                        <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-tighter">PUFE</span>
                                         <div className="mt-2">
                                             <BookmarkButton trendId={trend.id} initialIsBookmarked={trend.isBookmarked} />
                                         </div>
@@ -172,16 +173,16 @@ export function TrendList({ initialTrends }: TrendListProps) {
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-1">
                                         <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider flex items-center gap-1">
-                                            <IconClock size={12} /> 난이도
+                                            <IconTrendingUp size={12} /> 언급수/기여도
                                         </p>
-                                        <p className="text-sm font-bold">{trend.difficulty}</p>
+                                        <p className="text-sm font-bold">{trend.upvotes}</p>
                                     </div>
                                     <div className="space-y-1">
                                         <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider flex items-center gap-1">
-                                            <IconChartBar size={12} /> 잠재력
+                                            <IconChartBar size={12} /> Pain 유형
                                         </p>
-                                        <p className={`text-sm font-bold ${trend.potential === '높음' ? 'text-orange-500' : 'text-foreground'}`}>
-                                            {trend.potential}
+                                        <p className={`text-sm font-bold ${trend.pain_category === 'Emotional' ? 'text-orange-500' : 'text-foreground'}`}>
+                                            {trend.pain_category}
                                         </p>
                                     </div>
                                 </div>

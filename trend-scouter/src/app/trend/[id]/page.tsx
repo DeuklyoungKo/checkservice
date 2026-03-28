@@ -76,7 +76,7 @@ export default async function TrendDetailPage({ params }: PageProps) {
 
     const analysis = trend.analysis?.[0];
 
-    // [TITLE_KO] 및 Summary 분리
+    // 새로운 분석 포맷 파싱 ([Category Pain] Title_KO)
     let displayTitle = trend.title;
     let mainSummary = "현재 분석 중입니다.";
     let reasoning = "데이터 기반 분석 근거가 준비 중입니다.";
@@ -84,15 +84,19 @@ export default async function TrendDetailPage({ params }: PageProps) {
     if (analysis?.summary) {
         let currentContent = analysis.summary;
 
-        // 1. [TITLE_KO] 추출
-        if (currentContent.startsWith('[TITLE_KO]')) {
-            const titleParts = currentContent.split('\n\n');
-            displayTitle = titleParts[0].replace('[TITLE_KO] ', '').trim();
-            currentContent = titleParts.slice(1).join('\n\n');
+        // 1. [Category Pain] Title_KO 추출
+        if (currentContent.startsWith('[')) {
+            const lines = currentContent.split('\n\n');
+            const titleLine = lines[0];
+            const titleMatch = titleLine.match(/\[(.*?) Pain\] (.*)/);
+            if (titleMatch) {
+                displayTitle = titleMatch[2].trim();
+                currentContent = lines.slice(1).join('\n\n');
+            }
         }
 
         // 2. Summary와 Reasoning 분리
-        const summaryParts = currentContent.split('### 💡 점수 부여 근거 (Reasoning)');
+        const summaryParts = currentContent.split('### ⚖️ PUFE 분석 근거');
         mainSummary = summaryParts[0]?.trim();
 
         const reasoningAndGtm = summaryParts[1] || "";
@@ -205,49 +209,54 @@ export default async function TrendDetailPage({ params }: PageProps) {
                     </h1>
 
                     <div className="space-y-4 bg-primary/5 p-8 rounded-[56px] border border-primary/10 shadow-sm backdrop-blur-sm">
-                        {/* Row 1: 3 Score Cards */}
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                            {/* 종합 수익 점수 */}
-                            <div className="relative bg-background/80 p-8 rounded-[40px] border border-muted/50 shadow-sm flex flex-col items-center justify-center text-center hover:border-primary/30 transition-all duration-300 min-h-[140px]">
-                                <span className="text-xs text-primary/60 font-black uppercase tracking-widest mb-3">종합 수익 점수</span>
+                        {/* Row 1: 4 PUFE Score Cards */}
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                            {/* Pain */}
+                            <div className="bg-background/80 p-6 rounded-[40px] border border-muted/50 shadow-sm flex flex-col items-center justify-center text-center">
+                                <span className="text-[10px] text-primary/60 font-black uppercase tracking-widest mb-2">Pain (고통)</span>
                                 <div className="flex items-baseline gap-1">
-                                    <span className="text-6xl font-black text-primary tabular-nums tracking-tighter drop-shadow-sm">{analysis?.score_revenue || 0}</span>
-                                    <span className="text-sm font-bold text-primary/40 pb-1">/ 100</span>
+                                    <span className="text-4xl font-black text-primary">{analysis?.pufe_p || 0}</span>
+                                    <span className="text-[10px] font-bold text-primary/30">/ 25</span>
                                 </div>
                             </div>
-
-                            {/* 실행 난이도 */}
-                            <div className="relative bg-background/80 p-8 rounded-[40px] border border-muted/50 shadow-sm flex flex-col items-center justify-center text-center hover:border-blue-500/30 transition-all duration-300 min-h-[140px]">
-                                <div className="flex items-center justify-center gap-2 mb-3">
-                                    <IconRocket size={16} className="text-blue-500" />
-                                    <span className="text-xs text-muted-foreground uppercase font-black tracking-widest">실행 난이도</span>
+                            {/* Urgency */}
+                            <div className="bg-background/80 p-6 rounded-[40px] border border-muted/50 shadow-sm flex flex-col items-center justify-center text-center">
+                                <span className="text-[10px] text-orange-500/60 font-black uppercase tracking-widest mb-2">Urgency (긴급)</span>
+                                <div className="flex items-baseline gap-1">
+                                    <span className="text-4xl font-black text-orange-500">{analysis?.pufe_u || 0}</span>
+                                    <span className="text-[10px] font-bold text-orange-500/30">/ 25</span>
                                 </div>
-                                <p className="text-2xl font-black">
-                                    {analysis?.score_difficulty > 70 ? '어려움' : analysis?.score_difficulty > 40 ? '보통' : '쉬움'}
-                                </p>
                             </div>
-
-                            {/* 한국 잠재력 */}
-                            <div className="relative bg-background/80 p-8 rounded-[40px] border border-muted/50 shadow-sm flex flex-col items-center justify-center text-center hover:border-orange-500/30 transition-all duration-300 min-h-[140px]">
-                                <div className="flex items-center justify-center gap-2 mb-3">
-                                    <IconTrendingUp size={16} className="text-orange-500" />
-                                    <span className="text-xs text-muted-foreground uppercase font-black tracking-widest">한국 잠재력</span>
+                            {/* Frequency */}
+                            <div className="bg-background/80 p-6 rounded-[40px] border border-muted/50 shadow-sm flex flex-col items-center justify-center text-center">
+                                <span className="text-[10px] text-blue-500/60 font-black uppercase tracking-widest mb-2">Frequency (빈도)</span>
+                                <div className="flex items-baseline gap-1">
+                                    <span className="text-4xl font-black text-blue-500">{analysis?.pufe_f || 0}</span>
+                                    <span className="text-[10px] font-bold text-blue-500/30">/ 25</span>
                                 </div>
-                                <p className="text-2xl font-black text-orange-500">
-                                    {analysis?.score_korea_potential > 70 ? '압도적' : analysis?.score_korea_potential > 40 ? '유망함' : '낮음'}
-                                </p>
+                            </div>
+                            {/* Existing Solution */}
+                            <div className="bg-background/80 p-6 rounded-[40px] border border-muted/50 shadow-sm flex flex-col items-center justify-center text-center">
+                                <span className="text-[10px] text-green-500/60 font-black uppercase tracking-widest mb-2">Existing (대안)</span>
+                                <div className="flex items-baseline gap-1">
+                                    <span className="text-4xl font-black text-green-500">{analysis?.pufe_e || 0}</span>
+                                    <span className="text-[10px] font-bold text-green-500/30">/ 25</span>
+                                </div>
                             </div>
                         </div>
 
-                        {/* Row 2: 비즈니스 모델 (Full Width) */}
-                        <div className="relative bg-background/80 px-10 py-8 rounded-[40px] border border-muted/50 shadow-sm hover:border-green-500/30 transition-all duration-300">
-                            <div className="flex items-center gap-2 mb-4">
-                                <IconChartBar size={16} className="text-green-500" />
-                                <span className="text-xs text-muted-foreground uppercase font-black tracking-widest">비즈니스 모델</span>
+                        {/* Summary Score & Category (Full Width) */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="relative bg-background/80 px-10 py-6 rounded-[40px] border border-primary/20 shadow-sm flex items-center justify-between">
+                                <span className="text-sm font-black text-muted-foreground uppercase tracking-widest">종합 PUFE 스코어</span>
+                                <span className="text-4xl font-black text-primary">{analysis?.pufe_total || 0} <span className="text-xs font-bold opacity-30">PTS</span></span>
                             </div>
-                            <p className="text-base font-bold leading-relaxed text-foreground/90 whitespace-pre-wrap">
-                                {analysis?.business_model || "구독 / 결제"}
-                            </p>
+                            <div className="relative bg-background/80 px-10 py-6 rounded-[40px] border border-muted/50 shadow-sm flex items-center justify-between">
+                                <span className="text-sm font-black text-muted-foreground uppercase tracking-widest">Pain Point 유형</span>
+                                <Badge className="rounded-full px-6 py-2 bg-primary/10 text-primary font-black border-none text-sm">
+                                    {analysis?.pain_category || 'General'} Pain
+                                </Badge>
+                            </div>
                         </div>
                     </div>
 
@@ -300,21 +309,57 @@ export default async function TrendDetailPage({ params }: PageProps) {
                                         <h2 className="text-4xl font-black tracking-tighter">한국형 진입 전략 (GTM)</h2>
                                     </div>
                                 </div>
-                                <div className="hidden sm:flex flex-col items-end opacity-40">
-                                    <span className="text-[10px] font-black uppercase tracking-widest leading-none">Confidential</span>
-                                    <span className="text-[10px] font-bold uppercase tracking-[0.2em]">Strategy Report</span>
-                                </div>
                             </div>
 
                             <div className="relative group">
-                                <div className="absolute top-8 right-12 opacity-[0.03] select-none pointer-events-none transform rotate-12">
-                                    <span className="text-[120px] font-black leading-none">PRO</span>
-                                </div>
                                 <div className="prose prose-lg prose-slate dark:prose-invert max-w-none text-foreground leading-relaxed bg-white dark:bg-slate-900 p-12 sm:p-16 rounded-[64px] border border-orange-200/50 dark:border-orange-900/40 shadow-2xl relative">
-                                    {/* Paper texture effect */}
                                     <div className="absolute inset-0 opacity-[0.02] pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/notebook.png')] rounded-[64px]" />
                                     <div className="relative z-10 font-medium leading-loose">
                                         <ReactMarkdown>{formatNarrativeText(analysis?.gtm_strategy) || "전략 수립 중입니다."}</ReactMarkdown>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        {/* 4. Solution Wizard Section (NEW) */}
+                        <section className="space-y-12 bg-primary/5 p-12 rounded-[64px] border border-primary/20 shadow-inner group/wizard">
+                            <div className="flex items-center gap-6 mb-4">
+                                <div className="w-16 h-16 bg-foreground rounded-[28px] flex items-center justify-center shadow-2xl group-hover/wizard:rotate-12 transition-transform duration-500">
+                                    <IconRocket className="text-background w-8 h-8" />
+                                </div>
+                                <div>
+                                    <p className="text-primary font-black text-[10px] uppercase tracking-[0.2em] mb-1.5 px-0.5 opacity-60">Step-by-Step Solution</p>
+                                    <h2 className="text-4xl font-black tracking-tighter">AI 아이디어 컨버터 (솔루션 위저드)</h2>
+                                </div>
+                            </div>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                {/* Steps */}
+                                <div className="space-y-6">
+                                    <h3 className="text-xl font-black mb-6 flex items-center gap-2">
+                                        <IconCheck className="text-primary" /> 해결 실행 단계
+                                    </h3>
+                                    {(analysis?.solution_wizard as any)?.steps?.map((step: string, i: number) => (
+                                        <div key={i} className="flex gap-4 p-6 bg-background rounded-3xl border border-muted shadow-sm hover:scale-105 transition-transform">
+                                            <span className="text-2xl font-black text-primary/20">0{i+1}</span>
+                                            <p className="text-sm font-bold leading-relaxed">{step}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                                {/* Checklist */}
+                                <div className="bg-primary/10 p-10 rounded-[48px] border border-primary/20 h-fit">
+                                    <h3 className="text-xl font-black mb-6 flex items-center gap-2">
+                                        <IconRocket size={20} className="text-primary" /> 액션 체크리스트
+                                    </h3>
+                                    <div className="space-y-4">
+                                        {(analysis?.solution_wizard as any)?.checklist?.map((item: string, i: number) => (
+                                            <div key={i} className="flex items-center gap-4 bg-background/50 p-4 rounded-2xl border border-primary/10">
+                                                <div className="w-6 h-6 rounded-full border-2 border-primary/30 flex items-center justify-center group-hover/wizard:bg-primary/20 transition-colors">
+                                                    <IconCheck size={12} className="text-primary opacity-0 group-hover:opacity-100" />
+                                                </div>
+                                                <span className="text-xs font-bold text-foreground/80">{item}</span>
+                                            </div>
+                                        ))}
                                     </div>
                                 </div>
                             </div>

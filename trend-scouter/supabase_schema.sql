@@ -15,18 +15,26 @@ CREATE TABLE public.trends (
     UNIQUE(source, external_id)
 );
 
--- 2. Analysis Table: Stores AI-generated analysis for each trend
+-- 2. Analysis Table: Stores AI-generated analysis for each trend based on PUFE Framework
 CREATE TABLE public.analysis (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    trend_id UUID REFERENCES public.trends(id) ON DELETE CASCADE,
-    score_revenue INTEGER CHECK (score_revenue BETWEEN 0 AND 100),
-    score_difficulty INTEGER CHECK (score_difficulty BETWEEN 0 AND 100),
-    score_korea_potential INTEGER CHECK (score_korea_potential BETWEEN 0 AND 100),
+    trend_id UUID REFERENCES public.trends(id) ON DELETE CASCADE, -- Nullable for user-generated ideas
+    user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL, -- Identifies the owner of the analysis
+    is_unlocked BOOLEAN DEFAULT FALSE, -- Payment status for the analysis booster package
+    -- PUFE Framework (Each 0-25, Total 100)
+    pufe_p INTEGER CHECK (pufe_p BETWEEN 0 AND 25), -- Pain
+    pufe_u INTEGER CHECK (pufe_u BETWEEN 0 AND 25), -- Urgency
+    pufe_f INTEGER CHECK (pufe_f BETWEEN 0 AND 25), -- Frequency
+    pufe_e INTEGER CHECK (pufe_e BETWEEN 0 AND 25), -- Existing Solution
+    pufe_total INTEGER CHECK (pufe_total BETWEEN 0 AND 100),
+    
+    pain_category TEXT, -- 'Functional', 'Financial', 'Emotional'
     summary TEXT,
     business_model TEXT,
     gtm_strategy TEXT, -- Go-to-Market strategy
     tech_stack_suggestion TEXT,
     korea_localization_tips TEXT,
+    solution_wizard JSONB, -- AI-generated solution steps/checklists
     ai_model TEXT, -- Which model performed the analysis
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
