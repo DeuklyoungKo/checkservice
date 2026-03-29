@@ -13,28 +13,22 @@ import {
     IconSearch,
     IconFilter,
     IconSortDescending,
-    IconChevronLeft,
-    IconChevronRight,
+    IconArrowRight
 } from "@tabler/icons-react"
 import { BookmarkButton } from "@/components/BookmarkButton"
 
 const PAGE_SIZE = 9
 
 interface Trend {
-    id: string
-    title: string
-    pain_category: 'Functional' | 'Financial' | 'Emotional'
-    pufe_total: number
-    description: string
-    tags: string[]
-    isBookmarked: boolean
-    upvotes: number
-    analysis?: {
-        pufe_p: number
-        pufe_u: number
-        pufe_f: number
-        pufe_e: number
-    }
+    id: string;
+    title: string;
+    description: string;
+    category: string;
+    score: number;
+    difficulty: string;
+    potential: string;
+    tags: string[];
+    isBookmarked: boolean;
 }
 
 interface TrendListProps {
@@ -48,7 +42,7 @@ export function TrendList({ initialTrends }: TrendListProps) {
     const [currentPage, setCurrentPage] = useState(1)
 
     const categories = useMemo(() => {
-        const cats = new Set(initialTrends.map(t => t.pain_category))
+        const cats = new Set(initialTrends.map(t => t.category))
         return ['all', ...Array.from(cats)]
     }, [initialTrends])
 
@@ -59,38 +53,39 @@ export function TrendList({ initialTrends }: TrendListProps) {
             const q = searchQuery.toLowerCase()
             result = result.filter(t =>
                 t.title.toLowerCase().includes(q) ||
-                t.pain_category.toLowerCase().includes(q) ||
-                t.tags.some(tag => tag.toLowerCase().includes(q))
+                t.description.toLowerCase().includes(q)
             )
         }
 
         if (filterCategory !== 'all') {
-            result = result.filter(t => t.pain_category === filterCategory)
+            result = result.filter(t => t.category === filterCategory)
         }
 
-        result.sort((a, b) => {
-            if (sortBy === 'score') return b.pufe_total - a.pufe_total
-            return 0
-        })
+        if (sortBy === 'score') {
+            result.sort((a, b) => b.score - a.score)
+        } else if (sortBy === 'difficulty') {
+            const diffMap = { '쉬움': 0, '보통': 1, '어려움': 2 }
+            result.sort((a, b) => (diffMap[a.difficulty as keyof typeof diffMap] || 0) - (diffMap[b.difficulty as keyof typeof diffMap] || 0))
+        }
 
         return result
     }, [initialTrends, searchQuery, sortBy, filterCategory])
 
-    // Reset page when filters change
+    const paginatedTrends = useMemo(() => {
+        const start = (currentPage - 1) * PAGE_SIZE
+        return filteredAndSortedTrends.slice(start, start + PAGE_SIZE)
+    }, [filteredAndSortedTrends, currentPage])
+
+    const totalPages = Math.max(1, Math.ceil(filteredAndSortedTrends.length / PAGE_SIZE))
+
     const handleSearch = (q: string) => { setSearchQuery(q); setCurrentPage(1) }
     const handleCategory = (c: string) => { setFilterCategory(c); setCurrentPage(1) }
     const handleSort = (s: 'score' | 'newest' | 'difficulty') => { setSortBy(s); setCurrentPage(1) }
 
-    const totalPages = Math.max(1, Math.ceil(filteredAndSortedTrends.length / PAGE_SIZE))
-    const paginatedTrends = filteredAndSortedTrends.slice(
-        (currentPage - 1) * PAGE_SIZE,
-        currentPage * PAGE_SIZE
-    )
-
     return (
-        <div className="space-y-8">
+        <div className="space-y-12">
             {/* Search & Filter Controls */}
-            <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-muted/20 p-6 rounded-3xl border border-muted-foreground/10">
+            <div className="flex flex-col md:flex-row gap-6 items-start md:items-center justify-between bg-muted/20 p-6 rounded-[32px] border border-muted-foreground/10">
                 <div className="relative w-full md:w-96 group">
                     <IconSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={20} />
                     <input
@@ -128,7 +123,6 @@ export function TrendList({ initialTrends }: TrendListProps) {
                         </select>
                     </div>
 
-                    {/* Result count */}
                     <span className="text-sm text-muted-foreground font-bold hidden md:block">
                         총 {filteredAndSortedTrends.length}개
                     </span>
@@ -143,17 +137,17 @@ export function TrendList({ initialTrends }: TrendListProps) {
                             <CardHeader className="pb-4">
                                 <div className="flex justify-between items-start mb-4">
                                     <Badge variant="secondary" className="bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
-                                        {trend.pain_category}
+                                        {trend.category}
                                     </Badge>
                                     <div className="flex flex-col items-end">
-                                        <span className="text-2xl font-black text-primary leading-none">{trend.pufe_total}</span>
-                                        <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-tighter">PUFE</span>
-                                        <div className="mt-2">
-                                            <BookmarkButton trendId={trend.id} initialIsBookmarked={trend.isBookmarked} />
+                                        <span className="text-2xl font-black text-primary leading-none">{trend.score}</span>
+                                        <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-tighter">Score</span>
+                                        <div className="mt-2 text-right">
+                                            <BookmarkButton trendId={trend.id} initialIsBookmarked={trend.isBookmarked} size="sm" />
                                         </div>
                                     </div>
                                 </div>
-                                <CardTitle className="text-2xl group-hover:text-primary transition-colors mb-2 line-clamp-2">
+                                <CardTitle className="text-2xl group-hover:text-primary transition-colors mb-2 line-clamp-2 min-h-[4rem] flex items-center">
                                     {trend.title}
                                 </CardTitle>
                                 <CardDescription className="text-sm leading-relaxed line-clamp-3 h-[4.5rem]">
@@ -162,94 +156,66 @@ export function TrendList({ initialTrends }: TrendListProps) {
                             </CardHeader>
 
                             <CardContent className="pb-6 flex-grow">
-                                <div className="flex flex-wrap gap-2 mb-6">
-                                    {trend.tags.map((tag: string) => (
-                                        <Badge key={tag} variant="outline" className="rounded-md border-muted text-muted-foreground text-[10px]">
-                                            #{tag}
-                                        </Badge>
-                                    ))}
-                                </div>
-                                <Separator className="mb-6 opacity-30" />
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-1">
                                         <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider flex items-center gap-1">
-                                            <IconTrendingUp size={12} /> 언급수/기여도
+                                            <IconClock size={12} /> 난이도
                                         </p>
-                                        <p className="text-sm font-bold">{trend.upvotes}</p>
+                                        <p className="text-sm font-bold">{trend.difficulty}</p>
                                     </div>
                                     <div className="space-y-1">
                                         <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider flex items-center gap-1">
-                                            <IconChartBar size={12} /> Pain 유형
+                                            <IconChartBar size={12} /> 잠재력
                                         </p>
-                                        <p className={`text-sm font-bold ${trend.pain_category === 'Emotional' ? 'text-orange-500' : 'text-foreground'}`}>
-                                            {trend.pain_category}
+                                        <p className={`text-sm font-bold ${trend.potential === '높음' ? 'text-orange-500' : 'text-foreground'}`}>
+                                            {trend.potential}
                                         </p>
                                     </div>
                                 </div>
                             </CardContent>
 
-                            <CardFooter className="bg-muted/30 p-4 mt-auto">
+                            <CardFooter className="bg-muted/30 p-4 mt-auto border-t border-muted/50">
                                 <Link href={`/trend/${trend.id}`} className="w-full">
                                     <Button className="w-full rounded-xl font-bold bg-muted hover:bg-primary hover:text-primary-foreground text-foreground transition-all duration-300" variant="ghost">
                                         심층 분석 데이터 보기
+                                        <IconArrowRight size={16} className="ml-2" />
                                     </Button>
                                 </Link>
                             </CardFooter>
                         </Card>
                     ))
                 ) : (
-                    <div className="col-span-full py-20 text-center">
-                        <p className="text-muted-foreground text-lg">검색 결과가 없습니다. 다른 키워드로 시도해 보세요.</p>
+                    <div className="col-span-full py-20 text-center bg-muted/10 rounded-[48px] border-2 border-dashed border-muted">
+                        <p className="text-muted-foreground font-bold">검색 결과가 없습니다.</p>
                     </div>
                 )}
             </div>
 
             {/* Pagination Controls */}
             {totalPages > 1 && (
-                <div className="flex items-center justify-center gap-2 pt-4">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        className="rounded-full h-10 w-10 p-0"
-                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                <div className="flex justify-center items-center gap-4 mt-12">
+                    <Button 
+                        variant="outline" 
+                        size="sm" 
                         disabled={currentPage === 1}
+                        onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                        className="rounded-xl font-bold"
                     >
-                        <IconChevronLeft size={18} />
+                        이전
                     </Button>
-
-                    <div className="flex items-center gap-1">
-                        {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                            <button
-                                key={page}
-                                onClick={() => setCurrentPage(page)}
-                                className={`h-10 w-10 rounded-full text-sm font-bold transition-all ${
-                                    currentPage === page
-                                        ? 'bg-primary text-primary-foreground shadow-md shadow-primary/30'
-                                        : 'text-muted-foreground hover:bg-muted'
-                                }`}
-                            >
-                                {page}
-                            </button>
-                        ))}
-                    </div>
-
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        className="rounded-full h-10 w-10 p-0"
-                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    <span className="text-sm font-bold">
+                        {currentPage} / {totalPages}
+                    </span>
+                    <Button 
+                        variant="outline" 
+                        size="sm" 
                         disabled={currentPage === totalPages}
+                        onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                        className="rounded-xl font-bold"
                     >
-                        <IconChevronRight size={18} />
+                        다음
                     </Button>
                 </div>
-            )}
-
-            {/* Page info */}
-            {totalPages > 1 && (
-                <p className="text-center text-xs text-muted-foreground font-bold">
-                    {currentPage} / {totalPages} 페이지 &nbsp;·&nbsp; 총 {filteredAndSortedTrends.length}개
-                </p>
             )}
         </div>
     )

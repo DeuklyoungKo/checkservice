@@ -8,9 +8,10 @@ import { toggleBookmark } from '@/app/actions/workspace'
 interface BookmarkButtonProps {
     trendId: string
     initialIsBookmarked: boolean
+    size?: 'sm' | 'default'
 }
 
-export function BookmarkButton({ trendId, initialIsBookmarked }: BookmarkButtonProps) {
+export function BookmarkButton({ trendId, initialIsBookmarked, size = 'default' }: BookmarkButtonProps) {
     const [isBookmarked, setIsBookmarked] = useState(initialIsBookmarked)
     const [isPending, startTransition] = useTransition()
 

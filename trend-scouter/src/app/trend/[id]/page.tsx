@@ -30,23 +30,18 @@ export async function generateMetadata({ params }: PageProps) {
     const supabase = await createClient();
     const { data: trend } = await supabase
         .from('trends')
-        .select('*, analysis(*)')
+        .select('*, analysis(headline, summary)')
         .eq('id', id)
         .single();
 
     if (!trend) return { title: "Trend NOT Found" };
 
     const analysis = trend.analysis?.[0];
-    let displayTitle = trend.title;
-
-    if (analysis?.summary?.startsWith('[TITLE_KO]')) {
-        const titleParts = analysis.summary.split('\n\n');
-        displayTitle = titleParts[0].replace('[TITLE_KO] ', '').trim();
-    }
+    const displayTitle = analysis?.headline || "분석 중인 트렌드";
 
     return {
         title: `${displayTitle} - Trend Intelligence`,
-        description: analysis?.summary?.split('###')[0]?.trim() || trend.description,
+        description: analysis?.summary || "비즈니스 기회를 분석하고 있습니다.",
     };
 }
 
@@ -57,11 +52,11 @@ export default async function TrendDetailPage({ params }: PageProps) {
     const { data: trend, error } = await supabase
         .from('trends')
         .select(`
-      *,
-      analysis (
-        *
-      )
-    `)
+            *,
+            analysis (
+                *
+            )
+        `)
         .eq('id', id)
         .single();
 
@@ -76,32 +71,10 @@ export default async function TrendDetailPage({ params }: PageProps) {
 
     const analysis = trend.analysis?.[0];
 
-    // 새로운 분석 포맷 파싱 ([Category Pain] Title_KO)
-    let displayTitle = trend.title;
-    let mainSummary = "현재 분석 중입니다.";
-    let reasoning = "데이터 기반 분석 근거가 준비 중입니다.";
-
-    if (analysis?.summary) {
-        let currentContent = analysis.summary;
-
-        // 1. [Category Pain] Title_KO 추출
-        if (currentContent.startsWith('[')) {
-            const lines = currentContent.split('\n\n');
-            const titleLine = lines[0];
-            const titleMatch = titleLine.match(/\[(.*?) Pain\] (.*)/);
-            if (titleMatch) {
-                displayTitle = titleMatch[2].trim();
-                currentContent = lines.slice(1).join('\n\n');
-            }
-        }
-
-        // 2. Summary와 Reasoning 분리
-        const summaryParts = currentContent.split('### ⚖️ PUFE 분석 근거');
-        mainSummary = summaryParts[0]?.trim();
-
-        const reasoningAndGtm = summaryParts[1] || "";
-        reasoning = reasoningAndGtm.split('### 🇰🇷 한국형 진입 전략 (GTM)')[0]?.trim();
-    }
+    // Stats-Only: Use AI-generated headline and summary directly
+    const displayTitle = analysis?.headline || "분석 중인 트렌드";
+    const mainSummary = analysis?.summary || "현재 비즈니스 분석이 진행 중입니다.";
+    const reasoning = analysis?.summary ? "데이터 기반 분석 근거가 준비되었습니다." : "분석 근거를 생성 중입니다.";
 
     const gtmStrategy = analysis?.gtm_strategy?.trim() || "한국 시장 특화 전략이 준비 중입니다.";
 

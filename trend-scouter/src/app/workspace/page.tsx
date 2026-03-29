@@ -32,7 +32,12 @@ export default async function WorkspacePage() {
           *,
           trends (
             *,
-            analysis (*)
+            analysis (
+                headline,
+                summary,
+                pufe_total,
+                pain_category
+            )
           )
         `)
         .eq('user_id', user.id)
@@ -50,51 +55,27 @@ export default async function WorkspacePage() {
         const t = item.trends as any;
         const analysis = t.analysis?.[0];
 
-        let displayTitle = t.title;
-        let displayDescription = analysis?.summary || t.description || "설명이 없습니다.";
-
-        if (analysis?.summary && analysis.summary.startsWith('[')) {
-            const parts = analysis.summary.split('\n\n');
-            const titleMatch = parts[0].match(/\[(.*?) Pain\] (.*)/);
-            if (titleMatch) {
-                displayTitle = titleMatch[2].trim();
-                displayDescription = parts.slice(1).join('\n\n').split('###')[0].trim();
-            }
-        }
-
         return {
             id: t.id,
-            title: displayTitle,
-            category: t.source === 'reddit' ? 'Community/Reddit' : t.source === 'product-hunt' ? 'SaaS/Product Hunt' : 'General',
+            title: analysis?.headline || "분석 중인 트렌드",
+            category: analysis?.pain_category || 'General',
             score: analysis?.pufe_total || 0,
             difficulty: analysis?.pufe_u > 18 ? '어려움' : '보통',
             potential: analysis?.pufe_p > 18 ? '높음' : '보통',
-            description: displayDescription,
-            tags: t.raw_data?.tags || [t.source],
+            description: analysis?.summary || "비즈니스 기회를 분석 중입니다...",
+            tags: [t.source],
             isBookmarked: true,
             isUserIdea: false
         };
     }) || [];
 
     const myIdeas = userAnalyses?.map(a => {
-        let displayTitle = "나의 아이디어 분석";
-        let displayDescription = a.summary || "분석 내용이 없습니다.";
-
-        if (a.summary && a.summary.startsWith('[')) {
-            const parts = a.summary.split('\n\n');
-            const titleMatch = parts[0].match(/\[(.*?) Pain\] (.*)/);
-            if (titleMatch) {
-                displayTitle = titleMatch[2].trim();
-                displayDescription = parts.slice(1).join('\n\n').split('###')[0].trim();
-            }
-        }
-
         return {
             id: a.id,
-            title: displayTitle,
+            title: a.headline || "나의 아이디어 분석",
             category: `${a.pain_category} Pain`,
             score: a.pufe_total || 0,
-            description: displayDescription,
+            description: a.summary || "분석 내용이 없습니다.",
             isUnlocked: a.is_unlocked,
             isUserIdea: true,
             createdAt: a.created_at

@@ -23,10 +23,14 @@ export default async function TrendsPage() {
         .select(`
             *,
             analysis (
-                score_revenue,
-                score_difficulty,
-                score_korea_potential,
-                summary
+                headline,
+                summary,
+                pufe_p,
+                pufe_u,
+                pufe_f,
+                pufe_e,
+                pufe_total,
+                pain_category
             )
         `)
         .order("created_at", { ascending: false })
@@ -42,32 +46,16 @@ export default async function TrendsPage() {
 
     const trends = rawTrends?.map(t => {
         const analysis = t.analysis?.[0];
-        let displayTitle = t.title;
-        let displayDescription = analysis?.summary || t.description || "설명이 없습니다.";
-
-        if (analysis?.summary && analysis.summary.startsWith("[TITLE_KO]")) {
-            const parts = analysis.summary.split("\n\n");
-            const titleMatch = parts[0].replace("[TITLE_KO] ", "").trim();
-            if (titleMatch) {
-                displayTitle = titleMatch;
-                displayDescription = parts.slice(1).join("\n\n").split("###")[0].trim();
-            }
-        } else if (analysis?.summary) {
-            displayDescription = analysis.summary.split("###")[0].trim();
-        }
-
+        
         return {
             id: t.id,
-            title: displayTitle,
-            category:
-                t.source === "reddit" ? "Community/Reddit" :
-                t.source === "product-hunt" ? "SaaS/Product Hunt" :
-                t.source === "indie-hackers" ? "Indie Hackers" : "General",
-            score: analysis?.score_revenue || 0,
-            difficulty: analysis?.score_difficulty > 70 ? "어려움" : analysis?.score_difficulty > 40 ? "보통" : "쉬움",
-            potential: analysis?.score_korea_potential > 70 ? "높음" : analysis?.score_korea_potential > 40 ? "보통" : "낮음",
-            description: displayDescription,
-            tags: t.raw_data?.tags || [t.source],
+            title: analysis?.headline || "분석 중인 트렌드",
+            category: analysis?.pain_category || 'General',
+            score: analysis?.pufe_total || 0,
+            difficulty: analysis?.pufe_u > 18 ? '어려움' : analysis?.pufe_u > 10 ? '보통' : '쉬움',
+            potential: analysis?.pufe_p > 18 ? '높음' : analysis?.pufe_p > 10 ? '보통' : '낮음',
+            description: analysis?.summary || "비즈니스 기회를 분석하고 있습니다...",
+            tags: [t.source],
             isBookmarked: bookmarkedIds.has(t.id),
         };
     }) || [];

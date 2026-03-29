@@ -1,26 +1,24 @@
 -- Trend Intelligence Database Schema
 
--- 1. Trends Table: Stores raw and basic info of gathered trends
+-- 1. Trends Table: Stores aggregated statistics and impact metrics (Strict Stats-Only)
 CREATE TABLE public.trends (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    source TEXT NOT NULL, -- 'product-hunt', 'reddit', 'indie-hackers'
-    external_id TEXT NOT NULL, -- Original ID from the source
-    title TEXT NOT NULL,
-    description TEXT,
+    source TEXT NOT NULL, -- 'product-hunt', 'reddit', 'indie-hackers', 'hacker-news', etc.
+    external_id TEXT NOT NULL, -- Original ID/Link Hash
+    impact_score INTEGER DEFAULT 0, -- Calculated index based on engagement/keywords
+    stats_data JSONB, -- Aggregated metrics like keyword frequencies, upvotes, etc.
     url TEXT,
-    thumbnail_url TEXT,
-    upvotes INTEGER DEFAULT 0,
-    raw_data JSONB, -- Store full response for backup
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
     UNIQUE(source, external_id)
 );
 
--- 2. Analysis Table: Stores AI-generated analysis for each trend based on PUFE Framework
+-- 2. Analysis Table: Stores AI-generated analysis and business headers
 CREATE TABLE public.analysis (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    trend_id UUID REFERENCES public.trends(id) ON DELETE CASCADE, -- Nullable for user-generated ideas
-    user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL, -- Identifies the owner of the analysis
-    is_unlocked BOOLEAN DEFAULT FALSE, -- Payment status for the analysis booster package
+    trend_id UUID REFERENCES public.trends(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+    is_unlocked BOOLEAN DEFAULT FALSE,
+    headline TEXT, -- AI-generated business-focused title (Replacing original title)
     -- PUFE Framework (Each 0-25, Total 100)
     pufe_p INTEGER CHECK (pufe_p BETWEEN 0 AND 25), -- Pain
     pufe_u INTEGER CHECK (pufe_u BETWEEN 0 AND 25), -- Urgency
