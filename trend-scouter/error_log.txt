@@ -1,0 +1,6 @@
+??Error in indie-hackers: Unquoted attribute value
+Line: 0
+Column: 27
+Char: e
+??Error in reddit-sideproject: Status code 403
+??Error in zdnet-korea: Status code 404

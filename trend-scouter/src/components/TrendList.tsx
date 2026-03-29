@@ -13,7 +13,9 @@ import {
     IconSearch,
     IconFilter,
     IconSortDescending,
-    IconArrowRight
+    IconArrowRight,
+    IconRocket,
+    IconBulb
 } from "@tabler/icons-react"
 import { BookmarkButton } from "@/components/BookmarkButton"
 
@@ -29,6 +31,7 @@ interface Trend {
     potential: string;
     tags: string[];
     isBookmarked: boolean;
+    isUnlocked: boolean; // 추가됨
 }
 
 interface TrendListProps {
@@ -133,8 +136,16 @@ export function TrendList({ initialTrends }: TrendListProps) {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {paginatedTrends.length > 0 ? (
                     paginatedTrends.map((trend) => (
-                        <Card key={trend.id} className="group border-2 hover:border-primary/50 transition-all duration-300 hover:shadow-2xl hover:shadow-primary/10 overflow-hidden rounded-3xl bg-card flex flex-col h-full">
-                            <CardHeader className="pb-4">
+                        <Card key={trend.id} className="group border-2 hover:border-primary/50 transition-all duration-300 hover:shadow-2xl hover:shadow-primary/10 overflow-hidden rounded-3xl bg-card flex flex-col h-full relative">
+                            {/* Premium Badge */}
+                            {!trend.isUnlocked && (
+                                <div className="absolute top-4 left-4 z-10 flex items-center gap-1.5 bg-gradient-to-r from-yellow-500 to-amber-600 text-white px-3 py-1 rounded-full text-[10px] font-black shadow-lg shadow-amber-500/20 uppercase tracking-widest border border-white/20">
+                                    <IconRocket size={12} className="text-white animate-pulse" />
+                                    Premium
+                                </div>
+                            )}
+
+                            <CardHeader className="pb-4 pt-8">
                                 <div className="flex justify-between items-start mb-4">
                                     <Badge variant="secondary" className="bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
                                         {trend.category}
@@ -147,7 +158,8 @@ export function TrendList({ initialTrends }: TrendListProps) {
                                         </div>
                                     </div>
                                 </div>
-                                <CardTitle className="text-2xl group-hover:text-primary transition-colors mb-2 line-clamp-2 min-h-[4rem] flex items-center">
+                                <CardTitle className="text-2xl group-hover:text-primary transition-colors mb-2 line-clamp-2 min-h-[4rem] flex items-center gap-2">
+                                    {!trend.isUnlocked && <IconBulb size={24} className="text-amber-500 flex-shrink-0" />}
                                     {trend.title}
                                 </CardTitle>
                                 <CardDescription className="text-sm leading-relaxed line-clamp-3 h-[4.5rem]">
@@ -176,10 +188,17 @@ export function TrendList({ initialTrends }: TrendListProps) {
 
                             <CardFooter className="bg-muted/30 p-4 mt-auto border-t border-muted/50">
                                 <Link href={`/trend/${trend.id}`} className="w-full">
-                                    <Button className="w-full rounded-xl font-bold bg-muted hover:bg-primary hover:text-primary-foreground text-foreground transition-all duration-300" variant="ghost">
-                                        심층 분석 데이터 보기
-                                        <IconArrowRight size={16} className="ml-2" />
-                                    </Button>
+                                    {trend.isUnlocked ? (
+                                        <Button className="w-full rounded-xl font-bold bg-muted hover:bg-primary hover:text-primary-foreground text-foreground transition-all duration-300" variant="ghost">
+                                            심층 분석 데이터 보기
+                                            <IconArrowRight size={16} className="ml-2" />
+                                        </Button>
+                                    ) : (
+                                        <Button className="w-full rounded-xl font-black bg-primary/10 text-primary hover:bg-primary transition-all duration-300 border border-primary/20" variant="ghost">
+                                            분석 데이터 잠금 해제
+                                            <IconRocket size={16} className="ml-2 scale-110" />
+                                        </Button>
+                                    )}
                                 </Link>
                             </CardFooter>
                         </Card>

@@ -16,6 +16,7 @@ import {
   IconArrowRight,
   IconClock,
   IconChartBar,
+  IconRocket,
 } from "@tabler/icons-react";
 import { BookmarkButton } from "@/components/BookmarkButton";
 
@@ -27,52 +28,54 @@ export default async function Home() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  // trends 테이블과 연관된 analysis 데이터를 최신순으로 가져옵니다.
-  const { data: rawTrends, error } = await supabase
-    .from('trends')
-    .select(`
-      *,
-      analysis (
-        headline,
-        summary,
-        pufe_p,
-        pufe_u,
-        pufe_f,
-        pufe_e,
-        pufe_total,
-        pain_category
-      )
-    `)
+  // [분석 우선 전략] analysis가 있는 최신 트렌드만 노출합니다.
+  // 1. 최신 분석 데이터 6개를 먼저 조회합니다.
+  const { data: latestAnalyses } = await supabase
+    .from('analysis')
+    .select('*')
     .order('created_at', { ascending: false })
     .limit(6);
 
-  // 현재 유저의 북마크 목록을 가져옵니다.
+  // 2. 분석에 연결된 trend_id로 트렌드 정보를 조회합니다.
+  const analysisIds = latestAnalyses?.map(a => a.trend_id) || [];
+  const { data: rawTrends, error } = analysisIds.length > 0
+    ? await supabase.from('trends').select('*').in('id', analysisIds)
+    : { data: [], error: null };
+
+  if (error) {
+    console.error("Error fetching trends:", error);
+  }
+
+  // 3. 북마크 조회
   const { data: userBookmarks } = user
     ? await supabase.from('bookmarks').select('trend_id').eq('user_id', user.id)
     : { data: [] };
 
   const bookmarkedIds = new Set(userBookmarks?.map(b => b.trend_id) || []);
 
-  if (error) {
-    console.error("Error fetching trends:", error);
-  }
-
-  // DB 데이터를 UI 형식에 맞춰 매핑합니다.
-  const trends = rawTrends?.map(t => {
-    const analysis = t.analysis?.[0]; // 최신 분석 결과 1개 사용
-
-    return {
-      id: t.id,
-      title: analysis?.headline || "분석 중인 트렌드",
-      category: analysis?.pain_category || 'General',
-      score: analysis?.pufe_total || 0,
-      difficulty: analysis?.pufe_u > 18 ? '어려움' : analysis?.pufe_u > 10 ? '보통' : '쉬움',
-      potential: analysis?.pufe_p > 18 ? '높음' : analysis?.pufe_p > 10 ? '보통' : '낮음',
-      description: analysis?.summary || "비즈니스 기회를 분석하고 있습니다...",
-      tags: [t.source],
-      isBookmarked: bookmarkedIds.has(t.id),
-    };
-  }) || [];
+  // 4. 매핑합니다.
+  type TrendItem = {
+    id: string; title: string; category: string; score: number;
+    difficulty: string; potential: string; description: string;
+    tags: string[]; isBookmarked: boolean; isUnlocked: boolean;
+  };
+  const trends: TrendItem[] = (latestAnalyses || []).reduce<TrendItem[]>((acc, analysis) => {
+    const trend = rawTrends?.find(t => t.id === analysis.trend_id);
+    if (!trend) return acc;
+    acc.push({
+      id: trend.id,
+      title: analysis.headline || "분석 중인 트렌드",
+      category: analysis.pain_category || 'General',
+      score: analysis.pufe_total || 0,
+      difficulty: analysis.pufe_u > 18 ? '어려움' : analysis.pufe_u > 10 ? '보통' : '쉬움',
+      potential: analysis.pufe_p > 18 ? '높음' : analysis.pufe_p > 10 ? '보통' : '낮음',
+      description: analysis.summary || "비즈니스 기회를 분석하고 있습니다...",
+      tags: [trend.source],
+      isBookmarked: bookmarkedIds.has(trend.id),
+      isUnlocked: analysis.is_unlocked ?? false,
+    });
+    return acc;
+  }, []);
 
   return (
     <div className="min-h-screen bg-background text-foreground font-sans selection:bg-primary/20 transition-all duration-500">
@@ -183,8 +186,16 @@ export default async function Home() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {trends.map((trend) => (
-            <Card key={trend.id} className="group border-2 hover:border-primary/50 transition-all duration-300 hover:shadow-2xl hover:shadow-primary/10 overflow-hidden rounded-3xl bg-card flex flex-col h-full">
-              <CardHeader className="pb-4">
+            <Card key={trend.id} className="group border-2 hover:border-primary/50 transition-all duration-300 hover:shadow-2xl hover:shadow-primary/10 overflow-hidden rounded-3xl bg-card flex flex-col h-full relative">
+              {/* Premium Badge */}
+              {!trend.isUnlocked && (
+                <div className="absolute top-4 left-4 z-10 flex items-center gap-1.5 bg-gradient-to-r from-yellow-500 to-amber-600 text-white px-3 py-1 rounded-full text-[10px] font-black shadow-lg shadow-amber-500/20 uppercase tracking-widest border border-white/20">
+                  <IconRocket size={12} className="text-white animate-pulse" />
+                  Premium
+                </div>
+              )}
+
+              <CardHeader className="pb-4 pt-8">
                 <div className="flex justify-between items-start mb-4">
                   <Badge variant="secondary" className="bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
                     {trend.category}
@@ -197,7 +208,8 @@ export default async function Home() {
                     </div>
                   </div>
                 </div>
-                <CardTitle className="text-2xl group-hover:text-primary transition-colors mb-2 line-clamp-2">
+                <CardTitle className="text-2xl group-hover:text-primary transition-colors mb-2 line-clamp-2 h-[4rem] flex items-center gap-2">
+                  {!trend.isUnlocked && <IconBulb size={24} className="text-amber-500 flex-shrink-0" />}
                   {trend.title}
                 </CardTitle>
                 <CardDescription className="text-sm leading-relaxed line-clamp-3 h-[4.5rem]">
@@ -224,9 +236,17 @@ export default async function Home() {
               </CardContent>
               <CardFooter className="bg-muted/30 p-4 mt-auto">
                 <Link href={`/trend/${trend.id}`} className="w-full">
-                  <Button className="w-full rounded-xl font-bold bg-muted hover:bg-primary hover:text-primary-foreground text-foreground transition-all duration-300" variant="ghost">
-                    심층 분석 데이터 보기
-                  </Button>
+                  {trend.isUnlocked ? (
+                    <Button className="w-full rounded-xl font-bold bg-muted hover:bg-primary hover:text-primary-foreground text-foreground transition-all duration-300" variant="ghost">
+                      심층 분석 데이터 보기
+                      <IconArrowRight size={16} className="ml-2" />
+                    </Button>
+                  ) : (
+                    <Button className="w-full rounded-xl font-black bg-primary/10 text-primary hover:bg-primary transition-all duration-300 border border-primary/20" variant="ghost">
+                      분석 데이터 잠금 해제
+                      <IconRocket size={16} className="ml-2 scale-110" />
+                    </Button>
+                  )}
                 </Link>
               </CardFooter>
             </Card>

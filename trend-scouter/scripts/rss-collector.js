@@ -4,29 +4,38 @@ const { createClient } = require('@supabase/supabase-js');
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '../.env.local') });
 
-const parser = new Parser();
+
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 const geminiApiKey = process.env.GEMINI_API_KEY;
 
-// 수집 대상 RSS 피드 리스트 (Notion 가이드 기반)
+console.log('🔑 Gemini API Key Status:', geminiApiKey ? `Loaded (${geminiApiKey.substring(0, 5)}...)` : '❌ NOT FOUND');
+
+// 수집 대상 RSS 피드 리스트 (HNRSS 및 최신 URL 반영)
 const RSS_FEEDS = [
-    { name: 'indie-hackers', url: 'https://www.indiehackers.com/feed.rss' },
+    { name: 'indie-hackers', url: 'https://hnrss.org/newest?q=Indie+Hackers&points=20' },
     { name: 'reddit-sideproject', url: 'https://www.reddit.com/r/sideproject/.rss' },
     { name: 'product-hunt', url: 'https://www.producthunt.com/feed' },
-    { name: 'hacker-news', url: 'https://news.ycombinator.com/rss' },
+    { name: 'hacker-news', url: 'https://hnrss.org/newest?q=SaaS+OR+Automation&points=20' },
     { name: 'dev-to', url: 'https://dev.to/feed' },
-    { name: 'zdnet-korea', url: 'https://zdnet.co.kr/rss.aspx' }
+    { name: 'zdnet-korea', url: 'https://zdnet.co.kr/feed' }
 ];
 
-// 분석 대상 핵심 키워드 (Impact Score 산정용)
-const TARGET_KEYWORDS = ['AI', '자동화', 'SaaS', '노코드', '수익화', 'ChatGPT', 'Automation', 'Revenue', 'Startup', 'No-code'];
+// 브라우저용 User-Agent (차단 우회용)
+const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36';
+
+// 분석 대상 핵심 키워드
+const TARGET_KEYWORDS = ['AI', '자동화', 'SaaS', '노코드', '수익화', 'ChatGPT', 'Automation', 'Revenue', 'Startup', 'No-code', 'OpenAI', 'Gemini'];
+
+const parser = new Parser({
+    headers: { 'User-Agent': USER_AGENT }
+});
 
 async function calculateImpactScore(title, content) {
     let score = 0;
     const text = (title + ' ' + content).toLowerCase();
     TARGET_KEYWORDS.forEach(keyword => {
         if (text.includes(keyword.toLowerCase())) {
-            score += 10; // 키워드당 10점 가점
+            score += 10;
         }
     });
     return score;
@@ -34,35 +43,41 @@ async function calculateImpactScore(title, content) {
 
 async function analyzeWithAI(title, content, source) {
     const prompt = `
-    Analyze the following trend/problem found in ${source}.
-    Original Title (Temporary): "${title}"
-    Content Excerpt: "${content.substring(0, 500)}"
+    Analyze this trend from ${source}.
+    Title: "${title}"
+    Content: "${content.substring(0, 1000)}"
 
-    OUTPUT FORMAT (JSON only):
+    OUTPUT JSON ONLY:
     {
-      "headline": "A punchy business-focused headline in Korean",
+      "headline": "Punchy Korean business headline",
       "pain_category": "Functional" | "Financial" | "Emotional",
-      "pufe": { "p": 0-25, "u": 0-25, "f": 0-25, "e": 0-25, "reasoning": "..." },
-      "summary": "3-sentence analysis in Korean",
-      "solution_wizard": { "steps": [...], "checklist": [...] }
+      "pufe": { "p": 0-25, "u": 0-25, "f": 0-25, "e": 0-25, "reasoning": "Detailed reason in Korean" },
+      "summary": "3-sentence Korean analysis",
+      "solution_wizard": { "steps": ["step1", "step2", ...], "checklist": ["item1", "item2", ...] }
     }
     `;
 
     try {
         const response = await axios.post(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${geminiApiKey}`,
-            { contents: [{ parts: [{ text: prompt + "\n\nProvide JSON only." }] }] }
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite-preview:generateContent?key=${geminiApiKey}`,
+            { contents: [{ parts: [{ text: prompt }] }] },
+            { headers: { 'User-Agent': USER_AGENT } }
         );
         const resultText = response.data.candidates[0].content.parts[0].text.replace(/```json\n?|```/g, '').trim();
-        return JSON.parse(resultText);
+        const analysis = JSON.parse(resultText);
+        console.log(`✅ Analysis success: ${analysis.headline.substring(0, 40)}...`);
+        return analysis;
     } catch (error) {
         console.error('AI Analysis failed:', error.message);
+        if (error.response) {
+            console.error('Error Details:', JSON.stringify(error.response.data, null, 2));
+        }
         return null;
     }
 }
 
 async function collectRSS() {
-    console.log('🚀 Starting Strict Stats-Only RSS Collection...');
+    console.log('🚀 Starting Robust Stats-Only RSS Collection...');
 
     for (const feed of RSS_FEEDS) {
         try {
@@ -70,30 +85,36 @@ async function collectRSS() {
             const data = await parser.parseURL(feed.url);
             
             for (const item of data.items) {
-                const impactScore = await calculateImpactScore(item.title, item.contentSnippet || item.content || '');
-                
-                // 1. 임팩트 스코어가 높은 아이템(예: 20점 이상)만 AI 분석 수행
-                if (impactScore >= 20) {
-                    console.log(`✨ High impact detected: ${item.title.substring(0, 30)}... (Score: ${impactScore})`);
-                    
+                try {
+                    const impactScore = await calculateImpactScore(item.title, item.contentSnippet || item.content || '');
+                    if (impactScore < 10) continue; // 최소 기준점
+
+                    // 중복 체크 (External ID 기준)
+                    const externalId = item.guid || item.id || item.link;
+                    const { data: existing } = await supabase.from('trends').select('id, impact_score').eq('external_id', externalId).single();
+
+                    if (existing && existing.impact_score >= impactScore) {
+                        continue; // 이미 처리된 고득점 아이템 스킵
+                    }
+
+                    console.log(`✨ Analyzing: ${item.title.substring(0, 40)}... (Score: ${impactScore})`);
                     const analysis = await analyzeWithAI(item.title, item.content || item.contentSnippet || '', feed.name);
                     
                     if (analysis) {
-                        // 2. Trends 테이블에는 통계 정보만 저장 (Strict Stats-Only)
                         const { data: trend, error: tError } = await supabase.from('trends').upsert({
                             source: feed.name,
-                            external_id: item.guid || item.id || item.link,
+                            external_id: externalId,
                             url: item.link,
                             impact_score: impactScore,
                             stats_data: {
                                 keyword_hits: TARGET_KEYWORDS.filter(k => (item.title + (item.content || '')).toLowerCase().includes(k.toLowerCase())),
-                                total_feed_items: data.items.length
+                                original_title: item.title
                             }
                         }, { onConflict: 'source,external_id' }).select().single();
 
                         if (trend) {
-                            // 3. Analysis 테이블에 AI 생성 헤드라인과 리포트만 저장
-                            await supabase.from('analysis').insert({
+                            // Analysis 결과 덮어쓰기 (Upsert 지원을 위해 trend_id 기준 중복 제거)
+                            await supabase.from('analysis').upsert({
                                 trend_id: trend.id,
                                 headline: analysis.headline,
                                 pufe_p: analysis.pufe.p,
@@ -103,18 +124,21 @@ async function collectRSS() {
                                 pufe_total: analysis.pufe.p + analysis.pufe.u + analysis.pufe.f + analysis.pufe.e,
                                 pain_category: analysis.pain_category,
                                 summary: analysis.summary,
+                                reasoning: analysis.pufe.reasoning,
                                 solution_wizard: analysis.solution_wizard,
-                                ai_model: 'gemini-2.5-flash-lite-stats-v1'
-                            });
+                                ai_model: 'gemini-2.0-flash-lite-stats-v2'
+                            }, { onConflict: 'trend_id' });
                         }
                     }
+                } catch (itemError) {
+                    console.error(`⚠️  Item skip error: ${item.title.substring(0, 30)} | ${itemError.message}`);
                 }
             }
         } catch (error) {
-            console.error(`❌ Error in ${feed.name}:`, error.message);
+            console.error(`❌ Source failed: ${feed.name} | ${error.message}`);
         }
     }
-    console.log('✅ Collection complete.');
+    console.log('✅ Collection and Analysis complete.');
 }
 
 collectRSS();
