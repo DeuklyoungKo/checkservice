@@ -64,25 +64,6 @@ export default async function TrendsPage() {
 
     return (
         <div className="min-h-screen bg-background text-foreground font-sans selection:bg-primary/20 transition-all duration-500">
-            {/* Navigation */}
-            <nav className="border-b bg-background/80 backdrop-blur-md sticky top-0 z-50">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex justify-between h-16 items-center">
-                        <Link href="/" className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
-                                <IconBulb className="text-primary-foreground w-6 h-6" />
-                            </div>
-                            <span className="text-xl font-bold tracking-tight text-primary">Trend Intelligence</span>
-                        </Link>
-                        <Link href="/">
-                            <Button variant="ghost" size="sm" className="gap-2 font-bold">
-                                <IconArrowLeft size={16} />
-                                메인으로
-                            </Button>
-                        </Link>
-                    </div>
-                </div>
-            </nav>
 
             {/* Hero */}
             <header className="relative overflow-hidden pt-16 pb-12 border-b bg-muted/20">

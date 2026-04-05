@@ -10,6 +10,14 @@ const geminiApiKey = process.env.GEMINI_API_KEY;
 
 console.log('🔑 Gemini API Key Status:', geminiApiKey ? `Loaded (${geminiApiKey.substring(0, 5)}...)` : '❌ NOT FOUND');
 
+const parser = new Parser({
+    headers: {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+        'Accept': 'application/rss+xml, application/xml;q=0.9, */*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.5',
+    },
+});
+
 // 수집 대상 RSS 피드 리스트 (HNRSS 및 최신 URL 반영)
 const RSS_FEEDS = [
     { name: 'indie-hackers', url: 'https://hnrss.org/newest?q=Indie+Hackers&points=20' },
@@ -25,10 +33,6 @@ const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36
 
 // 분석 대상 핵심 키워드
 const TARGET_KEYWORDS = ['AI', '자동화', 'SaaS', '노코드', '수익화', 'ChatGPT', 'Automation', 'Revenue', 'Startup', 'No-code', 'OpenAI', 'Gemini'];
-
-const parser = new Parser({
-    headers: { 'User-Agent': USER_AGENT }
-});
 
 async function calculateImpactScore(title, content) {
     let score = 0;

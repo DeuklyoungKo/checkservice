@@ -79,67 +79,6 @@ export default async function Home() {
 
   return (
     <div className="min-h-screen bg-background text-foreground font-sans selection:bg-primary/20 transition-all duration-500">
-      {/* Navigation */}
-      <nav className="border-b bg-background/80 backdrop-blur-md sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16 items-center">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
-                <IconBulb className="text-primary-foreground w-6 h-6" />
-              </div>
-              <span className="text-xl font-bold tracking-tight text-primary">Trend Intelligence</span>
-            </div>
-
-            <div className="hidden md:flex items-center gap-6">
-              {user && (
-                <Link href="/workspace">
-                  <Button variant="ghost" size="sm" className="gap-2">
-                    <IconBookmarkFilled size={18} className="text-primary" />
-                    워크스페이스
-                  </Button>
-                </Link>
-              )}
-              <Link href="/trends">
-                <Button variant="ghost" size="sm" className="gap-2">
-                  <IconReportAnalytics size={18} />
-                  전체 트렌드
-                </Button>
-              </Link>
-
-              <Separator orientation="vertical" className="h-6 mx-2" />
-
-              {user ? (
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-2 px-3 py-1.5 bg-muted rounded-full">
-                    <IconUser size={16} className="text-primary" />
-                    <span className="text-xs font-bold truncate max-w-[120px]">{user.email?.split('@')[0]}</span>
-                  </div>
-                  <form action={signOut}>
-                    <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-destructive transition-colors">
-                      <IconLogout size={18} />
-                      로그아웃
-                    </Button>
-                  </form>
-                </div>
-              ) : (
-                <Link href="/login">
-                  <Button variant="ghost" size="sm" className="gap-2">
-                    <IconUser size={18} />
-                    로그인
-                  </Button>
-                </Link>
-              )}
-
-                <Link href="/premium">
-                  <Button size="sm" className="gap-2 rounded-full font-bold shadow-md shadow-primary/10">
-                    <IconCrown size={18} />
-                    Premium 가입
-                  </Button>
-                </Link>
-            </div>
-          </div>
-        </div>
-      </nav>
 
       {/* Hero Section */}
       <header className="relative overflow-hidden pt-20 pb-16 sm:pt-32 sm:pb-24 border-b bg-muted/30">
@@ -208,7 +147,7 @@ export default async function Home() {
                     </div>
                   </div>
                 </div>
-                <CardTitle className="text-2xl group-hover:text-primary transition-colors mb-2 line-clamp-2 h-[4rem] flex items-center gap-2">
+                <CardTitle className="text-xl group-hover:text-primary transition-colors mb-2 line-clamp-3 min-h-[5.5rem] flex items-start gap-2">
                   {!trend.isUnlocked && <IconBulb size={24} className="text-amber-500 flex-shrink-0" />}
                   {trend.title}
                 </CardTitle>

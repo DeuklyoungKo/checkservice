@@ -153,16 +153,16 @@ export default async function TrendDetailPage({ params }: PageProps) {
 
     return (
         <div className="min-h-screen bg-background text-foreground font-sans selection:bg-primary/20 transition-all duration-500">
-            {/* Top Navigation */}
-            <nav className="border-b bg-background/80 backdrop-blur-md sticky top-0 z-50">
-                <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-                    <Link href="/">
+            <main className="max-w-7xl mx-auto px-4 py-8">
+                {/* 뒤로가기 + 북마크 */}
+                <div className="flex items-center justify-between mb-8">
+                    <Link href="/trends">
                         <Button variant="ghost" size="sm" className="gap-2 rounded-full hover:bg-muted transition-all font-bold">
                             <IconArrowLeft size={18} />
-                            대시보드로 돌아가기
+                            트렌드 목록으로
                         </Button>
                     </Link>
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-3">
                         <BookmarkButton trendId={trend.id} initialIsBookmarked={!!bookmark} />
                         <Separator orientation="vertical" className="h-6" />
                         <div className="flex items-center gap-2">
@@ -171,9 +171,6 @@ export default async function TrendDetailPage({ params }: PageProps) {
                         </div>
                     </div>
                 </div>
-            </nav>
-
-            <main className="max-w-7xl mx-auto px-4 py-12">
                 {/* Header Section */}
                 <header className="mb-16">
                     <div className="flex flex-wrap items-center gap-3 mb-6">

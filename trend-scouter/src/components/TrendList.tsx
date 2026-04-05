@@ -158,7 +158,7 @@ export function TrendList({ initialTrends }: TrendListProps) {
                                         </div>
                                     </div>
                                 </div>
-                                <CardTitle className="text-2xl group-hover:text-primary transition-colors mb-2 line-clamp-2 min-h-[4rem] flex items-center gap-2">
+                                <CardTitle className="text-xl group-hover:text-primary transition-colors mb-2 line-clamp-3 min-h-[5.5rem] flex items-start gap-2">
                                     {!trend.isUnlocked && <IconBulb size={24} className="text-amber-500 flex-shrink-0" />}
                                     {trend.title}
                                 </CardTitle>
