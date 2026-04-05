@@ -8,6 +8,7 @@ on:
 jobs:
   collect-trends:
     runs-on: ubuntu-latest
+    environment: trendscouter    
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
