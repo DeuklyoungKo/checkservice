@@ -113,8 +113,7 @@ async function collectRSS() {
                         }, { onConflict: 'source,external_id' }).select().single();
 
                         if (trend) {
-                            // Analysis 결과 덮어쓰기 (Upsert 지원을 위해 trend_id 기준 중복 제거)
-                            await supabase.from('analysis').upsert({
+                            const { error: aError } = await supabase.from('analysis').upsert({
                                 trend_id: trend.id,
                                 headline: analysis.headline,
                                 pufe_p: analysis.pufe.p,
@@ -128,6 +127,12 @@ async function collectRSS() {
                                 solution_wizard: analysis.solution_wizard,
                                 ai_model: 'gemini-2.0-flash-lite-stats-v2'
                             }, { onConflict: 'trend_id' });
+
+                            if (aError) {
+                                console.error(`❌ Analysis save failed [${trend.id}]:`, aError.message, aError.code);
+                            } else {
+                                console.log(`💾 Analysis saved: ${analysis.headline?.substring(0, 40)}`);
+                            }
                         }
                     }
                 } catch (itemError) {
