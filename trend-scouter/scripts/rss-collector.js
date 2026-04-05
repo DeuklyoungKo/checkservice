@@ -83,7 +83,7 @@ async function collectRSS() {
         try {
             console.log(`📡 Fetching ${feed.name}...`);
             const data = await parser.parseURL(feed.url);
-            
+
             for (const item of data.items) {
                 try {
                     const impactScore = await calculateImpactScore(item.title, item.contentSnippet || item.content || '');
@@ -99,7 +99,7 @@ async function collectRSS() {
 
                     console.log(`✨ Analyzing: ${item.title.substring(0, 40)}... (Score: ${impactScore})`);
                     const analysis = await analyzeWithAI(item.title, item.content || item.contentSnippet || '', feed.name);
-                    
+
                     if (analysis) {
                         const { data: trend, error: tError } = await supabase.from('trends').upsert({
                             source: feed.name,
