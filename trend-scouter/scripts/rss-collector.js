@@ -55,15 +55,18 @@ async function analyzeWithAI(title, content, source) {
     {
       "headline": "Punchy Korean business headline",
       "pain_category": "Functional" | "Financial" | "Emotional",
-      "pufe": { "p": 0-25, "u": 0-25, "f": 0-25, "e": 0-25, "reasoning": "Detailed reason in Korean" },
-      "summary": "3-sentence Korean analysis",
+      "pufe": { "p": 0-25, "u": 0-25, "f": 0-25, "e": 0-25, "reasoning": "Detailed reason in Korean for each PUFE score" },
+      "summary": "3-sentence Korean market analysis",
+      "gtm_strategy": "Step-by-step Korean Go-to-Market strategy",
+      "tech_stack_suggestion": ["Tech1", "Tech2", "Tech3"],
+      "korea_localization_tips": "Specific tips for Korean market localization",
       "solution_wizard": { "steps": ["step1", "step2", ...], "checklist": ["item1", "item2", ...] }
     }
     `;
 
     try {
         const response = await axios.post(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite-preview:generateContent?key=${geminiApiKey}`,
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${geminiApiKey}`,
             { contents: [{ parts: [{ text: prompt }] }] },
             { headers: { 'User-Agent': USER_AGENT } }
         );
@@ -128,8 +131,11 @@ async function collectRSS() {
                                 pain_category: analysis.pain_category,
                                 summary: analysis.summary,
                                 reasoning: analysis.pufe.reasoning,
+                                gtm_strategy: analysis.gtm_strategy,
+                                tech_stack_suggestion: JSON.stringify(analysis.tech_stack_suggestion),
+                                korea_localization_tips: analysis.korea_localization_tips,
                                 solution_wizard: analysis.solution_wizard,
-                                ai_model: 'gemini-2.0-flash-lite-stats-v2'
+                                ai_model: 'gemini-2.0-flash-lite-stats-v3'
                             }, { onConflict: 'trend_id' });
 
                             if (aError) {
@@ -144,10 +150,13 @@ async function collectRSS() {
                 }
             }
         } catch (error) {
-            console.error(`❌ Source failed: ${feed.name} | ${error.message}`);
+            console.error(`❌ Source failed: ${feed.name} | ${error.message} | ${error.code || ''}`);
         }
     }
     console.log('✅ Collection and Analysis complete.');
 }
 
-collectRSS();
+collectRSS().catch(err => {
+    console.error('CRITICAL ERROR in collectRSS:', err);
+    process.exit(1);
+});

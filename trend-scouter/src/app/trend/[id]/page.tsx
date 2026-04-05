@@ -75,7 +75,7 @@ export default async function TrendDetailPage({ params }: PageProps) {
     // Stats-Only: Use AI-generated headline and summary directly
     const displayTitle = analysis?.headline || "분석 중인 트렌드";
     const mainSummary = analysis?.summary || "현재 비즈니스 분석이 진행 중입니다.";
-    const reasoning = analysis?.summary ? "데이터 기반 분석 근거가 준비되었습니다." : "분석 근거를 생성 중입니다.";
+    const reasoning = analysis?.reasoning || (analysis?.summary ? "데이터 기반 분석 근거가 준비되었습니다." : "분석 근거를 생성 중입니다.");
 
     // 기술 스택 파싱
     const cleanTechStack = (text: string | null): string[] => {
@@ -284,7 +284,7 @@ export default async function TrendDetailPage({ params }: PageProps) {
                                         <h2 className="text-4xl font-black tracking-tighter">한국형 진입 전략 (GTM)</h2>
                                     </div>
                                     <div className="prose prose-lg prose-slate dark:prose-invert max-w-none text-foreground leading-relaxed bg-white dark:bg-slate-900 p-12 sm:p-16 rounded-[64px] border border-orange-200/50 dark:border-orange-900/40 shadow-2xl relative">
-                                        <ReactMarkdown>{formatNarrativeText(analysis?.gtm_strategy)}</ReactMarkdown>
+                                        <ReactMarkdown>{formatNarrativeText(analysis?.gtm_strategy) || "해당 트렌드의 한국 시장 진출 전략을 분석 중입니다."}</ReactMarkdown>
                                     </div>
                                 </section>
 
@@ -371,9 +371,13 @@ export default async function TrendDetailPage({ params }: PageProps) {
                                     추천 기술 스택
                                 </h3>
                                 <div className="flex flex-wrap gap-2">
-                                    {cleanTechStack(analysis?.tech_stack_suggestion).map((item, i) => (
-                                        <span key={i} className="px-3 py-1.5 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-700 dark:text-blue-300 text-sm font-semibold">{item}</span>
-                                    ))}
+                                    {cleanTechStack(analysis?.tech_stack_suggestion).length > 0 ? (
+                                        cleanTechStack(analysis?.tech_stack_suggestion).map((item, i) => (
+                                            <span key={i} className="px-3 py-1.5 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-700 dark:text-blue-300 text-sm font-semibold">{item}</span>
+                                        ))
+                                    ) : (
+                                        <p className="text-sm text-muted-foreground opacity-60">추천 기술 스택을 분석 중입니다.</p>
+                                    )}
                                 </div>
                             </section>
 
@@ -385,12 +389,16 @@ export default async function TrendDetailPage({ params }: PageProps) {
                                     현지화 핵심 포인트
                                 </h3>
                                 <div className="space-y-4">
-                                    {analysis?.korea_localization_tips?.split(/\n{2,}|(?=\d+\.)/).map((para: string, i: number) => (
-                                        <div key={i} className="flex gap-3">
-                                            <span className="mt-1 flex-shrink-0 w-6 h-6 rounded-full bg-purple-500/15 flex items-center justify-center text-xs font-black text-purple-600 dark:text-purple-400">{i + 1}</span>
-                                            <p className="text-sm leading-relaxed text-foreground/80 font-medium">{para.replace(/^\d+\.\s*/, '').trim()}</p>
-                                        </div>
-                                    ))}
+                                    {analysis?.korea_localization_tips ? (
+                                        analysis.korea_localization_tips.split(/\n{2,}|(?=\d+\.)/).map((para: string, i: number) => (
+                                            <div key={i} className="flex gap-3">
+                                                <span className="mt-1 flex-shrink-0 w-6 h-6 rounded-full bg-purple-500/15 flex items-center justify-center text-xs font-black text-purple-600 dark:text-purple-400">{i + 1}</span>
+                                                <p className="text-sm leading-relaxed text-foreground/80 font-medium">{para.replace(/^\d+\.\s*/, '').trim()}</p>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <p className="text-sm text-muted-foreground opacity-60">현지화 포인트를 분석 중입니다.</p>
+                                    )}
                                 </div>
                             </section>
                         </div>
