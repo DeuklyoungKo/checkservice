@@ -18,23 +18,18 @@ export const metadata = {
 export default async function TrendsPage() {
     const supabase = await createClient();
 
-    const { data: rawTrends, error } = await supabase
-        .from("trends")
-        .select(`
-            *,
-            analysis (
-                headline,
-                summary,
-                pufe_p,
-                pufe_u,
-                pufe_f,
-                pufe_e,
-                pufe_total,
-                pain_category
-            )
-        `)
-        .order("created_at", { ascending: false })
+    // 1. 최신 analysis 데이터를 먼저 조회 (관계 조인 대신 수동 매핑)
+    const { data: latestAnalyses } = await supabase
+        .from('analysis')
+        .select('*')
+        .order('created_at', { ascending: false })
         .limit(200);
+
+    // 2. trend_id 목록으로 trends 조회
+    const analysisIds = latestAnalyses?.map(a => a.trend_id) || [];
+    const { data: rawTrends, error } = analysisIds.length > 0
+        ? await supabase.from('trends').select('*').in('id', analysisIds)
+        : { data: [], error: null };
 
     const { data: { user } } = await supabase.auth.getUser();
     const { data: userBookmarks } = user
@@ -44,21 +39,28 @@ export default async function TrendsPage() {
 
     if (error) console.error("Error fetching trends:", error);
 
-    const trends = rawTrends?.map(t => {
-        const analysis = t.analysis?.[0];
-        
-        return {
-            id: t.id,
-            title: analysis?.headline || "분석 중인 트렌드",
-            category: analysis?.pain_category || 'General',
-            score: analysis?.pufe_total || 0,
-            difficulty: analysis?.pufe_u > 18 ? '어려움' : analysis?.pufe_u > 10 ? '보통' : '쉬움',
-            potential: analysis?.pufe_p > 18 ? '높음' : analysis?.pufe_p > 10 ? '보통' : '낮음',
-            description: analysis?.summary || "비즈니스 기회를 분석하고 있습니다...",
-            tags: [t.source],
-            isBookmarked: bookmarkedIds.has(t.id),
-        };
-    }) || [];
+    // 3. analysis 순서 기준으로 매핑
+    const trends = (latestAnalyses || []).reduce<{
+        id: string; title: string; category: string; score: number;
+        difficulty: string; potential: string; description: string;
+        tags: string[]; isBookmarked: boolean; isUnlocked: boolean;
+    }[]>((acc, analysis) => {
+        const trend = rawTrends?.find(t => t.id === analysis.trend_id);
+        if (!trend) return acc;
+        acc.push({
+            id: trend.id,
+            title: analysis.headline || "분석 중인 트렌드",
+            category: analysis.pain_category || 'General',
+            score: analysis.pufe_total || 0,
+            difficulty: analysis.pufe_u > 18 ? '어려움' : analysis.pufe_u > 10 ? '보통' : '쉬움',
+            potential: analysis.pufe_p > 18 ? '높음' : analysis.pufe_p > 10 ? '보통' : '낮음',
+            description: analysis.summary || "비즈니스 기회를 분석하고 있습니다...",
+            tags: [trend.source],
+            isBookmarked: bookmarkedIds.has(trend.id),
+            isUnlocked: analysis.is_unlocked ?? false,
+        });
+        return acc;
+    }, []);
 
     return (
         <div className="min-h-screen bg-background text-foreground font-sans selection:bg-primary/20 transition-all duration-500">
