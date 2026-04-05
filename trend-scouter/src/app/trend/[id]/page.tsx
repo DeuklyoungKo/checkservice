@@ -59,7 +59,10 @@ export default async function TrendDetailPage({ params }: PageProps) {
         notFound();
     }
 
-    const [{ data: analysisData }, { data: bookmark }] = await Promise.all([
+    const [{ data: userProfile }, { data: analysisData }, { data: bookmark }] = await Promise.all([
+        user
+            ? supabase.from('user_profiles').select('is_premium').eq('id', user.id).single()
+            : Promise.resolve({ data: null, error: null }),
         supabase.from('analysis').select('*').eq('trend_id', id).single(),
         user
             ? supabase.from('bookmarks').select('*').eq('user_id', user.id).eq('trend_id', id).single()
@@ -67,7 +70,7 @@ export default async function TrendDetailPage({ params }: PageProps) {
     ]);
 
     const analysis = analysisData;
-    const isUnlocked = analysis?.is_unlocked ?? false;
+    const isUnlocked = (analysis?.is_unlocked || userProfile?.is_premium) ?? false;
 
     // Stats-Only: Use AI-generated headline and summary directly
     const displayTitle = analysis?.headline || "분석 중인 트렌드";
@@ -341,16 +344,18 @@ export default async function TrendDetailPage({ params }: PageProps) {
                             </a>
                         </div>
 
-                        <div className="bg-gradient-to-br from-primary/20 via-primary/10 to-background border-2 border-primary/20 rounded-[48px] p-10 shadow-xl shadow-primary/5 relative overflow-hidden group">
-                            <h3 className="font-black text-2xl mb-6 relative z-10 leading-[1.2] tracking-tighter">
-                                완벽한 타이밍을 <br />놓치지 마세요.
-                            </h3>
-                            <Link href="/premium" className="block w-full">
-                                <Button size="lg" className="w-full bg-primary font-black shadow-lg shadow-primary/40 h-14 rounded-2xl relative z-10 text-lg hover:scale-[1.03] transition-all duration-300">
-                                    Premium 가입하기
-                                </Button>
-                            </Link>
-                        </div>
+                        {!userProfile?.is_premium && (
+                            <div className="bg-gradient-to-br from-primary/20 via-primary/10 to-background border-2 border-primary/20 rounded-[48px] p-10 shadow-xl shadow-primary/5 relative overflow-hidden group">
+                                <h3 className="font-black text-2xl mb-6 relative z-10 leading-[1.2] tracking-tighter">
+                                    완벽한 타이밍을 <br />놓치지 마세요.
+                                </h3>
+                                <Link href="/premium" className="block w-full">
+                                    <Button size="lg" className="w-full bg-primary font-black shadow-lg shadow-primary/40 h-14 rounded-2xl relative z-10 text-lg hover:scale-[1.03] transition-all duration-300">
+                                        Premium 가입하기
+                                    </Button>
+                                </Link>
+                            </div>
+                        )}
                     </aside>
                 </div>
 

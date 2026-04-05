@@ -46,11 +46,17 @@ export default async function Home() {
     console.error("Error fetching trends:", error);
   }
 
-  // 3. 북마크 조회
-  const { data: userBookmarks } = user
-    ? await supabase.from('bookmarks').select('trend_id').eq('user_id', user.id)
-    : { data: [] };
+  // 3. 프리미엄 정보 및 북마크 조회
+  const [{ data: userProfile }, { data: userBookmarks }] = await Promise.all([
+    user
+      ? supabase.from('user_profiles').select('is_premium').eq('id', user.id).single()
+      : Promise.resolve({ data: null, error: null }),
+    user
+      ? supabase.from('bookmarks').select('trend_id').eq('user_id', user.id)
+      : Promise.resolve({ data: [] })
+  ]);
 
+  const userIsPremium = userProfile?.is_premium || false;
   const bookmarkedIds = new Set(userBookmarks?.map(b => b.trend_id) || []);
 
   // 4. 매핑합니다.
@@ -68,11 +74,11 @@ export default async function Home() {
       category: analysis.pain_category || 'General',
       score: analysis.pufe_total || 0,
       difficulty: analysis.pufe_u > 18 ? '어려움' : analysis.pufe_u > 10 ? '보통' : '쉬움',
-      potential: analysis.pufe_p > 18 ? '높음' : analysis.pufe_p > 10 ? '보통' : '낮음',
-      description: analysis.summary || "비즈니스 기회를 분석하고 있습니다...",
-      tags: [trend.source],
+      potential: analysis.pufe_p > 18 ? '매우 높음' : analysis.pufe_p > 12 ? '높음' : '보통',
+      description: analysis.summary || "현재 비즈니스 분석이 진행 중입니다.",
+      tags: [trend.source, analysis.pain_category || 'General'].filter(Boolean),
       isBookmarked: bookmarkedIds.has(trend.id),
-      isUnlocked: analysis.is_unlocked ?? false,
+      isUnlocked: analysis.is_unlocked || userIsPremium,
     });
     return acc;
   }, []);

@@ -16,6 +16,13 @@ export default async function GlobalNav() {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
+    // 프리미엄 상태 확인
+    const { data: profile } = user
+        ? await supabase.from('user_profiles').select('is_premium').eq('id', user.id).single()
+        : { data: null };
+
+    const isPremium = profile?.is_premium || false;
+
     return (
         <nav className="border-b bg-background/80 backdrop-blur-md sticky top-0 z-50">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -50,7 +57,7 @@ export default async function GlobalNav() {
                         {user ? (
                             <div className="flex items-center gap-3">
                                 <div className="flex items-center gap-2 px-3 py-1.5 bg-muted rounded-full">
-                                    <IconUser size={16} className="text-primary" />
+                                    {isPremium ? <IconCrown size={16} className="text-amber-500" /> : <IconUser size={16} className="text-primary" />}
                                     <span className="text-xs font-bold truncate max-w-[120px]">
                                         {user.email?.split('@')[0]}
                                     </span>
@@ -75,12 +82,14 @@ export default async function GlobalNav() {
                             </Link>
                         )}
 
-                        <Link href="/premium">
-                            <Button size="sm" className="gap-2 rounded-full font-bold shadow-md shadow-primary/10">
-                                <IconCrown size={18} />
-                                Premium 가입
-                            </Button>
-                        </Link>
+                        {!isPremium && (
+                            <Link href="/premium">
+                                <Button size="sm" className="gap-2 rounded-full font-bold shadow-md shadow-primary/10">
+                                    <IconCrown size={18} />
+                                    Premium 가입
+                                </Button>
+                            </Link>
+                        )}
                     </div>
 
                     {/* Mobile Menu */}
@@ -98,12 +107,14 @@ export default async function GlobalNav() {
                                 </Button>
                             </Link>
                         )}
-                        <Link href="/premium">
-                            <Button size="sm" className="gap-1 rounded-full font-bold text-xs">
-                                <IconCrown size={14} />
-                                Premium
-                            </Button>
-                        </Link>
+                        {!isPremium && (
+                            <Link href="/premium">
+                                <Button size="sm" className="gap-1 rounded-full font-bold text-xs">
+                                    <IconCrown size={14} />
+                                    Premium
+                                </Button>
+                            </Link>
+                        )}
                     </div>
                 </div>
             </div>
