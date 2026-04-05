@@ -24,6 +24,12 @@ jobs:
           cd trend-scouter
           npm install
 
+      - name: Check Secrets
+        run: |
+          echo "SUPABASE_URL set: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL != '' }}"
+          echo "SERVICE_KEY set: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY != '' }}"
+          echo "GEMINI_KEY set: ${{ secrets.GEMINI_API_KEY != '' }}"
+
       - name: Run RSS Collector
         run: |
           cd trend-scouter
