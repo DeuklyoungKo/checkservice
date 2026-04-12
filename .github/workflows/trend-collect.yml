@@ -30,6 +30,8 @@ jobs:
           echo "SUPABASE_URL set: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL != '' }}"
           echo "SERVICE_KEY set: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY != '' }}"
           echo "GEMINI_KEY set: ${{ secrets.GEMINI_API_KEY != '' }}"
+          echo "NAVER_CLIENT_ID set: ${{ secrets.NAVER_CLIENT_ID != '' }}"
+          echo "NAVER_CLIENT_SECRET set: ${{ secrets.NAVER_CLIENT_SECRET != '' }}"
 
       - name: Run RSS Collector
         run: |
@@ -39,3 +41,5 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          NAVER_CLIENT_ID: ${{ secrets.NAVER_CLIENT_ID }}
+          NAVER_CLIENT_SECRET: ${{ secrets.NAVER_CLIENT_SECRET }}

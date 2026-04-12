@@ -3,12 +3,19 @@ const axios = require('axios');
 const { createClient } = require('@supabase/supabase-js');
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '../.env.local') });
+const { getKoreanDemandSignal, getFullKoreanTrendSnapshot } = require('./naver-datalab');
 
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 const geminiApiKey = process.env.GEMINI_API_KEY;
+const naverClientId = process.env.NAVER_CLIENT_ID;
+const naverClientSecret = process.env.NAVER_CLIENT_SECRET;
 
 console.log('🔑 Gemini API Key Status:', geminiApiKey ? `Loaded (${geminiApiKey.substring(0, 5)}...)` : '❌ NOT FOUND');
+console.log('🔑 Naver DataLab Status:', naverClientId ? `Loaded (${naverClientId.substring(0, 4)}...)` : '⚠️  NOT SET (교차검증 비활성화)');
+
+// DataLab 스냅샷 캐시 (한 번 조회 후 재사용 — API 호출 최소화)
+let datalabSnapshot = null;
 
 const parser = new Parser({
     headers: {
@@ -18,21 +25,29 @@ const parser = new Parser({
     },
 });
 
-// 수집 대상 RSS 피드 리스트 (HNRSS 및 최신 URL 반영)
+// 수집 대상 RSS 피드 리스트 (글로벌 Tier 1 + 한국 Tier 2)
 const RSS_FEEDS = [
-    { name: 'indie-hackers', url: 'https://hnrss.org/newest?q=Indie+Hackers&points=20' },
-    { name: 'reddit-sideproject', url: 'https://www.reddit.com/r/sideproject/.rss' },
-    { name: 'product-hunt', url: 'https://www.producthunt.com/feed' },
-    { name: 'hacker-news', url: 'https://hnrss.org/newest?q=SaaS+OR+Automation&points=20' },
-    { name: 'dev-to', url: 'https://dev.to/feed' },
-    { name: 'zdnet-korea', url: 'https://zdnet.co.kr/feed' }
+    // --- [Tier 1] 글로벌 소스 ---
+    { name: 'indie-hackers',     url: 'https://hnrss.org/newest?q=Indie+Hackers&points=20',        isKorean: false },
+    { name: 'reddit-sideproject',url: 'https://www.reddit.com/r/sideproject/.rss',                  isKorean: false },
+    { name: 'product-hunt',      url: 'https://www.producthunt.com/feed',                           isKorean: false },
+    { name: 'hacker-news',       url: 'https://hnrss.org/newest?q=SaaS+OR+Automation&points=20',   isKorean: false },
+    { name: 'dev-to',            url: 'https://dev.to/feed',                                        isKorean: false },
+    // --- [Tier 2] 한국 소스 (Korea Data Pipeline - 단계적 추가) ---
+    { name: 'zdnet-korea',       url: 'https://zdnet.co.kr/feed',                                   isKorean: true  },
+    { name: 'geek-news',         url: 'https://news.hada.io/rss/news',                              isKorean: true  }, // 한국 개발자 커뮤니티 인기 토픽
 ];
 
 // 브라우저용 User-Agent (차단 우회용)
 const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36';
 
-// 분석 대상 핵심 키워드
-const TARGET_KEYWORDS = ['AI', '자동화', 'SaaS', '노코드', '수익화', 'ChatGPT', 'Automation', 'Revenue', 'Startup', 'No-code', 'OpenAI', 'Gemini'];
+// 분석 대상 핵심 키워드 (글로벌 + 한국)
+const TARGET_KEYWORDS = [
+    // 글로벌
+    'AI', 'SaaS', 'Automation', 'Revenue', 'Startup', 'No-code', 'OpenAI', 'Gemini', 'ChatGPT',
+    // 한국어 (GeekNews, ZDNet Korea 대응)
+    '자동화', '노코드', '수익화', 'AI', '스타트업', '창업', '서비스', '앱', '플랫폼', 'SaaS'
+];
 
 async function calculateImpactScore(title, content) {
     let score = 0;
@@ -45,9 +60,17 @@ async function calculateImpactScore(title, content) {
     return score;
 }
 
-async function analyzeWithAI(title, content, source) {
+async function analyzeWithAI(title, content, source, isKorean = false, koreaDemand = null) {
+    const koreanHint = isKorean
+        ? `\n    ※ 이 데이터는 한국 소스(${source})에서 수집된 콘텐츠입니다. 한국 시장 맥락을 최우선으로 분석하세요.`
+        : `\n    ※ 이 데이터는 글로벌 소스(${source})에서 수집되었습니다. 한국 시장에 이식 가능한 관점으로 분석하세요.`;
+
+    const datalabHint = koreaDemand
+        ? `\n    [한국 네이버 검색 수요 데이터 - DataLab 교차검증]\n    - 관련 키워드 그룹: "${koreaDemand.group}"\n    - 최신 검색 지수: ${koreaDemand.ratio}/100 (0=거의 없음, 100=최고점)\n    - 전월 대비 성장률: ${koreaDemand.growth > 0 ? '+' : ''}${koreaDemand.growth}%\n    ※ 이 수요 데이터를 기반으로 한국 시장 실제 관심도를 PUFE 점수에 반영하고, summary에 구체적으로 언급하세요.`
+        : '';
+
     const prompt = `
-    Analyze this trend from ${source}.
+    Analyze this trend from ${source}.${koreanHint}${datalabHint}
     Title: "${title}"
     Content: "${content.substring(0, 1000)}"
 
@@ -86,6 +109,22 @@ async function analyzeWithAI(title, content, source) {
 async function collectRSS() {
     console.log('🚀 Starting Robust Stats-Only RSS Collection...');
 
+    // 네이버 DataLab 전체 스냅샷 선조회 (API 호출 1번으로 캐시)
+    if (naverClientId && naverClientSecret) {
+        console.log('📊 [DataLab] 한국 검색 트렌드 스냅샷 조회 중...');
+        datalabSnapshot = await getFullKoreanTrendSnapshot(naverClientId, naverClientSecret);
+        if (datalabSnapshot) {
+            const topKeywords = Object.entries(datalabSnapshot)
+                .sort((a, b) => b[1].ratio - a[1].ratio)
+                .slice(0, 3)
+                .map(([k, v]) => `${k}(${v.ratio})`)
+                .join(', ');
+            console.log(`✅ [DataLab] 스냅샷 로드 완료. 상위 키워드: ${topKeywords}`);
+        }
+    } else {
+        console.log('⏩ [DataLab] API 키 없음 — 교차검증 스킵 (NAVER_CLIENT_ID, NAVER_CLIENT_SECRET 설정 필요)');
+    }
+
     for (const feed of RSS_FEEDS) {
         try {
             console.log(`📡 Fetching ${feed.name}...`);
@@ -94,7 +133,9 @@ async function collectRSS() {
             for (const item of data.items) {
                 try {
                     const impactScore = await calculateImpactScore(item.title, item.contentSnippet || item.content || '');
-                    if (impactScore < 10) continue; // 최소 기준점
+                    // 한국 소스는 필터 기준을 낮춤 (한국어 키워드가 적어 점수가 낮게 나올 수 있음)
+                    const minScore = feed.isKorean ? 5 : 10;
+                    if (impactScore < minScore) continue;
 
                     // 중복 체크 (External ID 기준)
                     const externalId = item.guid || item.id || item.link;
@@ -104,8 +145,17 @@ async function collectRSS() {
                         continue; // 이미 처리된 고득점 아이템 스킵
                     }
 
-                    console.log(`✨ Analyzing: ${item.title.substring(0, 40)}... (Score: ${impactScore})`);
-                    const analysis = await analyzeWithAI(item.title, item.content || item.contentSnippet || '', feed.name);
+                    // 네이버 DataLab 교차검증 — 해당 아이템의 한국 수요 신호 추출
+                    let koreaDemand = null;
+                    if (naverClientId && naverClientSecret) {
+                        koreaDemand = await getKoreanDemandSignal(item.title, naverClientId, naverClientSecret);
+                        if (koreaDemand) {
+                            console.log(`   📊 [DataLab] "${koreaDemand.group}" 지수: ${koreaDemand.ratio}/100, 성장률: ${koreaDemand.growth > 0 ? '+' : ''}${koreaDemand.growth}%`);
+                        }
+                    }
+
+                    console.log(`✨ [${feed.isKorean ? '🇰🇷 KR' : '🌐 GL'}] Analyzing: ${item.title.substring(0, 40)}... (Score: ${impactScore})`);
+                    const analysis = await analyzeWithAI(item.title, item.content || item.contentSnippet || '', feed.name, feed.isKorean, koreaDemand);
 
                     if (analysis) {
                         const { data: trend, error: tError } = await supabase.from('trends').upsert({
@@ -115,7 +165,14 @@ async function collectRSS() {
                             impact_score: impactScore,
                             stats_data: {
                                 keyword_hits: TARGET_KEYWORDS.filter(k => (item.title + (item.content || '')).toLowerCase().includes(k.toLowerCase())),
-                                original_title: item.title
+                                original_title: item.title,
+                                // 네이버 DataLab 교차검증 데이터
+                                korea_demand: koreaDemand ? {
+                                    group: koreaDemand.group,
+                                    ratio: koreaDemand.ratio,
+                                    growth: koreaDemand.growth,
+                                    period: koreaDemand.period,
+                                } : null,
                             }
                         }, { onConflict: 'source,external_id' }).select().single();
 
