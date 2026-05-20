@@ -30,7 +30,8 @@ export default async function TrendsPage() {
                 pufe_f,
                 pufe_e,
                 pufe_total,
-                pain_category
+                pain_category,
+                is_unlocked
             )
         `)
         .order("created_at", { ascending: false })
@@ -45,7 +46,7 @@ export default async function TrendsPage() {
     if (error) console.error("Error fetching trends:", error);
 
     const trends = rawTrends?.map(t => {
-        const analysis = t.analysis?.[0];
+        const analysis = Array.isArray(t.analysis) ? t.analysis[0] : t.analysis;
         
         return {
             id: t.id,
@@ -57,6 +58,7 @@ export default async function TrendsPage() {
             description: analysis?.summary || "비즈니스 기회를 분석하고 있습니다...",
             tags: [t.source],
             isBookmarked: bookmarkedIds.has(t.id),
+            isUnlocked: analysis?.is_unlocked ?? false,
         };
     }) || [];
 
