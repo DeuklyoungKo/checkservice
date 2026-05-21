@@ -99,10 +99,33 @@ export default async function TrendDetailPage({ params }: PageProps) {
             .filter(Boolean);
     };
 
-    // 문장 단위 줄바꿈 최적화
+    // 문장 단위 줄바꿈 최적화 및 배열 형태 문자열 대응
     const formatNarrativeText = (text: string | null) => {
         if (!text) return "";
         let processed = text.trim();
+        
+        // AI가 문자열 배열 (["A", "B"]) 형태로 응답한 경우 파싱
+        if (processed.startsWith('[') && processed.endsWith(']')) {
+            try {
+                const parsed = JSON.parse(processed);
+                if (Array.isArray(parsed)) {
+                    // 항목별로 번호를 매기거나 줄바꿈을 적용
+                    return parsed
+                        .map((item, index) => {
+                            let str = typeof item === 'string' ? item.trim() : JSON.stringify(item);
+                            // 이미 번호가 붙어있지 않다면 번호를 붙여줌 (선택사항)
+                            // if (!/^\d+\./.test(str)) str = `${index + 1}. ${str}`;
+                            // 번호 없이 항목별로 불릿 포인트처럼 보이게 처리
+                            if (str.startsWith('- ')) return str;
+                            return `- ${str}`;
+                        })
+                        .join('\n\n');
+                }
+            } catch {
+                // 파싱 실패 시 일반 텍스트로 처리
+            }
+        }
+
         if (processed.includes('\n\n')) return processed;
         if (/\d+\./.test(processed)) {
             return processed
@@ -124,6 +147,17 @@ export default async function TrendDetailPage({ params }: PageProps) {
             groupedParagraphs.push(paragraph);
         }
         return groupedParagraphs.join('\n\n');
+    };
+
+    // PUFE 점수 산정 근거 전용 텍스트 포맷터 (P, U, F, E 각각 줄바꿈 처리)
+    const formatReasoningText = (text: string | null) => {
+        if (!text) return "";
+        let processed = text.trim();
+        // P (Problem):, U (Urgency): 등의 패턴 앞에 줄바꿈을 넣고 굵게 처리
+        processed = processed.replace(/([PUFE]\s*\([A-Za-z]+\)\s*:)/g, '\n\n**$1**');
+        // 만약 괄호 없이 P:, U:, F:, E: 로만 왔을 경우 대비
+        processed = processed.replace(/(?<![A-Za-z])([PUFE]\s*:)/g, '\n\n**$1**');
+        return processed.trim();
     };
 
     // Unlock CTA Component
@@ -271,7 +305,7 @@ export default async function TrendDetailPage({ params }: PageProps) {
                                         <h2 className="text-4xl font-black tracking-tighter">점수 부여 상세 근거</h2>
                                     </div>
                                     <div className="prose prose-lg prose-slate dark:prose-invert max-w-none text-foreground leading-relaxed bg-background/60 p-10 rounded-[40px] border border-muted shadow-inner">
-                                        <ReactMarkdown>{formatNarrativeText(reasoning)}</ReactMarkdown>
+                                        <ReactMarkdown>{formatReasoningText(reasoning)}</ReactMarkdown>
                                     </div>
                                 </section>
 
