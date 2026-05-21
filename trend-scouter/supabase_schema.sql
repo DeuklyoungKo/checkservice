@@ -28,13 +28,15 @@ CREATE TABLE public.analysis (
     
     pain_category TEXT, -- 'Functional', 'Financial', 'Emotional'
     summary TEXT,
+    reasoning TEXT,
     business_model TEXT,
     gtm_strategy TEXT, -- Go-to-Market strategy
     tech_stack_suggestion TEXT,
     korea_localization_tips TEXT,
     solution_wizard JSONB, -- AI-generated solution steps/checklists
     ai_model TEXT, -- Which model performed the analysis
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+    UNIQUE(trend_id)           -- upsert(onConflict: 'trend_id') 동작에 필수
 );
 
 -- 3. Users Table (Extended from auth.users)

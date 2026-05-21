@@ -94,12 +94,7 @@ export default async function WorkspacePage() {
                         <span className="text-xl font-black tracking-tight text-primary">Trend Intelligence</span>
                     </Link>
                     <div className="flex items-center gap-4">
-                        <Link href="/wizard">
-                            <Button size="sm" className="gap-2 rounded-full font-bold bg-primary/10 text-primary hover:bg-primary/20 border-none">
-                                <IconSparkles size={16} />
-                                아이디어 분석하기
-                            </Button>
-                        </Link>
+                        {/* [PHASE 2 - 차후 오픈 예정] 아이디어 컨버터 위저드 버튼 - 수익화 검증 완료 후 재활성화 */}
                         <Link href="/">
                             <Button variant="ghost" size="sm" className="gap-2 rounded-full font-bold">
                                 <IconArrowLeft size={18} />
@@ -141,10 +136,8 @@ export default async function WorkspacePage() {
                             
                             {myIdeas.length === 0 ? (
                                 <div className="bg-muted/10 rounded-[48px] border-4 border-dashed border-muted/50 py-16 text-center">
-                                    <p className="text-muted-foreground font-bold mb-6">아직 직접 분석한 아이디어가 없습니다.</p>
-                                    <Link href="/wizard">
-                                        <Button className="rounded-2xl font-black">첫 아이디어 분석하기</Button>
-                                    </Link>
+                                    <p className="text-muted-foreground font-bold">아직 직접 분석한 아이디어가 없습니다.</p>
+                                    {/* [PHASE 2 - 차후 오픈 예정] 아이디어 분석하기 CTA - 수익화 검증 완료 후 재활성화 */}
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -167,13 +160,7 @@ export default async function WorkspacePage() {
                                                     {idea.description}
                                                 </CardDescription>
                                             </CardHeader>
-                                            <CardFooter className="mt-auto p-4 bg-muted/30">
-                                                <Link href={`/wizard?id=${idea.id}`} className="w-full">
-                                                    <Button variant="ghost" className="w-full rounded-2xl font-black bg-white border-2 border-muted shadow-sm hover:bg-primary hover:text-white transition-all">
-                                                        {idea.isUnlocked ? '전체 리포트 열람' : '분석 결과 확인'}
-                                                    </Button>
-                                                </Link>
-                                            </CardFooter>
+                                            {/* [PHASE 2 - 차후 오픈 예정] 아이디어 카드 열람 버튼 - 수익화 검증 완료 후 재활성화 */}
                                         </Card>
                                     ))}
                                 </div>

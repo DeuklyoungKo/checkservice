@@ -46,11 +46,17 @@ export default async function Home() {
     console.error("Error fetching trends:", error);
   }
 
-  // 3. 북마크 조회
-  const { data: userBookmarks } = user
-    ? await supabase.from('bookmarks').select('trend_id').eq('user_id', user.id)
-    : { data: [] };
+  // 3. 프리미엄 정보 및 북마크 조회
+  const [{ data: userProfile }, { data: userBookmarks }] = await Promise.all([
+    user
+      ? supabase.from('user_profiles').select('is_premium').eq('id', user.id).single()
+      : Promise.resolve({ data: null, error: null }),
+    user
+      ? supabase.from('bookmarks').select('trend_id').eq('user_id', user.id)
+      : Promise.resolve({ data: [] })
+  ]);
 
+  const userIsPremium = userProfile?.is_premium || false;
   const bookmarkedIds = new Set(userBookmarks?.map(b => b.trend_id) || []);
 
   // 4. 매핑합니다.
@@ -68,78 +74,17 @@ export default async function Home() {
       category: analysis.pain_category || 'General',
       score: analysis.pufe_total || 0,
       difficulty: analysis.pufe_u > 18 ? '어려움' : analysis.pufe_u > 10 ? '보통' : '쉬움',
-      potential: analysis.pufe_p > 18 ? '높음' : analysis.pufe_p > 10 ? '보통' : '낮음',
-      description: analysis.summary || "비즈니스 기회를 분석하고 있습니다...",
-      tags: [trend.source],
+      potential: analysis.pufe_p > 18 ? '매우 높음' : analysis.pufe_p > 12 ? '높음' : '보통',
+      description: analysis.summary || "현재 비즈니스 분석이 진행 중입니다.",
+      tags: [trend.source, analysis.pain_category || 'General'].filter(Boolean),
       isBookmarked: bookmarkedIds.has(trend.id),
-      isUnlocked: analysis.is_unlocked ?? false,
+      isUnlocked: analysis.is_unlocked || userIsPremium,
     });
     return acc;
   }, []);
 
   return (
     <div className="min-h-screen bg-background text-foreground font-sans selection:bg-primary/20 transition-all duration-500">
-      {/* Navigation */}
-      <nav className="border-b bg-background/80 backdrop-blur-md sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16 items-center">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
-                <IconBulb className="text-primary-foreground w-6 h-6" />
-              </div>
-              <span className="text-xl font-bold tracking-tight text-primary">Trend Intelligence</span>
-            </div>
-
-            <div className="hidden md:flex items-center gap-6">
-              {user && (
-                <Link href="/workspace">
-                  <Button variant="ghost" size="sm" className="gap-2">
-                    <IconBookmarkFilled size={18} className="text-primary" />
-                    워크스페이스
-                  </Button>
-                </Link>
-              )}
-              <Link href="/trends">
-                <Button variant="ghost" size="sm" className="gap-2">
-                  <IconReportAnalytics size={18} />
-                  전체 트렌드
-                </Button>
-              </Link>
-
-              <Separator orientation="vertical" className="h-6 mx-2" />
-
-              {user ? (
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-2 px-3 py-1.5 bg-muted rounded-full">
-                    <IconUser size={16} className="text-primary" />
-                    <span className="text-xs font-bold truncate max-w-[120px]">{user.email?.split('@')[0]}</span>
-                  </div>
-                  <form action={signOut}>
-                    <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-destructive transition-colors">
-                      <IconLogout size={18} />
-                      로그아웃
-                    </Button>
-                  </form>
-                </div>
-              ) : (
-                <Link href="/login">
-                  <Button variant="ghost" size="sm" className="gap-2">
-                    <IconUser size={18} />
-                    로그인
-                  </Button>
-                </Link>
-              )}
-
-                <Link href="/premium">
-                  <Button size="sm" className="gap-2 rounded-full font-bold shadow-md shadow-primary/10">
-                    <IconCrown size={18} />
-                    Premium 가입
-                  </Button>
-                </Link>
-            </div>
-          </div>
-        </div>
-      </nav>
 
       {/* Hero Section */}
       <header className="relative overflow-hidden pt-20 pb-16 sm:pt-32 sm:pb-24 border-b bg-muted/30">

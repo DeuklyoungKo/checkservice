@@ -18,71 +18,60 @@ export const metadata = {
 export default async function TrendsPage() {
     const supabase = await createClient();
 
-    const { data: rawTrends, error } = await supabase
-        .from("trends")
-        .select(`
-            *,
-            analysis (
-                headline,
-                summary,
-                pufe_p,
-                pufe_u,
-                pufe_f,
-                pufe_e,
-                pufe_total,
-                pain_category,
-                is_unlocked
-            )
-        `)
-        .order("created_at", { ascending: false })
+    // 1. 최신 analysis 데이터를 먼저 조회 (관계 조인 대신 수동 매핑)
+    const { data: latestAnalyses } = await supabase
+        .from('analysis')
+        .select('*')
+        .order('created_at', { ascending: false })
         .limit(200);
 
+    // 2. trend_id 목록으로 trends 조회
+    const analysisIds = latestAnalyses?.map(a => a.trend_id) || [];
+    const { data: rawTrends, error } = analysisIds.length > 0
+        ? await supabase.from('trends').select('*').in('id', analysisIds)
+        : { data: [], error: null };
+
     const { data: { user } } = await supabase.auth.getUser();
-    const { data: userBookmarks } = user
-        ? await supabase.from("bookmarks").select("trend_id").eq("user_id", user.id)
-        : { data: [] };
+
+    const [{ data: userProfile }, { data: userBookmarks }] = await Promise.all([
+        user
+            ? supabase.from('user_profiles').select('is_premium').eq('id', user.id).single()
+            : Promise.resolve({ data: null, error: null }),
+        user
+            ? supabase.from('bookmarks').select('trend_id').eq('user_id', user.id)
+            : Promise.resolve({ data: [] })
+    ]);
+
+    const userIsPremium = userProfile?.is_premium || false;
     const bookmarkedIds = new Set(userBookmarks?.map(b => b.trend_id) || []);
 
     if (error) console.error("Error fetching trends:", error);
 
-    const trends = rawTrends?.map(t => {
-        const analysis = Array.isArray(t.analysis) ? t.analysis[0] : t.analysis;
-        
-        return {
-            id: t.id,
-            title: analysis?.headline || "분석 중인 트렌드",
-            category: analysis?.pain_category || 'General',
-            score: analysis?.pufe_total || 0,
-            difficulty: analysis?.pufe_u > 18 ? '어려움' : analysis?.pufe_u > 10 ? '보통' : '쉬움',
-            potential: analysis?.pufe_p > 18 ? '높음' : analysis?.pufe_p > 10 ? '보통' : '낮음',
-            description: analysis?.summary || "비즈니스 기회를 분석하고 있습니다...",
-            tags: [t.source],
-            isBookmarked: bookmarkedIds.has(t.id),
-            isUnlocked: analysis?.is_unlocked ?? false,
-        };
-    }) || [];
+    // 3. analysis 순서 기준으로 매핑
+    const trends = (latestAnalyses || []).reduce<{
+        id: string; title: string; category: string; score: number;
+        difficulty: string; potential: string; description: string;
+        tags: string[]; isBookmarked: boolean; isUnlocked: boolean;
+    }[]>((acc, analysis) => {
+        const trend = rawTrends?.find(t => t.id === analysis.trend_id);
+        if (!trend) return acc;
+        acc.push({
+            id: trend.id,
+            title: analysis.headline || "분석 중인 트렌드",
+            category: analysis.pain_category || 'General',
+            score: analysis.pufe_total || 0,
+            difficulty: analysis.pufe_u > 18 ? '어려움' : analysis.pufe_u > 10 ? '보통' : '쉬움',
+            potential: analysis.pufe_p > 18 ? '매우 높음' : analysis.pufe_p > 12 ? '높음' : '보통',
+            description: analysis.summary || "현재 비즈니스 분석이 진행 중입니다.",
+            tags: [trend.source, analysis.pain_category || 'General'].filter(Boolean),
+            isBookmarked: bookmarkedIds.has(trend.id),
+            isUnlocked: analysis.is_unlocked || userIsPremium,
+        });
+        return acc;
+    }, []);
 
     return (
         <div className="min-h-screen bg-background text-foreground font-sans selection:bg-primary/20 transition-all duration-500">
-            {/* Navigation */}
-            <nav className="border-b bg-background/80 backdrop-blur-md sticky top-0 z-50">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex justify-between h-16 items-center">
-                        <Link href="/" className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
-                                <IconBulb className="text-primary-foreground w-6 h-6" />
-                            </div>
-                            <span className="text-xl font-bold tracking-tight text-primary">Trend Intelligence</span>
-                        </Link>
-                        <Link href="/">
-                            <Button variant="ghost" size="sm" className="gap-2 font-bold">
-                                <IconArrowLeft size={16} />
-                                메인으로
-                            </Button>
-                        </Link>
-                    </div>
-                </div>
-            </nav>
 
             {/* Hero */}
             <header className="relative overflow-hidden pt-16 pb-12 border-b bg-muted/20">
