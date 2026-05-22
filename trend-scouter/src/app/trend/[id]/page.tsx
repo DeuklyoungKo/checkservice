@@ -16,7 +16,8 @@ import {
     IconTrendingUp,
     IconRocket,
     IconTools,
-    IconWorld
+    IconWorld,
+    IconInfoCircle
 } from "@tabler/icons-react";
 import { BookmarkButton } from "@/components/BookmarkButton";
 
@@ -227,7 +228,14 @@ export default async function TrendDetailPage({ params }: PageProps) {
                         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                             {/* Pain */}
                             <div className="bg-background/80 p-6 rounded-[40px] border border-muted/50 shadow-sm flex flex-col items-center justify-center text-center">
-                                <span className="text-[10px] text-primary/60 font-black uppercase tracking-widest mb-2">Pain (고통)</span>
+                                <div className="group relative flex items-center gap-1 mb-2">
+                                    <span className="text-[10px] text-primary/60 font-black uppercase tracking-widest">Pain (고통)</span>
+                                    <IconInfoCircle size={12} className="text-primary/40 cursor-help" />
+                                    <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 opacity-0 scale-95 transition-all group-hover:opacity-100 group-hover:scale-100 bg-foreground text-background text-xs font-bold rounded-xl p-3 shadow-xl z-50 text-center leading-relaxed">
+                                        사용자 결핍의 깊이.<br />(기능적/재정적/감정적)
+                                        <div className="absolute top-full left-1/2 -translate-x-1/2 border-[6px] border-transparent border-t-foreground"></div>
+                                    </div>
+                                </div>
                                 <div className="flex items-baseline gap-1">
                                     <span className="text-4xl font-black text-primary">{analysis?.pufe_p || 0}</span>
                                     <span className="text-[10px] font-bold text-primary/30">/ 25</span>
@@ -235,7 +243,14 @@ export default async function TrendDetailPage({ params }: PageProps) {
                             </div>
                             {/* Urgency */}
                             <div className="bg-background/80 p-6 rounded-[40px] border border-muted/50 shadow-sm flex flex-col items-center justify-center text-center">
-                                <span className="text-[10px] text-orange-500/60 font-black uppercase tracking-widest mb-2">Urgency (긴급)</span>
+                                <div className="group relative flex items-center gap-1 mb-2">
+                                    <span className="text-[10px] text-orange-500/60 font-black uppercase tracking-widest">Urgency (긴급)</span>
+                                    <IconInfoCircle size={12} className="text-orange-500/40 cursor-help" />
+                                    <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 opacity-0 scale-95 transition-all group-hover:opacity-100 group-hover:scale-100 bg-foreground text-background text-xs font-bold rounded-xl p-3 shadow-xl z-50 text-center leading-relaxed">
+                                        지금 당장 해결해야 하는 정도.
+                                        <div className="absolute top-full left-1/2 -translate-x-1/2 border-[6px] border-transparent border-t-foreground"></div>
+                                    </div>
+                                </div>
                                 <div className="flex items-baseline gap-1">
                                     <span className="text-4xl font-black text-orange-500">{analysis?.pufe_u || 0}</span>
                                     <span className="text-[10px] font-bold text-orange-500/30">/ 25</span>
@@ -243,7 +258,14 @@ export default async function TrendDetailPage({ params }: PageProps) {
                             </div>
                             {/* Frequency */}
                             <div className="bg-background/80 p-6 rounded-[40px] border border-muted/50 shadow-sm flex flex-col items-center justify-center text-center">
-                                <span className="text-[10px] text-blue-500/60 font-black uppercase tracking-widest mb-2">Frequency (빈도)</span>
+                                <div className="group relative flex items-center gap-1 mb-2">
+                                    <span className="text-[10px] text-blue-500/60 font-black uppercase tracking-widest">Frequency (빈도)</span>
+                                    <IconInfoCircle size={12} className="text-blue-500/40 cursor-help" />
+                                    <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 opacity-0 scale-95 transition-all group-hover:opacity-100 group-hover:scale-100 bg-foreground text-background text-xs font-bold rounded-xl p-3 shadow-xl z-50 text-center leading-relaxed">
+                                        얼마나 자주 발생하는 문제인가.
+                                        <div className="absolute top-full left-1/2 -translate-x-1/2 border-[6px] border-transparent border-t-foreground"></div>
+                                    </div>
+                                </div>
                                 <div className="flex items-baseline gap-1">
                                     <span className="text-4xl font-black text-blue-500">{analysis?.pufe_f || 0}</span>
                                     <span className="text-[10px] font-bold text-blue-500/30">/ 25</span>
@@ -251,7 +273,14 @@ export default async function TrendDetailPage({ params }: PageProps) {
                             </div>
                             {/* Existing Solution */}
                             <div className="bg-background/80 p-6 rounded-[40px] border border-muted/50 shadow-sm flex flex-col items-center justify-center text-center">
-                                <span className="text-[10px] text-green-500/60 font-black uppercase tracking-widest mb-2">Existing (대안)</span>
+                                <div className="group relative flex items-center gap-1 mb-2">
+                                    <span className="text-[10px] text-green-500/60 font-black uppercase tracking-widest">Existing (대안)</span>
+                                    <IconInfoCircle size={12} className="text-green-500/40 cursor-help" />
+                                    <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 opacity-0 scale-95 transition-all group-hover:opacity-100 group-hover:scale-100 bg-foreground text-background text-xs font-bold rounded-xl p-3 shadow-xl z-50 text-center leading-relaxed">
+                                        현재의 대안이 얼마나 불편하거나 비싼가.
+                                        <div className="absolute top-full left-1/2 -translate-x-1/2 border-[6px] border-transparent border-t-foreground"></div>
+                                    </div>
+                                </div>
                                 <div className="flex items-baseline gap-1">
                                     <span className="text-4xl font-black text-green-500">{analysis?.pufe_e || 0}</span>
                                     <span className="text-[10px] font-bold text-green-500/30">/ 25</span>
