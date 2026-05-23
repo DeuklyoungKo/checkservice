@@ -50,17 +50,19 @@ export default async function TrendsPage() {
     // 3. analysis 순서 기준으로 매핑
     const trends = (latestAnalyses || []).reduce<{
         id: string; title: string; category: string; score: number;
-        difficulty: string; potential: string; description: string;
+        difficulty: string; aiBuildabilityScore: number; potential: string; description: string;
         tags: string[]; isBookmarked: boolean; isUnlocked: boolean;
     }[]>((acc, analysis) => {
         const trend = rawTrends?.find(t => t.id === analysis.trend_id);
         if (!trend) return acc;
+        const fallbackScore = analysis.pufe_u > 18 ? 4 : analysis.pufe_u > 10 ? 3 : 2;
         acc.push({
             id: trend.id,
             title: analysis.headline || "분석 중인 트렌드",
             category: analysis.pain_category || 'General',
             score: analysis.pufe_total || 0,
             difficulty: analysis.pufe_u > 18 ? '어려움' : analysis.pufe_u > 10 ? '보통' : '쉬움',
+            aiBuildabilityScore: analysis.ai_buildability_score || fallbackScore,
             potential: analysis.pufe_p > 18 ? '매우 높음' : analysis.pufe_p > 12 ? '높음' : '보통',
             description: analysis.summary || "현재 비즈니스 분석이 진행 중입니다.",
             tags: [trend.source, analysis.pain_category || 'General'].filter(Boolean),

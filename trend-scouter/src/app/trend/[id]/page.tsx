@@ -313,16 +313,46 @@ ${(analysis?.solution_wizard as any)?.steps?.map((step: string, i: number) => `$
                         </div>
 
                         {/* Summary Score & Category (Full Width) */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div className="relative bg-background/80 px-10 py-6 rounded-[40px] border border-primary/20 shadow-sm flex items-center justify-between">
-                                <span className="text-sm font-black text-muted-foreground uppercase tracking-widest">종합 PUFE 스코어</span>
-                                <span className="text-4xl font-black text-primary">{analysis?.pufe_total || 0} <span className="text-xs font-bold opacity-30">PTS</span></span>
+                                <span className="text-xs font-black text-muted-foreground uppercase tracking-widest">종합 PUFE 스코어</span>
+                                <span className="text-3xl font-black text-primary">{analysis?.pufe_total || 0} <span className="text-xs font-bold opacity-30">PTS</span></span>
                             </div>
                             <div className="relative bg-background/80 px-10 py-6 rounded-[40px] border border-muted/50 shadow-sm flex items-center justify-between">
-                                <span className="text-sm font-black text-muted-foreground uppercase tracking-widest">Pain Point 유형</span>
-                                <Badge className="rounded-full px-6 py-2 bg-primary/10 text-primary font-black border-none text-sm">
+                                <span className="text-xs font-black text-muted-foreground uppercase tracking-widest">Pain Point 유형</span>
+                                <Badge className="rounded-full px-4 py-1.5 bg-primary/10 text-primary font-black border-none text-xs">
                                     {analysis?.pain_category || 'General'} Pain
                                 </Badge>
+                            </div>
+                            <div className="relative bg-background/80 px-10 py-6 rounded-[40px] border border-muted/50 shadow-sm flex items-center justify-between">
+                                <span className="text-xs font-black text-muted-foreground uppercase tracking-widest">AI 개발 난이도</span>
+                                <div className="flex items-center gap-1.5">
+                                    {(() => {
+                                        const score = analysis?.ai_buildability_score || (analysis?.pufe_u ? (analysis.pufe_u > 18 ? 4 : analysis.pufe_u > 10 ? 3 : 2) : 2);
+                                        const labels = ["하루 (초간단)", "2-3일 (간단 SaaS)", "1주일 (일반 SaaS)", "2주일 (실시간/보안)", "1개월+ (복잡)"];
+                                        const colors = ["bg-green-500 border-green-500 shadow-green-500/20", "bg-emerald-500 border-emerald-500 shadow-emerald-500/20", "bg-blue-500 border-blue-500 shadow-blue-500/20", "bg-orange-500 border-orange-500 shadow-orange-500/20", "bg-rose-500 border-rose-500 shadow-rose-500/20"];
+                                        const colorClass = colors[score - 1] || colors[1];
+                                        return (
+                                            <>
+                                                <div className="flex gap-0.5">
+                                                    {[1, 2, 3, 4, 5].map((index) => (
+                                                        <div
+                                                            key={index}
+                                                            className={`w-2.5 h-4 rounded-[3px] border ${
+                                                                index <= score
+                                                                    ? `${colorClass} shadow-md`
+                                                                    : 'bg-muted/20 border-muted/40'
+                                                            }`}
+                                                        />
+                                                    ))}
+                                                </div>
+                                                <span className="text-xs font-black text-foreground/80 ml-1.5 uppercase">
+                                                    {labels[score - 1] || labels[1]}
+                                                </span>
+                                            </>
+                                        );
+                                    })()}
+                                </div>
                             </div>
                         </div>
                     </div>

@@ -34,6 +34,7 @@ CREATE TABLE public.analysis (
     tech_stack_suggestion TEXT,
     korea_localization_tips TEXT,
     ai_brief TEXT, -- AI-generated markdown prompt brief for vibe coders
+    ai_buildability_score INTEGER CHECK (ai_buildability_score BETWEEN 1 AND 5), -- AI implementation difficulty
     solution_wizard JSONB, -- AI-generated solution steps/checklists
     ai_model TEXT, -- Which model performed the analysis
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,

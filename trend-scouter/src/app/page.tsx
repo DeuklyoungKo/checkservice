@@ -23,6 +23,16 @@ import { BookmarkButton } from "@/components/BookmarkButton";
 import { createClient } from "@/utils/supabase/server";
 import { signOut } from "./login/actions";
 
+const getDifficultyBadge = (score: number) => {
+  switch (score) {
+    case 1: return { text: "1단계 (하루)", class: "bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20" };
+    case 2: return { text: "2단계 (2-3일)", class: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20" };
+    case 3: return { text: "3단계 (1주)", class: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20" };
+    case 4: return { text: "4단계 (2주)", class: "bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20" };
+    case 5: return { text: "5단계 (한 달+)", class: "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20" };
+    default: return { text: "2단계 (2-3일)", class: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20" };
+  }
+};
 
 export default async function Home() {
   const supabase = await createClient();
@@ -62,18 +72,20 @@ export default async function Home() {
   // 4. 매핑합니다.
   type TrendItem = {
     id: string; title: string; category: string; score: number;
-    difficulty: string; potential: string; description: string;
+    difficulty: string; aiBuildabilityScore: number; potential: string; description: string;
     tags: string[]; isBookmarked: boolean; isUnlocked: boolean;
   };
   const trends: TrendItem[] = (latestAnalyses || []).reduce<TrendItem[]>((acc, analysis) => {
     const trend = rawTrends?.find(t => t.id === analysis.trend_id);
     if (!trend) return acc;
+    const fallbackScore = analysis.pufe_u > 18 ? 4 : analysis.pufe_u > 10 ? 3 : 2;
     acc.push({
       id: trend.id,
       title: analysis.headline || "분석 중인 트렌드",
       category: analysis.pain_category || 'General',
       score: analysis.pufe_total || 0,
       difficulty: analysis.pufe_u > 18 ? '어려움' : analysis.pufe_u > 10 ? '보통' : '쉬움',
+      aiBuildabilityScore: analysis.ai_buildability_score || fallbackScore,
       potential: analysis.pufe_p > 18 ? '매우 높음' : analysis.pufe_p > 12 ? '높음' : '보통',
       description: analysis.summary || "현재 비즈니스 분석이 진행 중입니다.",
       tags: [trend.source, analysis.pain_category || 'General'].filter(Boolean),
@@ -176,8 +188,10 @@ export default async function Home() {
                 <Separator className="mb-6 opacity-30" />
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider flex items-center gap-1"><IconClock size={12} /> 난이도</p>
-                    <p className="text-sm font-bold">{trend.difficulty}</p>
+                    <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider flex items-center gap-1"><IconClock size={12} /> AI 난이도</p>
+                    <Badge variant="outline" className={`rounded-lg px-2 py-0.5 border text-xs font-bold leading-none ${getDifficultyBadge(trend.aiBuildabilityScore).class}`}>
+                      {getDifficultyBadge(trend.aiBuildabilityScore).text}
+                    </Badge>
                   </div>
                   <div className="space-y-1">
                     <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider flex items-center gap-1"><IconChartBar size={12} /> 잠재력</p>

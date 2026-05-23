@@ -28,11 +28,23 @@ interface Trend {
     category: string;
     score: number;
     difficulty: string;
+    aiBuildabilityScore: number;
     potential: string;
     tags: string[];
     isBookmarked: boolean;
     isUnlocked: boolean; // 추가됨
 }
+
+const getDifficultyBadge = (score: number) => {
+    switch (score) {
+        case 1: return { text: "1단계 (하루)", class: "bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20" };
+        case 2: return { text: "2단계 (2-3일)", class: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20" };
+        case 3: return { text: "3단계 (1주)", class: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20" };
+        case 4: return { text: "4단계 (2주)", class: "bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20" };
+        case 5: return { text: "5단계 (한 달+)", class: "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20" };
+        default: return { text: "2단계 (2-3일)", class: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20" };
+    }
+};
 
 interface TrendListProps {
     initialTrends: Trend[]
@@ -42,6 +54,7 @@ export function TrendList({ initialTrends }: TrendListProps) {
     const [searchQuery, setSearchQuery] = useState('')
     const [sortBy, setSortBy] = useState<'score' | 'newest' | 'difficulty'>('newest')
     const [filterCategory, setFilterCategory] = useState<string>('all')
+    const [showOnlyWeekend, setShowOnlyWeekend] = useState(false)
     const [currentPage, setCurrentPage] = useState(1)
 
     const categories = useMemo(() => {
@@ -64,15 +77,18 @@ export function TrendList({ initialTrends }: TrendListProps) {
             result = result.filter(t => t.category === filterCategory)
         }
 
+        if (showOnlyWeekend) {
+            result = result.filter(t => t.aiBuildabilityScore <= 2)
+        }
+
         if (sortBy === 'score') {
             result.sort((a, b) => b.score - a.score)
         } else if (sortBy === 'difficulty') {
-            const diffMap = { '쉬움': 0, '보통': 1, '어려움': 2 }
-            result.sort((a, b) => (diffMap[a.difficulty as keyof typeof diffMap] || 0) - (diffMap[b.difficulty as keyof typeof diffMap] || 0))
+            result.sort((a, b) => a.aiBuildabilityScore - b.aiBuildabilityScore)
         }
 
         return result
-    }, [initialTrends, searchQuery, sortBy, filterCategory])
+    }, [initialTrends, searchQuery, sortBy, filterCategory, showOnlyWeekend])
 
     const paginatedTrends = useMemo(() => {
         const start = (currentPage - 1) * PAGE_SIZE
@@ -126,6 +142,18 @@ export function TrendList({ initialTrends }: TrendListProps) {
                         </select>
                     </div>
 
+                    {/* 주말 코딩 전용 토글 스위치 */}
+                    <button
+                        onClick={() => { setShowOnlyWeekend(!showOnlyWeekend); setCurrentPage(1) }}
+                        className={`flex items-center gap-2 border-2 px-4 py-1.5 rounded-2xl text-sm font-black transition-all duration-300 cursor-pointer ${
+                            showOnlyWeekend
+                                ? 'bg-amber-500/15 border-amber-500/40 text-amber-600 dark:text-amber-400 shadow-lg shadow-amber-500/5 hover:scale-[1.02]'
+                                : 'bg-background border-muted text-muted-foreground hover:text-primary hover:border-primary/30 shadow-sm'
+                        }`}
+                    >
+                        <span>⚡ 주말 코딩 전용 (1~2단계)</span>
+                    </button>
+
                     <span className="text-sm text-muted-foreground font-bold hidden md:block">
                         총 {filteredAndSortedTrends.length}개
                     </span>
@@ -177,9 +205,11 @@ export function TrendList({ initialTrends }: TrendListProps) {
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-1">
                                         <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider flex items-center gap-1">
-                                            <IconClock size={12} /> 난이도
+                                            <IconClock size={12} /> AI 난이도
                                         </p>
-                                        <p className="text-sm font-bold">{trend.difficulty}</p>
+                                        <Badge variant="outline" className={`rounded-lg px-2 py-0.5 border text-xs font-bold leading-none ${getDifficultyBadge(trend.aiBuildabilityScore).class}`}>
+                                            {getDifficultyBadge(trend.aiBuildabilityScore).text}
+                                        </Badge>
                                     </div>
                                     <div className="space-y-1">
                                         <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider flex items-center gap-1">
