@@ -99,10 +99,30 @@ export default async function TrendDetailPage({ params }: PageProps) {
             .filter(Boolean);
     };
 
-    // 문장 단위 줄바꿈 최적화
+    // 문장 단위 줄바꿈 최적화 및 HTML 태그 변환
     const formatNarrativeText = (text: string | null) => {
         if (!text) return "";
-        let processed = text.trim();
+        
+        // 1. 기초 HTML 변환
+        let processed = text
+            .replace(/<strong>/g, '**')
+            .replace(/<\/strong>/g, '**')
+            .replace(/<br\s*\/?>/g, '\n\n')
+            .trim();
+
+        // 2. PUFE 이니셜 강조 및 줄바꿈 처리 (P, U, F, E)
+        // 기존에 이미 볼드 처리가 되어있거나 되어있지 않은 경우 모두 대응
+        processed = processed.replace(/(?:\*\*|<strong>)?([PUFE] \([^)]+\):)(?:\*\*|<\/strong>)?/g, '\n\n**$1** ');
+
+        // 3. 중복 처리 정리 및 화이트스페이스 최적화
+        processed = processed
+            .replace(/\*\*\*\*+/g, '**')
+            .replace(/\n{3,}/g, '\n\n')
+            .trim();
+
+        // PUFE 마커가 적용되었다면 가독성이 이미 확보된 것으로 간주
+        if (/\*\*[PUFE] \(/.test(processed)) return processed;
+
         if (processed.includes('\n\n')) return processed;
         if (/\d+\./.test(processed)) {
             return processed
@@ -255,7 +275,7 @@ export default async function TrendDetailPage({ params }: PageProps) {
                                 </div>
                             </div>
                             <div className="prose prose-xl prose-slate dark:prose-invert max-w-none text-muted-foreground leading-relaxed font-medium bg-background/40 p-10 rounded-[40px] border border-muted/50 shadow-sm">
-                                <ReactMarkdown>{mainSummary || "분석 데이터를 불러오고 있습니다."}</ReactMarkdown>
+                                <ReactMarkdown>{formatNarrativeText(mainSummary) || "분석 데이터를 불러오고 있습니다."}</ReactMarkdown>
                             </div>
                         </section>
 
