@@ -1,12 +1,29 @@
+const { GoogleGenerativeAI } = require("@google/generative-ai");
 const Parser = require('rss-parser');
-const axios = require('axios');
 const { createClient } = require('@supabase/supabase-js');
 const path = require('path');
+
+// .env.local 로드 (로컬 개발용)
 require('dotenv').config({ path: path.join(__dirname, '../.env.local') });
 const { getKoreanDemandSignal, getFullKoreanTrendSnapshot } = require('./naver-datalab');
 
+/**
+ * 환경 변수 필수 검증
+ */
+function validateEnv() {
+    const required = ['NEXT_PUBLIC_SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY', 'GEMINI_API_KEY'];
+    const missing = required.filter(key => !process.env[key]);
+    if (missing.length > 0) {
+        console.error(`❌ 필수 환경 변수가 누락되었습니다: ${missing.join(', ')}`);
+        console.error('GitHub Secrets 또는 .env.local 설정을 확인해 주세요.');
+        process.exit(1);
+    }
+}
+
+validateEnv();
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const geminiApiKey = process.env.GEMINI_API_KEY;
 const naverClientId = process.env.NAVER_CLIENT_ID;
 const naverClientSecret = process.env.NAVER_CLIENT_SECRET;
@@ -38,9 +55,7 @@ const RSS_FEEDS = [
     { name: 'geek-news',         url: 'https://news.hada.io/rss/news',                              isKorean: true  }, // 한국 개발자 커뮤니티 인기 토픽
 ];
 
-// 브라우저용 User-Agent (차단 우회용)
 const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36';
-
 // 분석 대상 핵심 키워드 (글로벌 + 한국)
 const TARGET_KEYWORDS = [
     // 글로벌
@@ -61,6 +76,9 @@ async function calculateImpactScore(title, content) {
 }
 
 async function analyzeWithAI(title, content, source, isKorean = false, koreaDemand = null) {
+    // 3.1 모델을 우선 시도하되, 실패 시 1.5-flash로 폴백
+    const modelNames = ["gemini-3.1-flash-lite-preview", "gemini-1.5-flash"];
+    let lastError = null;
     const koreanHint = isKorean
         ? `\n    ※ 이 데이터는 한국 소스(${source})에서 수집된 콘텐츠입니다. 한국 시장 맥락을 최우선으로 분석하세요.`
         : `\n    ※ 이 데이터는 글로벌 소스(${source})에서 수집되었습니다. 한국 시장에 이식 가능한 관점으로 분석하세요.`;
@@ -87,27 +105,28 @@ async function analyzeWithAI(title, content, source, isKorean = false, koreaDema
     }
     `;
 
-    try {
-        const response = await axios.post(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${geminiApiKey}`,
-            { contents: [{ parts: [{ text: prompt }] }] },
-            { headers: { 'User-Agent': USER_AGENT } }
-        );
-        const resultText = response.data.candidates[0].content.parts[0].text.replace(/```json\n?|```/g, '').trim();
-        const analysis = JSON.parse(resultText);
-        console.log(`✅ Analysis success: ${analysis.headline.substring(0, 40)}...`);
-        return analysis;
-    } catch (error) {
-        console.error('AI Analysis failed:', error.message);
-        if (error.response) {
-            console.error('Error Details:', JSON.stringify(error.response.data, null, 2));
+    for (const modelName of modelNames) {
+        try {
+            const model = genAI.getGenerativeModel({ model: modelName });
+            const result = await model.generateContent(prompt);
+            const response = await result.response;
+            const resultText = response.text().replace(/```json\n?|```/g, '').trim();
+            const analysis = JSON.parse(resultText);
+            
+            console.log(`✅ Analysis success (${modelName}): ${analysis.headline.substring(0, 40)}...`);
+            return analysis;
+        } catch (error) {
+            lastError = error;
+            console.warn(`⚠️  Model ${modelName} failed, trying next... Error: ${error.message}`);
         }
-        return null;
     }
+
+    console.error('❌ AI Analysis failed for all models:', lastError.message);
+    return null;
 }
 
 async function collectRSS() {
-    console.log('🚀 Starting Robust Stats-Only RSS Collection...');
+    console.log('🚀 트렌드 데이터 수집 및 분석 시작...');
 
     // 네이버 DataLab 전체 스냅샷 선조회 (API 호출 1번으로 캐시)
     if (naverClientId && naverClientSecret) {
@@ -137,12 +156,22 @@ async function collectRSS() {
                     const minScore = feed.isKorean ? 5 : 10;
                     if (impactScore < minScore) continue;
 
-                    // 중복 체크 (External ID 기준)
                     const externalId = item.guid || item.id || item.link;
-                    const { data: existing } = await supabase.from('trends').select('id, impact_score').eq('external_id', externalId).single();
+                    
+                    // DB 조회 에러 핸들링 추가
+                    const { data: existing, error: checkError } = await supabase
+                        .from('trends')
+                        .select('id, impact_score')
+                        .eq('external_id', externalId)
+                        .maybeSingle();
+
+                    if (checkError) {
+                        console.error(`❌ DB Check Error: ${checkError.message}`);
+                        continue;
+                    }
 
                     if (existing && existing.impact_score >= impactScore) {
-                        continue; // 이미 처리된 고득점 아이템 스킵
+                        continue;
                     }
 
                     // 네이버 DataLab 교차검증 — 해당 아이템의 한국 수요 신호 추출
@@ -176,6 +205,11 @@ async function collectRSS() {
                             }
                         }, { onConflict: 'source,external_id' }).select().single();
 
+                        if (tError) {
+                            console.error(`❌ Trend Upsert Error: ${tError.message}`);
+                            continue;
+                        }
+
                         if (trend) {
                             const { error: aError } = await supabase.from('analysis').upsert({
                                 trend_id: trend.id,
@@ -184,7 +218,7 @@ async function collectRSS() {
                                 pufe_u: analysis.pufe.u,
                                 pufe_f: analysis.pufe.f,
                                 pufe_e: analysis.pufe.e,
-                                pufe_total: analysis.pufe.p + analysis.pufe.u + analysis.pufe.f + analysis.pufe.e,
+                                pufe_total: (analysis.pufe.p || 0) + (analysis.pufe.u || 0) + (analysis.pufe.f || 0) + (analysis.pufe.e || 0),
                                 pain_category: analysis.pain_category,
                                 summary: analysis.summary,
                                 reasoning: analysis.pufe.reasoning,
@@ -192,7 +226,7 @@ async function collectRSS() {
                                 tech_stack_suggestion: JSON.stringify(analysis.tech_stack_suggestion),
                                 korea_localization_tips: analysis.korea_localization_tips,
                                 solution_wizard: analysis.solution_wizard,
-                                ai_model: 'gemini-2.0-flash-lite-stats-v3'
+                                ai_model: 'gemini-3.1-or-1.5-flash-v3'
                             }, { onConflict: 'trend_id' });
 
                             if (aError) {
@@ -203,17 +237,20 @@ async function collectRSS() {
                         }
                     }
                 } catch (itemError) {
-                    console.error(`⚠️  Item skip error: ${item.title.substring(0, 30)} | ${itemError.message}`);
+                    console.error(`⚠️  Item skip error: ${item.title?.substring(0, 30)} | ${itemError.message}`);
                 }
             }
         } catch (error) {
             console.error(`❌ Source failed: ${feed.name} | ${error.message} | ${error.code || ''}`);
         }
     }
-    console.log('✅ Collection and Analysis complete.');
+    console.log('✅ 수집 및 분석 작업이 완료되었습니다.');
 }
 
-collectRSS().catch(err => {
-    console.error('CRITICAL ERROR in collectRSS:', err);
-    process.exit(1);
-});
+// 메인 실행부: 에러 발생 시 프로세스 종료 코드 전달
+collectRSS()
+    .then(() => process.exit(0))
+    .catch((err) => {
+        console.error('🔥 Fatal Error during execution:', err);
+        process.exit(1);
+    });

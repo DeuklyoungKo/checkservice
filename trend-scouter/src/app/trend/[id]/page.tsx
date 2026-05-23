@@ -16,7 +16,8 @@ import {
     IconTrendingUp,
     IconRocket,
     IconTools,
-    IconWorld
+    IconWorld,
+    IconInfoCircle
 } from "@tabler/icons-react";
 import { BookmarkButton } from "@/components/BookmarkButton";
 
@@ -99,30 +100,10 @@ export default async function TrendDetailPage({ params }: PageProps) {
             .filter(Boolean);
     };
 
-    // 문장 단위 줄바꿈 최적화 및 HTML 태그 변환
+    // 문장 단위 줄바꿈 최적화
     const formatNarrativeText = (text: string | null) => {
         if (!text) return "";
-        
-        // 1. 기초 HTML 변환
-        let processed = text
-            .replace(/<strong>/g, '**')
-            .replace(/<\/strong>/g, '**')
-            .replace(/<br\s*\/?>/g, '\n\n')
-            .trim();
-
-        // 2. PUFE 이니셜 강조 및 줄바꿈 처리 (P, U, F, E)
-        // 기존에 이미 볼드 처리가 되어있거나 되어있지 않은 경우 모두 대응
-        processed = processed.replace(/(?:\*\*|<strong>)?([PUFE] \([^)]+\):)(?:\*\*|<\/strong>)?/g, '\n\n**$1** ');
-
-        // 3. 중복 처리 정리 및 화이트스페이스 최적화
-        processed = processed
-            .replace(/\*\*\*\*+/g, '**')
-            .replace(/\n{3,}/g, '\n\n')
-            .trim();
-
-        // PUFE 마커가 적용되었다면 가독성이 이미 확보된 것으로 간주
-        if (/\*\*[PUFE] \(/.test(processed)) return processed;
-
+        let processed = text.trim();
         if (processed.includes('\n\n')) return processed;
         if (/\d+\./.test(processed)) {
             return processed
@@ -144,6 +125,17 @@ export default async function TrendDetailPage({ params }: PageProps) {
             groupedParagraphs.push(paragraph);
         }
         return groupedParagraphs.join('\n\n');
+    };
+
+    // PUFE 점수 산정 근거 전용 텍스트 포맷터 (P, U, F, E 각각 줄바꿈 처리)
+    const formatReasoningText = (text: string | null) => {
+        if (!text) return "";
+        let processed = text.trim();
+        // P (Problem):, U (Urgency): 등의 패턴 앞에 줄바꿈을 넣고 굵게 처리
+        processed = processed.replace(/([PUFE]\s*\([A-Za-z]+\)\s*:)/g, '\n\n**$1**');
+        // 만약 괄호 없이 P:, U:, F:, E: 로만 왔을 경우 대비
+        processed = processed.replace(/(?<![A-Za-z])([PUFE]\s*:)/g, '\n\n**$1**');
+        return processed.trim();
     };
 
     // Unlock CTA Component
@@ -213,7 +205,14 @@ export default async function TrendDetailPage({ params }: PageProps) {
                         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                             {/* Pain */}
                             <div className="bg-background/80 p-6 rounded-[40px] border border-muted/50 shadow-sm flex flex-col items-center justify-center text-center">
-                                <span className="text-[10px] text-primary/60 font-black uppercase tracking-widest mb-2">Pain (고통)</span>
+                                <div className="group relative flex items-center gap-1 mb-2">
+                                    <span className="text-[10px] text-primary/60 font-black uppercase tracking-widest">Pain (고통)</span>
+                                    <IconInfoCircle size={12} className="text-primary/40 cursor-help" />
+                                    <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 opacity-0 scale-95 transition-all group-hover:opacity-100 group-hover:scale-100 bg-foreground text-background text-xs font-bold rounded-xl p-3 shadow-xl z-50 text-center leading-relaxed">
+                                        사용자 결핍의 깊이.<br />(기능적/재정적/감정적)
+                                        <div className="absolute top-full left-1/2 -translate-x-1/2 border-[6px] border-transparent border-t-foreground"></div>
+                                    </div>
+                                </div>
                                 <div className="flex items-baseline gap-1">
                                     <span className="text-4xl font-black text-primary">{analysis?.pufe_p || 0}</span>
                                     <span className="text-[10px] font-bold text-primary/30">/ 25</span>
@@ -221,7 +220,14 @@ export default async function TrendDetailPage({ params }: PageProps) {
                             </div>
                             {/* Urgency */}
                             <div className="bg-background/80 p-6 rounded-[40px] border border-muted/50 shadow-sm flex flex-col items-center justify-center text-center">
-                                <span className="text-[10px] text-orange-500/60 font-black uppercase tracking-widest mb-2">Urgency (긴급)</span>
+                                <div className="group relative flex items-center gap-1 mb-2">
+                                    <span className="text-[10px] text-orange-500/60 font-black uppercase tracking-widest">Urgency (긴급)</span>
+                                    <IconInfoCircle size={12} className="text-orange-500/40 cursor-help" />
+                                    <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 opacity-0 scale-95 transition-all group-hover:opacity-100 group-hover:scale-100 bg-foreground text-background text-xs font-bold rounded-xl p-3 shadow-xl z-50 text-center leading-relaxed">
+                                        지금 당장 해결해야 하는 정도.
+                                        <div className="absolute top-full left-1/2 -translate-x-1/2 border-[6px] border-transparent border-t-foreground"></div>
+                                    </div>
+                                </div>
                                 <div className="flex items-baseline gap-1">
                                     <span className="text-4xl font-black text-orange-500">{analysis?.pufe_u || 0}</span>
                                     <span className="text-[10px] font-bold text-orange-500/30">/ 25</span>
@@ -229,7 +235,14 @@ export default async function TrendDetailPage({ params }: PageProps) {
                             </div>
                             {/* Frequency */}
                             <div className="bg-background/80 p-6 rounded-[40px] border border-muted/50 shadow-sm flex flex-col items-center justify-center text-center">
-                                <span className="text-[10px] text-blue-500/60 font-black uppercase tracking-widest mb-2">Frequency (빈도)</span>
+                                <div className="group relative flex items-center gap-1 mb-2">
+                                    <span className="text-[10px] text-blue-500/60 font-black uppercase tracking-widest">Frequency (빈도)</span>
+                                    <IconInfoCircle size={12} className="text-blue-500/40 cursor-help" />
+                                    <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 opacity-0 scale-95 transition-all group-hover:opacity-100 group-hover:scale-100 bg-foreground text-background text-xs font-bold rounded-xl p-3 shadow-xl z-50 text-center leading-relaxed">
+                                        얼마나 자주 발생하는 문제인가.
+                                        <div className="absolute top-full left-1/2 -translate-x-1/2 border-[6px] border-transparent border-t-foreground"></div>
+                                    </div>
+                                </div>
                                 <div className="flex items-baseline gap-1">
                                     <span className="text-4xl font-black text-blue-500">{analysis?.pufe_f || 0}</span>
                                     <span className="text-[10px] font-bold text-blue-500/30">/ 25</span>
@@ -237,7 +250,14 @@ export default async function TrendDetailPage({ params }: PageProps) {
                             </div>
                             {/* Existing Solution */}
                             <div className="bg-background/80 p-6 rounded-[40px] border border-muted/50 shadow-sm flex flex-col items-center justify-center text-center">
-                                <span className="text-[10px] text-green-500/60 font-black uppercase tracking-widest mb-2">Existing (대안)</span>
+                                <div className="group relative flex items-center gap-1 mb-2">
+                                    <span className="text-[10px] text-green-500/60 font-black uppercase tracking-widest">Existing (대안)</span>
+                                    <IconInfoCircle size={12} className="text-green-500/40 cursor-help" />
+                                    <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 opacity-0 scale-95 transition-all group-hover:opacity-100 group-hover:scale-100 bg-foreground text-background text-xs font-bold rounded-xl p-3 shadow-xl z-50 text-center leading-relaxed">
+                                        현재의 대안이 얼마나 불편하거나 비싼가.
+                                        <div className="absolute top-full left-1/2 -translate-x-1/2 border-[6px] border-transparent border-t-foreground"></div>
+                                    </div>
+                                </div>
                                 <div className="flex items-baseline gap-1">
                                     <span className="text-4xl font-black text-green-500">{analysis?.pufe_e || 0}</span>
                                     <span className="text-[10px] font-bold text-green-500/30">/ 25</span>
@@ -291,7 +311,7 @@ export default async function TrendDetailPage({ params }: PageProps) {
                                         <h2 className="text-4xl font-black tracking-tighter">점수 부여 상세 근거</h2>
                                     </div>
                                     <div className="prose prose-lg prose-slate dark:prose-invert max-w-none text-foreground leading-relaxed bg-background/60 p-10 rounded-[40px] border border-muted shadow-inner">
-                                        <ReactMarkdown>{formatNarrativeText(reasoning)}</ReactMarkdown>
+                                        <ReactMarkdown>{formatReasoningText(reasoning)}</ReactMarkdown>
                                     </div>
                                 </section>
 
@@ -323,7 +343,7 @@ export default async function TrendDetailPage({ params }: PageProps) {
                                             </h3>
                                             {(analysis?.solution_wizard as any)?.steps?.map((step: string, i: number) => (
                                                 <div key={i} className="flex gap-4 p-6 bg-background rounded-3xl border border-muted shadow-sm">
-                                                    <span className="text-2xl font-black text-primary/20">0{i+1}</span>
+                                                    <span className="text-2xl font-black text-primary/20">0{i + 1}</span>
                                                     <p className="text-sm font-bold leading-relaxed">{step}</p>
                                                 </div>
                                             ))}

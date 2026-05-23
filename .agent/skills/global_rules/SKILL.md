@@ -140,3 +140,7 @@ To apply these global rules to a new project:
 1.  **Copy Folder**: Copy the entire `.agents/skills/global_rules` folder.
 2.  **Paste**: Paste it into the `.agents/skills/` directory of your new project. (If `.agents/skills` doesn't exist, create it first).
 3.  **Automatic Detection**: Antigravity will automatically detect the new skill and follow these guidelines in the new project.
+
+
+## 9. 한글로 표시
+- 작업진행 내용, 결과 내용, 검토 문서는 모두 한글로 보여준다.

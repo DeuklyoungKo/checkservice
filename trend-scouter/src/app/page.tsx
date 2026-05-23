@@ -153,9 +153,15 @@ export default async function Home() {
                     </div>
                   </div>
                 </div>
-                <CardTitle className="text-xl group-hover:text-primary transition-colors mb-2 line-clamp-3 min-h-[5.5rem] flex items-start gap-2">
-                  {!trend.isUnlocked && <IconBulb size={24} className="text-amber-500 flex-shrink-0" />}
-                  {trend.title}
+                <CardTitle className="group-hover:text-primary transition-colors mb-2 min-h-[7rem] flex items-start gap-2">
+                  {!trend.isUnlocked && (
+                    <div className="flex-shrink-0 mt-2">
+                      <IconBulb size={24} className="text-amber-500" />
+                    </div>
+                  )}
+                  <div className="text-2xl line-clamp-3 leading-normal py-1">
+                    {trend.title}
+                  </div>
                 </CardTitle>
                 <CardDescription className="text-sm leading-relaxed line-clamp-3 h-[4.5rem]">
                   {trend.description}
