@@ -33,6 +33,7 @@ CREATE TABLE public.analysis (
     gtm_strategy TEXT, -- Go-to-Market strategy
     tech_stack_suggestion TEXT,
     korea_localization_tips TEXT,
+    ai_brief TEXT, -- AI-generated markdown prompt brief for vibe coders
     solution_wizard JSONB, -- AI-generated solution steps/checklists
     ai_model TEXT, -- Which model performed the analysis
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,

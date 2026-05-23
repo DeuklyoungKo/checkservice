@@ -101,7 +101,8 @@ async function analyzeWithAI(title, content, source, isKorean = false, koreaDema
       "gtm_strategy": "Step-by-step Korean Go-to-Market strategy",
       "tech_stack_suggestion": ["Tech1", "Tech2", "Tech3"],
       "korea_localization_tips": "Specific tips for Korean market localization",
-      "solution_wizard": { "steps": ["step1", "step2", ...], "checklist": ["item1", "item2", ...] }
+      "solution_wizard": { "steps": ["step1", "step2", ...], "checklist": ["item1", "item2", ...] },
+      "ai_brief": "Detailed, complete product brief in Korean formatted in Markdown. Tailor it specifically for AI Coding tools (Claude Code, ChatGPT, Gemini, etc.) so that developers can directly copy-paste this brief to build the product. Follow this Markdown structure precisely without using code block backticks inside: \\n# 서비스 개발 브리프\\n\\n## 아이디어 요약\\n[1-2 sentence core concept explanation]\\n\\n## 타겟 유저\\n- 페르소나: [Target persona]\\n- 핵심 고통 (Pain Point): [What major problem it solves]\\n- 지불 의사 (Willingness to Pay): [Estimated price/value]\\n\\n## MVP 핵심 기능 (3~5개)\\n1. [Feature 1]\\n2. [Feature 2]\\n3. [Feature 3]\\n\\n## 추천 기술 스택\\n- Frontend: Next.js + Tailwind CSS\\n- Backend/DB: Supabase\\n- 결제: Polar / Stripe\\n- 배포: Vercel\\n\\n## 예상 개발 기간\\n[Estimated time in days/weeks using AI tools]\\n\\n## 수익 가능성\\n[Monthly revenue estimation and logical grounds]"
     }
     `;
 
@@ -226,7 +227,8 @@ async function collectRSS() {
                                 tech_stack_suggestion: JSON.stringify(analysis.tech_stack_suggestion),
                                 korea_localization_tips: analysis.korea_localization_tips,
                                 solution_wizard: analysis.solution_wizard,
-                                ai_model: 'gemini-3.1-or-1.5-flash-v3'
+                                ai_brief: analysis.ai_brief || null,
+                                ai_model: 'gemini-3.1-or-1.5-flash-v4'
                             }, { onConflict: 'trend_id' });
 
                             if (aError) {

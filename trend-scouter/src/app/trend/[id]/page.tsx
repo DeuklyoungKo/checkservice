@@ -17,9 +17,11 @@ import {
     IconRocket,
     IconTools,
     IconWorld,
-    IconInfoCircle
+    IconInfoCircle,
+    IconSparkles
 } from "@tabler/icons-react";
 import { BookmarkButton } from "@/components/BookmarkButton";
+import { AIBriefCopyButton } from "@/components/AIBriefCopyButton";
 
 interface PageProps {
     params: Promise<{ id: string }>;
@@ -137,6 +139,51 @@ export default async function TrendDetailPage({ params }: PageProps) {
         processed = processed.replace(/(?<![A-Za-z])([PUFE]\s*:)/g, '\n\n**$1**');
         return processed.trim();
     };
+
+    // GTM 전략 전용 포맷터 (배열 형식 JSON 대응)
+    const formatGtmText = (text: string | null) => {
+        if (!text) return "";
+        let processed = text.trim();
+        if (processed.startsWith('[') && processed.endsWith(']')) {
+            try {
+                const parsed = JSON.parse(processed);
+                if (Array.isArray(parsed)) {
+                    // 줄바꿈이 포함된 리스트 형태로 가공하여 ReactMarkdown에 전달
+                    return parsed.map((item: string) => `- ${item.trim()}`).join('\n\n');
+                }
+            } catch (e) {
+                // JSON 파싱 에러 시 백업으로 일반 텍스트 변환 적용
+            }
+        }
+        return formatNarrativeText(text);
+    };
+
+    // AI 복사용 마크다운 백필 브리프
+    const fallbackBrief = `# 서비스 개발 브리프
+
+## 아이디어 요약
+${mainSummary}
+
+## 타겟 유저
+- 페르소나: 이 트렌드 분석에 관심 있는 AI 및 1인 창업 개발자
+- 핵심 고통 (Pain Point): ${reasoning ? reasoning.substring(0, 300) + '...' : '수집 중'}
+- 지불 의사 (Willingness to Pay): 월 3,000원 ~ 10,000원 수준의 유료 구독형 부가 기능
+
+## MVP 핵심 기능 (3~5개)
+${(analysis?.solution_wizard as any)?.steps?.map((step: string, i: number) => `${i + 1}. ${step}`).join('\n') || '1. 기본 MVP 기능 구축\n2. 사용자 인터페이스 연동\n3. 서비스 출시'}
+
+## 추천 기술 스택
+- Frontend: Next.js + Tailwind CSS
+- Backend/DB: Supabase
+- 결제: Polar / Stripe
+- 배포: Vercel
+
+## 예상 개발 기간
+2~3일 (Claude Code, ChatGPT 등 AI 코딩 도구 사용 시)
+
+## 수익 가능성
+사이드 프로젝트 런칭을 통한 마이크로 SaaS 매출 및 프리미어 유료 모델 연동
+`;
 
     // Unlock CTA Component
     const UnlockCTA = () => (
@@ -302,7 +349,26 @@ export default async function TrendDetailPage({ params }: PageProps) {
                         <div className="relative">
                             {/* Premium Masking Layer */}
                             <div className={isUnlocked ? "" : "blur-3xl select-none pointer-events-none opacity-40 grayscale transition-all duration-1000"}>
-                                {/* 2. Reasoning */}
+                                {/* 2. AI 개발 브리프 (Prompt Brief) */}
+                                <section className="space-y-10 bg-primary/5 p-12 rounded-[64px] border border-primary/20 shadow-inner group/brief mb-24 relative">
+                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-8">
+                                        <div className="flex items-center gap-6">
+                                            <div className="w-16 h-16 bg-primary rounded-[28px] flex items-center justify-center shadow-xl shadow-primary/30 group-hover/brief:scale-110 transition-transform duration-500">
+                                                <IconSparkles className="text-primary-foreground w-8 h-8 animate-pulse" />
+                                            </div>
+                                            <div>
+                                                <p className="text-primary font-black text-[10px] uppercase tracking-[0.2em] mb-1.5 px-0.5 opacity-60">AI ready brief</p>
+                                                <h2 className="text-4xl font-black tracking-tighter">AI 개발 브리프 (Prompt Brief)</h2>
+                                            </div>
+                                        </div>
+                                        <AIBriefCopyButton briefText={analysis?.ai_brief || fallbackBrief} />
+                                    </div>
+                                    <div className="prose prose-lg prose-slate dark:prose-invert max-w-none text-foreground leading-relaxed bg-background/60 p-10 rounded-[40px] border border-muted shadow-inner">
+                                        <ReactMarkdown>{analysis?.ai_brief || fallbackBrief}</ReactMarkdown>
+                                    </div>
+                                </section>
+
+                                {/* 3. Reasoning */}
                                 <section className="space-y-10 bg-muted/20 p-12 rounded-[64px] border border-muted-foreground/5 shadow-sm group/reasoning mb-24">
                                     <div className="flex items-center gap-6 mb-4">
                                         <div className="w-16 h-16 bg-primary rounded-[28px] flex items-center justify-center shadow-xl shadow-primary/30 group-hover/reasoning:scale-110 transition-transform duration-500">
@@ -324,7 +390,7 @@ export default async function TrendDetailPage({ params }: PageProps) {
                                         <h2 className="text-4xl font-black tracking-tighter">한국형 진입 전략 (GTM)</h2>
                                     </div>
                                     <div className="prose prose-lg prose-slate dark:prose-invert max-w-none text-foreground leading-relaxed bg-white dark:bg-slate-900 p-12 sm:p-16 rounded-[64px] border border-orange-200/50 dark:border-orange-900/40 shadow-2xl relative">
-                                        <ReactMarkdown>{formatNarrativeText(analysis?.gtm_strategy) || "해당 트렌드의 한국 시장 진출 전략을 분석 중입니다."}</ReactMarkdown>
+                                        <ReactMarkdown>{formatGtmText(analysis?.gtm_strategy) || "해당 트렌드의 한국 시장 진출 전략을 분석 중입니다."}</ReactMarkdown>
                                     </div>
                                 </section>
 
