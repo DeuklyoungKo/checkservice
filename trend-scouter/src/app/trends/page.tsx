@@ -11,7 +11,7 @@ import {
 } from "@tabler/icons-react";
 
 export const metadata = {
-    title: "전체 트렌드 — Trend Intelligence",
+    title: "전체 트렌드 — Trend Scouter",
     description: "AI가 분석한 글로벌 트렌드를 모두 탐색하세요. 검색, 필터, 정렬 기능을 제공합니다.",
 };
 
@@ -110,9 +110,9 @@ export default async function TrendsPage() {
                     <div className="flex flex-col items-center gap-3">
                         <div className="flex items-center gap-2 opacity-50">
                             <IconBulb size={20} />
-                            <span className="text-base font-bold">Trend Intelligence</span>
+                            <span className="text-base font-bold">Trend Scouter</span>
                         </div>
-                        <p className="text-muted-foreground text-sm">© 2026 Trend Intelligence. Built with Precision & AI.</p>
+                        <p className="text-muted-foreground text-sm">© 2026 Trend Scouter. Built with Precision & AI.</p>
                     </div>
                 </div>
             </footer>

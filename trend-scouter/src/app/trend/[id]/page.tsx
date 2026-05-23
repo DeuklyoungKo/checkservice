@@ -42,7 +42,7 @@ export async function generateMetadata({ params }: PageProps) {
     const displayTitle = analysis?.headline || "분석 중인 트렌드";
 
     return {
-        title: `${displayTitle} - Trend Intelligence`,
+        title: `${displayTitle} - Trend Scouter`,
         description: analysis?.summary || "비즈니스 기회를 분석하고 있습니다.",
     };
 }
@@ -185,10 +185,46 @@ ${(analysis?.solution_wizard as any)?.steps?.map((step: string, i: number) => `$
 사이드 프로젝트 런칭을 통한 마이크로 SaaS 매출 및 프리미어 유료 모델 연동
 `;
 
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+    const polarProductId = process.env.NEXT_PUBLIC_POLAR_PRODUCT_ID || 'mock-product-id';
+    const polarDomain = process.env.NEXT_PUBLIC_POLAR_SANDBOX === 'true' ? 'sandbox.polar.sh' : 'polar.sh';
+    const polarCheckoutUrl = `https://${polarDomain}/checkout/${polarProductId}?metadata[trend_id]=${trend.id}&metadata[user_id]=${user?.id || 'anonymous'}&success_url=${encodeURIComponent(siteUrl + '/trend/' + trend.id + '?success=true')}`;
+
+    const getSecureText = (text: string | null): string => {
+        if (isUnlocked && text) return text;
+        if (!text) return "";
+        const teaser = text.trim().substring(0, 100);
+        return `${teaser}... \n\n🔒 **[이후 상세 분석 내용은 결제 후 잠금 해제됩니다. 원화 3,900원으로 즉시 소장해 보세요!]**`;
+    };
+
+    const secureSteps = (steps: string[] | undefined): string[] => {
+        if (!steps) return [];
+        if (isUnlocked) return steps;
+        return steps.map((step, i) => i === 0 ? step : "🔒 개별 리포트 결제 또는 프리미엄 구독 후 전체 실행 단계가 잠금 해제됩니다.");
+    };
+
+    const secureChecklist = (checklist: string[] | undefined): string[] => {
+        if (!checklist) return [];
+        if (isUnlocked) return checklist;
+        return checklist.map((item, i) => i === 0 ? item : "🔒 액션 체크리스트 전체 항목 잠금 해제");
+    };
+
+    const secureTechStack = (text: string | null): string => {
+        if (isUnlocked && text) return text;
+        return '["Next.js", "Tailwind CSS", "Supabase", "🔒 결제 후 전체 추천 스택 해제"]';
+    };
+
+    const secureLocalizationTips = (text: string | null): string => {
+        if (isUnlocked && text) return text;
+        if (!text) return "";
+        const tips = text.split(/\n{2,}|(?=\d+\.)/);
+        return tips.map((tip, i) => i === 0 ? tip : "🔒 한국 시장 맞춤형 현지화 팁 잠금 해제").join('\n\n');
+    };
+
     // Unlock CTA Component
     const UnlockCTA = () => (
-        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-background/40 backdrop-blur-sm rounded-[64px] p-8 text-center animate-in fade-in duration-700">
-            <div className="bg-background/90 p-12 rounded-[56px] border-2 border-primary/20 shadow-2xl max-w-lg space-y-8">
+        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-background/50 backdrop-blur-md rounded-[64px] p-8 text-center animate-in fade-in duration-700">
+            <div className="bg-background/95 p-12 rounded-[56px] border-2 border-primary/20 shadow-2xl max-w-2xl space-y-8">
                 <div className="w-24 h-24 bg-primary/10 rounded-[32px] flex items-center justify-center mx-auto mb-6">
                     <IconRocket size={48} className="text-primary animate-bounce" />
                 </div>
@@ -199,16 +235,21 @@ ${(analysis?.solution_wizard as any)?.steps?.map((step: string, i: number) => `$
                     PUFE 상세 지표, 한국형 GTM 전략, 실행 체크리스트 등 <br />
                     비즈니스 실행력을 높여줄 모든 분석 데이터가 잠겨 있습니다.
                 </p>
-                <div className="pt-6 space-y-4">
+                <div className="pt-6 grid grid-cols-1 sm:grid-cols-2 gap-6 items-stretch">
+                    <a href={polarCheckoutUrl} target="_blank" rel="noopener noreferrer" className="block">
+                        <Button size="lg" className="w-full bg-primary font-black shadow-xl shadow-primary/30 h-16 rounded-2xl text-base hover:scale-105 transition-all gap-2">
+                            ⚡ 개별 리포트 구매 (₩3,900)
+                        </Button>
+                    </a>
                     <Link href="/premium" className="block">
-                        <Button size="lg" className="w-full bg-primary font-black shadow-xl shadow-primary/30 h-16 rounded-2xl text-xl hover:scale-105 transition-all">
-                            분석 리포트 잠금 해제하기
+                        <Button size="lg" variant="outline" className="w-full font-black border-2 border-muted hover:border-primary/50 h-16 rounded-2xl text-base hover:scale-105 transition-all">
+                            👑 프리미엄 구독 (₩9,900)
                         </Button>
                     </Link>
-                    <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest opacity-50 uppercase">
-                        Premium membership required for deep insights
-                    </p>
                 </div>
+                <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest opacity-65">
+                    Polar를 통한 즉시 잠금 해제 / 프리미엄 월간 무제한 이용권
+                </p>
             </div>
         </div>
     );
@@ -376,12 +417,12 @@ ${(analysis?.solution_wizard as any)?.steps?.map((step: string, i: number) => `$
                             </div>
                         </section>
 
-                        <div className="relative">
+                        <div className={`relative ${isUnlocked ? "" : "max-h-[480px] overflow-hidden rounded-[64px] shadow-sm bg-gradient-to-b from-transparent to-background/95 pb-20"}`}>
                             {/* Premium Masking Layer */}
                             <div className={isUnlocked ? "" : "blur-3xl select-none pointer-events-none opacity-40 grayscale transition-all duration-1000"}>
                                 {/* 2. AI 개발 브리프 (Prompt Brief) */}
                                 <section className="space-y-10 bg-primary/5 p-12 rounded-[64px] border border-primary/20 shadow-inner group/brief mb-24 relative">
-                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-8">
+                                    <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6 mb-8">
                                         <div className="flex items-center gap-6">
                                             <div className="w-16 h-16 bg-primary rounded-[28px] flex items-center justify-center shadow-xl shadow-primary/30 group-hover/brief:scale-110 transition-transform duration-500">
                                                 <IconSparkles className="text-primary-foreground w-8 h-8 animate-pulse" />
@@ -391,10 +432,18 @@ ${(analysis?.solution_wizard as any)?.steps?.map((step: string, i: number) => `$
                                                 <h2 className="text-4xl font-black tracking-tighter">AI 개발 브리프 (Prompt Brief)</h2>
                                             </div>
                                         </div>
-                                        <AIBriefCopyButton briefText={analysis?.ai_brief || fallbackBrief} />
+                                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+                                            <div className="flex items-center gap-2 bg-background/50 border border-muted px-4 py-2 rounded-2xl text-xs font-bold text-muted-foreground shadow-sm">
+                                                <span className="opacity-75">⚡ 추천 AI 도구:</span>
+                                                <a href="https://console.anthropic.com" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors underline decoration-dotted">Claude Console</a>
+                                                <span className="opacity-30">|</span>
+                                                <a href="https://platform.openai.com" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors underline decoration-dotted">OpenAI API</a>
+                                            </div>
+                                            <AIBriefCopyButton briefText={analysis?.ai_brief || fallbackBrief} />
+                                        </div>
                                     </div>
                                     <div className="prose prose-lg prose-slate dark:prose-invert max-w-none text-foreground leading-relaxed bg-background/60 p-10 rounded-[40px] border border-muted shadow-inner">
-                                        <ReactMarkdown>{analysis?.ai_brief || fallbackBrief}</ReactMarkdown>
+                                        <ReactMarkdown>{getSecureText(analysis?.ai_brief || fallbackBrief)}</ReactMarkdown>
                                     </div>
                                 </section>
 
@@ -407,7 +456,7 @@ ${(analysis?.solution_wizard as any)?.steps?.map((step: string, i: number) => `$
                                         <h2 className="text-4xl font-black tracking-tighter">점수 부여 상세 근거</h2>
                                     </div>
                                     <div className="prose prose-lg prose-slate dark:prose-invert max-w-none text-foreground leading-relaxed bg-background/60 p-10 rounded-[40px] border border-muted shadow-inner">
-                                        <ReactMarkdown>{formatReasoningText(reasoning)}</ReactMarkdown>
+                                        <ReactMarkdown>{formatReasoningText(getSecureText(reasoning))}</ReactMarkdown>
                                     </div>
                                 </section>
 
@@ -420,7 +469,7 @@ ${(analysis?.solution_wizard as any)?.steps?.map((step: string, i: number) => `$
                                         <h2 className="text-4xl font-black tracking-tighter">한국형 진입 전략 (GTM)</h2>
                                     </div>
                                     <div className="prose prose-lg prose-slate dark:prose-invert max-w-none text-foreground leading-relaxed bg-white dark:bg-slate-900 p-12 sm:p-16 rounded-[64px] border border-orange-200/50 dark:border-orange-900/40 shadow-2xl relative">
-                                        <ReactMarkdown>{formatGtmText(analysis?.gtm_strategy) || "해당 트렌드의 한국 시장 진출 전략을 분석 중입니다."}</ReactMarkdown>
+                                        <ReactMarkdown>{formatGtmText(getSecureText(analysis?.gtm_strategy)) || "해당 트렌드의 한국 시장 진출 전략을 분석 중입니다."}</ReactMarkdown>
                                     </div>
                                 </section>
 
@@ -437,7 +486,7 @@ ${(analysis?.solution_wizard as any)?.steps?.map((step: string, i: number) => `$
                                             <h3 className="text-xl font-black mb-6 flex items-center gap-2">
                                                 <IconCheck className="text-primary" /> 해결 실행 단계
                                             </h3>
-                                            {(analysis?.solution_wizard as any)?.steps?.map((step: string, i: number) => (
+                                            {secureSteps((analysis?.solution_wizard as any)?.steps)?.map((step: string, i: number) => (
                                                 <div key={i} className="flex gap-4 p-6 bg-background rounded-3xl border border-muted shadow-sm">
                                                     <span className="text-2xl font-black text-primary/20">0{i + 1}</span>
                                                     <p className="text-sm font-bold leading-relaxed">{step}</p>
@@ -449,7 +498,7 @@ ${(analysis?.solution_wizard as any)?.steps?.map((step: string, i: number) => `$
                                                 <IconRocket size={20} className="text-primary" /> 액션 체크리스트
                                             </h3>
                                             <div className="space-y-4">
-                                                {(analysis?.solution_wizard as any)?.checklist?.map((item: string, i: number) => (
+                                                {secureChecklist((analysis?.solution_wizard as any)?.checklist)?.map((item: string, i: number) => (
                                                     <div key={i} className="flex items-center gap-4 bg-background/50 p-4 rounded-2xl border border-primary/10">
                                                         <IconCheck size={16} className="text-primary" />
                                                         <span className="text-xs font-bold text-foreground/80">{item}</span>
@@ -507,8 +556,8 @@ ${(analysis?.solution_wizard as any)?.steps?.map((step: string, i: number) => `$
                                     추천 기술 스택
                                 </h3>
                                 <div className="flex flex-wrap gap-2">
-                                    {cleanTechStack(analysis?.tech_stack_suggestion).length > 0 ? (
-                                        cleanTechStack(analysis?.tech_stack_suggestion).map((item, i) => (
+                                    {cleanTechStack(secureTechStack(analysis?.tech_stack_suggestion)).length > 0 ? (
+                                        cleanTechStack(secureTechStack(analysis?.tech_stack_suggestion)).map((item, i) => (
                                             <span key={i} className="px-3 py-1.5 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-700 dark:text-blue-300 text-sm font-semibold">{item}</span>
                                         ))
                                     ) : (
@@ -525,8 +574,8 @@ ${(analysis?.solution_wizard as any)?.steps?.map((step: string, i: number) => `$
                                     현지화 핵심 포인트
                                 </h3>
                                 <div className="space-y-4">
-                                    {analysis?.korea_localization_tips ? (
-                                        analysis.korea_localization_tips.split(/\n{2,}|(?=\d+\.)/).map((para: string, i: number) => (
+                                    {secureLocalizationTips(analysis?.korea_localization_tips) ? (
+                                        secureLocalizationTips(analysis?.korea_localization_tips).split(/\n{2,}|(?=\d+\.)/).map((para: string, i: number) => (
                                             <div key={i} className="flex gap-3">
                                                 <span className="mt-1 flex-shrink-0 w-6 h-6 rounded-full bg-purple-500/15 flex items-center justify-center text-xs font-black text-purple-600 dark:text-purple-400">{i + 1}</span>
                                                 <p className="text-sm leading-relaxed text-foreground/80 font-medium">{para.replace(/^\d+\.\s*/, '').trim()}</p>
@@ -540,6 +589,54 @@ ${(analysis?.solution_wizard as any)?.steps?.map((step: string, i: number) => `$
                         </div>
                     </div>
                 </div>
+
+                {/* 🛡️ 파트너 및 배포 인프라 제휴 (Affiliate & Partner Links) */}
+                <div className="mt-16 bg-muted/10 p-12 rounded-[56px] border border-muted/30 shadow-inner">
+                    <div className="max-w-4xl mx-auto space-y-8">
+                        <div className="text-center space-y-2">
+                            <span className="text-[10px] text-primary/60 font-black uppercase tracking-[0.2em]">Affiliate Partners</span>
+                            <h3 className="text-3xl font-black tracking-tighter">추천 인프라 및 도구</h3>
+                            <p className="text-sm text-muted-foreground font-medium">사이드 프로젝트를 즉시 배포하고 결제를 연동하기 위해 최적화된 도구 파트너십입니다.</p>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
+                            {/* Vercel */}
+                            <a href="https://vercel.com" target="_blank" rel="noopener noreferrer" className="group/vercel bg-background hover:bg-black hover:text-white border border-muted hover:border-black p-8 rounded-[40px] shadow-sm hover:shadow-2xl transition-all duration-500 flex flex-col justify-between space-y-6">
+                                <div className="space-y-3">
+                                    <div className="w-12 h-12 bg-black text-white rounded-2xl flex items-center justify-center font-bold text-xl transition-transform group-hover/vercel:-rotate-6">▲</div>
+                                    <h4 className="font-black text-lg">Vercel</h4>
+                                    <p className="text-xs text-muted-foreground group-hover/vercel:text-white/80 leading-relaxed font-medium">AI 기반 프론트엔드 제품을 초고속으로 배포하고 최적화할 수 있는 업계 표준 인프라입니다.</p>
+                                </div>
+                                <span className="text-xs font-black uppercase tracking-widest text-primary group-hover/vercel:text-white/90 flex items-center gap-1.5 pt-2">
+                                    배포 플랫폼 바로가기 <IconExternalLink size={14} />
+                                </span>
+                            </a>
+                            
+                            {/* Supabase */}
+                            <a href="https://supabase.com" target="_blank" rel="noopener noreferrer" className="group/supabase bg-background hover:bg-emerald-950/20 border border-muted hover:border-emerald-500/30 p-8 rounded-[40px] shadow-sm hover:shadow-2xl transition-all duration-500 flex flex-col justify-between space-y-6">
+                                <div className="space-y-3">
+                                    <div className="w-12 h-12 bg-emerald-500/10 text-emerald-500 rounded-2xl flex items-center justify-center font-bold text-xl transition-transform group-hover/supabase:scale-110">⚡</div>
+                                    <h4 className="font-black text-lg group-hover/supabase:text-emerald-500">Supabase</h4>
+                                    <p className="text-xs text-muted-foreground group-hover/supabase:text-foreground/80 leading-relaxed font-medium">사용자 인증(Auth) 및 AI 벡터 데이터베이스, 실시간 CRUD 인스턴스를 즉시 구축하세요.</p>
+                                </div>
+                                <span className="text-xs font-black uppercase tracking-widest text-primary group-hover/supabase:text-emerald-500 flex items-center gap-1.5 pt-2">
+                                    DB 구축 바로가기 <IconExternalLink size={14} />
+                                </span>
+                            </a>
+                            
+                            {/* Polar */}
+                            <a href="https://polar.sh" target="_blank" rel="noopener noreferrer" className="group/polar bg-background hover:bg-blue-950/20 border border-muted hover:border-blue-500/30 p-8 rounded-[40px] shadow-sm hover:shadow-2xl transition-all duration-500 flex flex-col justify-between space-y-6">
+                                <div className="space-y-3">
+                                    <div className="w-12 h-12 bg-blue-500/10 text-blue-500 rounded-2xl flex items-center justify-center font-bold text-xl transition-transform group-hover/polar:scale-110">❄️</div>
+                                    <h4 className="font-black text-lg group-hover/polar:text-blue-500">Polar.sh</h4>
+                                    <p className="text-xs text-muted-foreground group-hover/polar:text-foreground/80 leading-relaxed font-medium">Stripe 기반의 오픈소스 PG 솔루션으로, 1인 개발자가 가장 간편하게 글로벌 마이크로 결제를 연동하는 방법입니다.</p>
+                                </div>
+                                <span className="text-xs font-black uppercase tracking-widest text-primary group-hover/polar:text-blue-500 flex items-center gap-1.5 pt-2">
+                                    결제 솔루션 바로가기 <IconExternalLink size={14} />
+                                </span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
             </main>
 
             <footer className="border-t py-24 bg-muted/20 relative z-10">
@@ -548,10 +645,10 @@ ${(analysis?.solution_wizard as any)?.steps?.map((step: string, i: number) => `$
                         <div className="p-2 bg-foreground rounded-lg">
                             <IconBulb size={24} className="text-background" />
                         </div>
-                        <span className="text-2xl font-black tracking-tighter">Trend Intelligence</span>
+                        <span className="text-2xl font-black tracking-tighter">Trend Scouter</span>
                     </div>
                     <p className="text-muted-foreground text-xs font-black uppercase tracking-widest opacity-60">
-                        © 2026 Trend Intelligence. Precision Analysis & Global Insights.
+                        © 2026 Trend Scouter. Precision Analysis & Global Insights.
                     </p>
                 </div>
             </footer>

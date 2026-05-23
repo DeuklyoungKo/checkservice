@@ -91,7 +91,7 @@ export default async function WorkspacePage() {
                         <div className="w-9 h-9 bg-primary rounded-xl flex items-center justify-center shadow-lg">
                             <IconBulb className="text-primary-foreground w-5 h-5" />
                         </div>
-                        <span className="text-xl font-black tracking-tight text-primary">Trend Intelligence</span>
+                        <span className="text-xl font-black tracking-tight text-primary">Trend Scouter</span>
                     </Link>
                     <div className="flex items-center gap-4">
                         {/* [PHASE 2 - 차후 오픈 예정] 아이디어 컨버터 위저드 버튼 - 수익화 검증 완료 후 재활성화 */}
@@ -209,7 +209,7 @@ export default async function WorkspacePage() {
             <footer className="border-t py-12 bg-muted/20 mt-32">
                 <div className="max-w-7xl mx-auto px-4 flex flex-col items-center gap-4">
                     <p className="text-muted-foreground text-xs font-medium">
-                        © 2026 Trend Intelligence. Your Personalized Opportunity Map.
+                        © 2026 Trend Scouter. Your Personalized Opportunity Map.
                     </p>
                 </div>
             </footer>

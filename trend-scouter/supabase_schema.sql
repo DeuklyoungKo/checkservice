@@ -1,4 +1,4 @@
--- Trend Intelligence Database Schema
+-- Trend Scouter Database Schema
 
 -- 1. Trends Table: Stores aggregated statistics and impact metrics (Strict Stats-Only)
 CREATE TABLE public.trends (

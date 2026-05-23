@@ -262,10 +262,10 @@ export default async function Home() {
           <div className="flex flex-col items-center gap-4">
             <div className="flex items-center gap-2 opacity-50">
               <IconBulb size={24} />
-              <span className="text-lg font-bold">Trend Intelligence</span>
+              <span className="text-lg font-bold">Trend Scouter</span>
             </div>
             <p className="text-muted-foreground text-sm">
-              © 2026 Trend Intelligence. Built with Precision & AI.
+              © 2026 Trend Scouter. Built with Precision & AI.
             </p>
             <div className="flex gap-6 mt-4">
               <Button variant="link" className="text-muted-foreground hover:text-primary p-0">Terms</Button>

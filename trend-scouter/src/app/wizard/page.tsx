@@ -82,7 +82,7 @@ export default function WizardPage() {
                         <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg">
                             <IconBulb className="text-primary-foreground w-6 h-6" />
                         </div>
-                        <span className="text-xl font-bold tracking-tight text-primary">Trend Intelligence</span>
+                        <span className="text-xl font-bold tracking-tight text-primary">Trend Scouter</span>
                     </Link>
                     <Link href="/">
                         <Button variant="ghost" size="sm" className="gap-2 rounded-full font-bold">
