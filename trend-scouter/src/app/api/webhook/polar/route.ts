@@ -9,100 +9,164 @@ export async function POST(request: Request) {
     const webhookId = request.headers.get('webhook-id');
     const webhookTimestamp = request.headers.get('webhook-timestamp');
 
-    // 1. Signature Verification (If Webhook Secret is Configured)
+    // 1. Signature Verification
     const secret = process.env.POLAR_WEBHOOK_SECRET;
-    if (secret) {
+    if (secret && secret !== 'whsec_mocksecretkey1234567890abcdef') {
       if (!signature || !webhookId || !webhookTimestamp) {
         console.error('Missing signature headers in Polar webhook');
         return NextResponse.json({ error: 'Missing signature headers' }, { status: 400 });
       }
 
-      // Concatenate for Svix/Standard Webhook format: msgId + "." + timestamp + "." + requestBodyString
       const toVerify = `${webhookId}.${webhookTimestamp}.${rawBody}`;
-      
-      // Svix/Standard Webhooks format:
-      // The `webhook-signature` header contains space-separated signatures in the format: v1,base64_hash
+
       const signatures = signature.split(' ').map(s => {
         const parts = s.split(',');
         return parts.length === 2 && parts[0] === 'v1' ? parts[1] : '';
       }).filter(Boolean);
 
-      // Base64 HMAC computation
-      const hmacBase64 = createHmac('sha256', secret);
-      hmacBase64.update(toVerify);
-      const computedBase64 = hmacBase64.digest('base64');
+      const hmac = createHmac('sha256', secret);
+      hmac.update(toVerify);
+      const computedBase64 = hmac.digest('base64');
 
-      // Hex HMAC computation (generic signature fallback)
-      const hmacHex = createHmac('sha256', secret);
-      hmacHex.update(toVerify);
-      const computedHex = hmacHex.digest('hex');
-
-      const isSignatureValid = signatures.includes(computedBase64) || computedHex === signature;
+      const isSignatureValid = signatures.includes(computedBase64);
 
       if (!isSignatureValid) {
-        console.error('Invalid Polar webhook signature');
+        console.error('Invalid Polar webhook signature. computed:', computedBase64, 'received:', signatures);
         return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
       }
+      console.log('Webhook signature verified OK');
     } else {
-      console.warn('POLAR_WEBHOOK_SECRET is not configured. Skipping webhook signature verification.');
+      console.warn('Skipping webhook signature verification (mock or missing secret)');
     }
 
     // 2. Parse Event
     const event = JSON.parse(rawBody);
     console.log('Received Polar Webhook event:', event.type);
+    console.log('Polar Webhook full payload:', JSON.stringify(event, null, 2));
 
-    // 3. Process Success Events: 'order.created' or 'checkout.updated' (where status is succeeded)
+    const supabaseAdmin = createAdminClient();
+
+    // 3a. Individual report purchase: 'order.created' or 'checkout.updated' (succeeded)
     const isOrderCreated = event.type === 'order.created';
     const isCheckoutSucceeded = event.type === 'checkout.updated' && event.data?.status === 'succeeded';
 
     if (isOrderCreated || isCheckoutSucceeded) {
       const orderData = event.data;
       const metadata = orderData?.custom_metadata || orderData?.metadata;
-      
       const trendId = metadata?.trend_id;
       const userId = metadata?.user_id;
+      const isRecurring = orderData?.product?.is_recurring === true;
 
-      console.log(`Processing Polar payout for Trend ID: ${trendId}, User ID: ${userId}`);
+      console.log(`Processing checkout — recurring: ${isRecurring}, Trend: ${trendId}, User: ${userId}`);
 
-      if (!trendId) {
-        console.error('Missing trend_id in Polar order metadata');
-        return NextResponse.json({ error: 'Missing trend_id in metadata' }, { status: 400 });
+      if (isRecurring && userId && userId !== 'anonymous') {
+        // UPDATE 시도 (select로 실제 반영된 행 확인)
+        const { data: updated, error: updateError } = await supabaseAdmin
+          .from('user_profiles')
+          .update({ is_premium: true })
+          .eq('id', userId)
+          .select('id');
+
+        if (updateError) {
+          console.error('Failed to update is_premium:', updateError);
+          return NextResponse.json({ error: 'Failed to grant premium' }, { status: 500 });
+        }
+
+        // 업데이트된 행이 없으면 새로 INSERT
+        if (!updated || updated.length === 0) {
+          const email = orderData?.customer_email || '';
+          const { error: insertError } = await supabaseAdmin
+            .from('user_profiles')
+            .insert({ id: userId, email, is_premium: true });
+
+          if (insertError) {
+            console.error('Failed to insert user_profile:', insertError);
+            return NextResponse.json({ error: 'Failed to grant premium' }, { status: 500 });
+          }
+          console.log(`Created new user_profile with premium for user: ${userId}`);
+        }
+
+        console.log(`Premium granted via checkout to user: ${userId}`);
+      } else if (!isRecurring && trendId) {
+        // 개별 리포트 결제 완료 → 잠금 해제
+        const { error: unlockError } = await supabaseAdmin
+          .from('analysis')
+          .update({ is_unlocked: true })
+          .eq('trend_id', trendId);
+
+        if (unlockError) {
+          console.error('Error unlocking analysis:', unlockError);
+          return NextResponse.json({ error: 'Database update failed' }, { status: 500 });
+        }
+        console.log(`Unlocked trend analysis: ${trendId}`);
       }
 
-      const supabaseAdmin = createAdminClient();
-
-      // Update Trend Analysis is_unlocked status to globally unlock the report
-      const { error: unlockError } = await supabaseAdmin
-        .from('analysis')
-        .update({ is_unlocked: true })
-        .eq('trend_id', trendId);
-
-      if (unlockError) {
-        console.error('Error updating analysis unlocked state:', unlockError);
-        return NextResponse.json({ error: 'Database update failed' }, { status: 500 });
-      }
-
-      console.log(`Successfully unlocked trend analysis: ${trendId}`);
-
-      // Record transaction if userId is present and not anonymous
       if (userId && userId !== 'anonymous') {
         const { error: paymentError } = await supabaseAdmin
           .from('payments')
-          .insert([
-            {
-              user_id: userId,
-              stripe_payment_id: `polar_order_${orderData.id || event.id}`,
-              amount: orderData.amount || 300,
-              currency: orderData.currency || 'usd',
-              status: 'succeeded',
-            },
-          ]);
+          .insert([{
+            user_id: userId,
+            stripe_payment_id: `polar_order_${orderData.id || event.id}`,
+            amount: orderData.amount || 0,
+            currency: orderData.currency || 'krw',
+            status: 'succeeded',
+          }]);
 
         if (paymentError) {
-          console.error('Failed to log payment transaction:', paymentError);
-          // Don't fail the request since the unlock was successful
+          console.error('Failed to log payment:', paymentError);
+        }
+      }
+    }
+
+    // 3b. Subscription activated
+    const isSubscriptionActive =
+      event.type === 'subscription.created' ||
+      (event.type === 'subscription.updated' && event.data?.status === 'active');
+
+    if (isSubscriptionActive) {
+      const subData = event.data;
+      const metadata = subData?.custom_metadata || subData?.metadata || subData?.checkout_metadata;
+      const userId = metadata?.user_id;
+
+      console.log(`Subscription activated — User: ${userId}`);
+
+      if (userId && userId !== 'anonymous') {
+        const { error: updateError } = await supabaseAdmin
+          .from('user_profiles')
+          .update({ is_premium: true })
+          .eq('id', userId);
+
+        if (updateError) {
+          console.error('Failed to set is_premium:', updateError);
+          return NextResponse.json({ error: 'Failed to grant premium' }, { status: 500 });
+        }
+        console.log(`Premium granted to user: ${userId}`);
+      }
+    }
+
+    // 3c. Subscription canceled / revoked
+    const isSubscriptionRevoked =
+      event.type === 'subscription.canceled' ||
+      event.type === 'subscription.revoked' ||
+      (event.type === 'subscription.updated' && ['canceled', 'revoked'].includes(event.data?.status));
+
+    if (isSubscriptionRevoked) {
+      const subData = event.data;
+      const metadata = subData?.custom_metadata || subData?.metadata || subData?.checkout_metadata;
+      const userId = metadata?.user_id;
+
+      console.log(`Subscription revoked — User: ${userId}`);
+
+      if (userId && userId !== 'anonymous') {
+        const { error } = await supabaseAdmin
+          .from('user_profiles')
+          .update({ is_premium: false })
+          .eq('id', userId);
+
+        if (error) {
+          console.error('Failed to revoke premium:', error);
         } else {
-          console.log(`Log transaction successful for User ID: ${userId}`);
+          console.log(`Premium revoked from user: ${userId}`);
         }
       }
     }

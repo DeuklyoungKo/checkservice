@@ -1,6 +1,7 @@
 ## next.js 실행
     cd trend-scouter
     npm run dev
+    ngrok http 3000
 
 ## 수집실행
     cd trend-scouter

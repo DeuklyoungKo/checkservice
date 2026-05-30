@@ -1,6 +1,7 @@
+import { createClient } from "@/utils/supabase/server";
 import { Button } from "@/components/ui/button";
+import { PolarCheckoutButton } from "@/components/PolarCheckoutButton";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 import {
@@ -9,13 +10,24 @@ import {
   IconCrown,
   IconRocket,
   IconSparkles,
-  IconQrcode,
   IconExternalLink,
-  IconInfinity
+  IconInfinity,
+  IconBolt,
+  IconCircleCheck,
 } from "@tabler/icons-react";
-import { PaymentConfirmationForm } from "@/components/PaymentConfirmationForm";
 
-export default function PremiumPage() {
+interface PageProps {
+  searchParams: Promise<{ subscribed?: string }>;
+}
+
+export default async function PremiumPage({ searchParams }: PageProps) {
+  const { subscribed } = await searchParams;
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  const productId9900 = process.env.NEXT_PUBLIC_POLAR_PRODUCT_ID_9900 || '';
+
   return (
     <div className="min-h-screen bg-background text-foreground font-sans selection:bg-primary/20 transition-all duration-500 pb-20">
       {/* Navigation */}
@@ -35,6 +47,53 @@ export default function PremiumPage() {
       </nav>
 
       <main className="max-w-7xl mx-auto px-4 py-16 sm:py-24">
+        {/* Success State - 구독 완료 시 전체 교체 */}
+        {subscribed === 'true' && (
+          <div className="max-w-2xl mx-auto text-center space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <div className="w-28 h-28 bg-green-500/15 rounded-[40px] flex items-center justify-center mx-auto border-2 border-green-500/30">
+              <IconCircleCheck size={56} className="text-green-500" />
+            </div>
+            <div className="space-y-4">
+              <h1 className="text-5xl font-black tracking-tighter">구독 완료!</h1>
+              <p className="text-xl text-muted-foreground font-medium leading-relaxed">
+                프리미엄 구독이 성공적으로 처리되었습니다.<br />
+                모든 트렌드 심층 리포트가 잠금 해제됩니다.
+              </p>
+            </div>
+            <div className="bg-muted/30 rounded-[32px] p-8 border border-muted space-y-3 text-left">
+              <p className="font-black text-sm uppercase tracking-widest text-muted-foreground">다음 단계</p>
+              {[
+                "로그인 상태라면 트렌드 페이지에서 즉시 전체 리포트 열람 가능",
+                "로그아웃 상태라면 로그인 후 자동으로 프리미엄 권한이 적용됩니다",
+                "반영까지 최대 1분이 소요될 수 있습니다",
+              ].map((text, i) => (
+                <div key={i} className="flex items-start gap-3">
+                  <div className="w-6 h-6 bg-green-500/20 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <IconCheck size={14} className="text-green-600" />
+                  </div>
+                  <p className="text-sm font-medium">{text}</p>
+                </div>
+              ))}
+            </div>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
+              <Link href="/trends">
+                <Button size="lg" className="h-14 px-10 rounded-2xl font-black text-base shadow-lg shadow-primary/20 hover:scale-[1.02] transition-all">
+                  전체 트렌드 보러 가기
+                </Button>
+              </Link>
+              {!user && (
+                <Link href="/login">
+                  <Button size="lg" variant="outline" className="h-14 px-10 rounded-2xl font-black text-base border-2 hover:scale-[1.02] transition-all">
+                    로그인하기
+                  </Button>
+                </Link>
+              )}
+            </div>
+          </div>
+        )}
+
+        {subscribed !== 'true' && (<>
+
         {/* Header */}
         <div className="text-center max-w-3xl mx-auto mb-20 space-y-6">
           <Badge variant="secondary" className="bg-primary/10 text-primary px-4 py-1.5 text-xs font-black tracking-[0.2em] uppercase rounded-full">
@@ -49,10 +108,16 @@ export default function PremiumPage() {
             무료 트렌드를 넘어, 실제 성공률을 높여주는 심층 리포트와<br className="hidden sm:block" />
             한국 시장 전용 GTM 전략을 무제한으로 이용할 수 있습니다.
           </p>
+          <div className="flex items-center justify-center gap-3 pt-2">
+            <div className="flex items-center gap-2 bg-muted/50 px-4 py-2 rounded-full text-xs font-bold text-muted-foreground">
+              <IconBolt size={14} className="text-primary" />
+              Polar 안전 결제 · 즉시 자동 활성화 · 언제든 해지 가능
+            </div>
+          </div>
         </div>
 
         {/* Pricing Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-32 items-stretch">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-32 items-stretch max-w-4xl mx-auto">
           {/* Individual Report */}
           <Card className="relative group overflow-hidden rounded-[56px] border-2 border-muted hover:border-primary/30 transition-all duration-500 bg-card/50 backdrop-blur-sm flex flex-col">
             <div className="absolute top-0 right-0 p-8 opacity-[0.03] select-none pointer-events-none">
@@ -82,12 +147,12 @@ export default function PremiumPage() {
               </ul>
             </CardContent>
             <CardFooter className="p-12 pt-0">
-              <a href="https://qr.kakaopay.com/FYPQCzrBK79e01229" target="_blank" rel="noopener noreferrer" className="w-full">
-                <Button size="lg" className="w-full h-16 rounded-3xl font-black text-xl gap-3 shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all bg-yellow-400 text-black hover:bg-yellow-500 border-none">
-                  <IconQrcode size={24} />
-                  카카오페이 송금하기
+              <Link href="/trends" className="w-full">
+                <Button size="lg" variant="outline" className="w-full h-16 rounded-3xl font-black text-lg gap-3 hover:scale-[1.02] active:scale-[0.98] transition-all border-2">
+                  <IconRocket size={20} />
+                  트렌드 목록에서 구매하기
                 </Button>
-              </a>
+              </Link>
             </CardFooter>
           </Card>
 
@@ -123,62 +188,55 @@ export default function PremiumPage() {
               </ul>
             </CardContent>
             <CardFooter className="p-12 pt-0">
-              <a href="https://qr.kakaopay.com/FYPQCzrBK135609116" target="_blank" rel="noopener noreferrer" className="w-full">
-                <Button size="lg" className="w-full h-16 rounded-3xl font-black text-xl gap-3 shadow-2xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all bg-primary text-primary-foreground border-none">
-                  <IconQrcode size={24} />
-                  카카오페이 송금하기
-                </Button>
-              </a>
+              <PolarCheckoutButton
+                productId={productId9900}
+                successPath="/premium?subscribed=true"
+                className="w-full h-16 rounded-3xl font-black text-xl gap-3 shadow-2xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all bg-primary text-primary-foreground border-none"
+              >
+                <IconExternalLink size={24} />
+                Polar로 구독 시작하기
+              </PolarCheckoutButton>
             </CardFooter>
           </Card>
         </div>
 
-        {/* Payment Confirmation Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-16 items-start">
-          <div className="lg:col-span-3 space-y-12">
-            <div className="space-y-6">
-              <h2 className="text-4xl font-black tracking-tight">결제 안내 및 절차</h2>
-              <p className="text-lg text-muted-foreground font-medium leading-relaxed">
-                현재 정식 결제 시스템 도입 전으로, **카카오페이 수동 송금**을 통해 권한을 부여해 드리고 있습니다. 불편을 드려 죄송하며, 더 나은 서비스로 보답하겠습니다!
+        {/* How it works */}
+        <div className="max-w-3xl mx-auto space-y-12">
+          <div className="text-center space-y-4">
+            <h2 className="text-4xl font-black tracking-tight">결제 흐름 안내</h2>
+            <p className="text-lg text-muted-foreground font-medium">
+              Polar를 통해 안전하게 결제하고 즉시 자동 활성화됩니다.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            {[
+              { step: "1", text: "위 버튼을 눌러 Polar 결제 페이지로 이동합니다." },
+              { step: "2", text: "카드 정보를 입력하고 결제를 완료합니다." },
+              { step: "3", text: "웹훅이 즉시 발동하여 계정에 프리미엄 권한이 부여됩니다." },
+              { step: "4", text: "페이지를 새로고침하면 모든 리포트가 잠금 해제됩니다." },
+            ].map(({ step, text }) => (
+              <div key={step} className="p-8 rounded-[40px] bg-muted/30 border border-muted flex flex-col items-center text-center space-y-4">
+                <div className="w-12 h-12 bg-primary/10 text-primary rounded-2xl flex items-center justify-center font-black text-lg">{step}</div>
+                <p className="font-bold">{text}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="bg-primary/5 p-8 rounded-[40px] border border-primary/10 flex items-start gap-6">
+            <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center flex-shrink-0">
+              <IconExternalLink size={24} className="text-primary" />
+            </div>
+            <div>
+              <h4 className="font-black text-lg mb-2">문의 및 환불</h4>
+              <p className="text-sm text-muted-foreground font-medium leading-relaxed">
+                결제 문제 또는 환불 요청은 Polar 대시보드에서 직접 처리하거나{" "}
+                <Link href="/contact" className="underline decoration-dotted hover:text-primary transition-colors">문의 페이지</Link>를 통해 연락해 주세요.
               </p>
             </div>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <div className="p-8 rounded-[40px] bg-muted/30 border border-muted flex flex-col items-center text-center space-y-4">
-                <div className="w-12 h-12 bg-background rounded-2xl flex items-center justify-center font-black">1</div>
-                <p className="font-bold">위의 카카오페이 버튼을 눌러 송금을 완료해 주세요.</p>
-              </div>
-              <div className="p-8 rounded-[40px] bg-muted/30 border border-muted flex flex-col items-center text-center space-y-4">
-                <div className="w-12 h-12 bg-background rounded-2xl flex items-center justify-center font-black">2</div>
-                <p className="font-bold">송금 후 우측의 '입금 확인 요청' 폼을 작성해 주세요.</p>
-              </div>
-              <div className="p-8 rounded-[40px] bg-muted/30 border border-muted flex flex-col items-center text-center space-y-4">
-                <div className="w-12 h-12 bg-background rounded-2xl flex items-center justify-center font-black">3</div>
-                <p className="font-bold">관리자가 입금 확인 후 1시간 내에 프리미엄 권한을 부여합니다.</p>
-              </div>
-              <div className="p-8 rounded-[40px] bg-muted/30 border border-muted flex flex-col items-center text-center space-y-4">
-                <div className="w-12 h-12 bg-background rounded-2xl flex items-center justify-center font-black">4</div>
-                <p className="font-bold">로그아웃 후 다시 로그인하시면 프리미엄 기능이 활성화됩니다.</p>
-              </div>
-            </div>
-
-            <div className="bg-primary/5 p-8 rounded-[40px] border border-primary/10 flex items-start gap-6">
-              <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center flex-shrink-0">
-                <IconExternalLink size={24} className="text-primary" />
-              </div>
-              <div>
-                <h4 className="font-black text-lg mb-2">도움이 필요하신가요?</h4>
-                <p className="text-sm text-muted-foreground font-medium leading-relaxed">
-                  입금 확인이 늦어지거나 기타 문의사항은 하단 뉴스레터를 통해 문의해 주시면 신속하게 답변 드리겠습니다.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="lg:col-span-2">
-            <PaymentConfirmationForm />
           </div>
         </div>
+        </>)}
       </main>
 
       {/* Mini Footer */}

@@ -22,6 +22,7 @@ import {
 } from "@tabler/icons-react";
 import { BookmarkButton } from "@/components/BookmarkButton";
 import { AIBriefCopyButton } from "@/components/AIBriefCopyButton";
+import { PolarCheckoutButton } from "@/components/PolarCheckoutButton";
 
 interface PageProps {
     params: Promise<{ id: string }>;
@@ -185,10 +186,8 @@ ${(analysis?.solution_wizard as any)?.steps?.map((step: string, i: number) => `$
 사이드 프로젝트 런칭을 통한 마이크로 SaaS 매출 및 프리미어 유료 모델 연동
 `;
 
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
-    const polarProductId = process.env.NEXT_PUBLIC_POLAR_PRODUCT_ID || 'mock-product-id';
-    const polarDomain = process.env.NEXT_PUBLIC_POLAR_SANDBOX === 'true' ? 'sandbox.polar.sh' : 'polar.sh';
-    const polarCheckoutUrl = `https://${polarDomain}/checkout/${polarProductId}?metadata[trend_id]=${trend.id}&metadata[user_id]=${user?.id || 'anonymous'}&success_url=${encodeURIComponent(siteUrl + '/trend/' + trend.id + '?success=true')}`;
+    const productId3900 = process.env.NEXT_PUBLIC_POLAR_PRODUCT_ID_3900 || '';
+    const productId9900 = process.env.NEXT_PUBLIC_POLAR_PRODUCT_ID_9900 || '';
 
     const getSecureText = (text: string | null): string => {
         if (isUnlocked && text) return text;
@@ -236,19 +235,25 @@ ${(analysis?.solution_wizard as any)?.steps?.map((step: string, i: number) => `$
                     비즈니스 실행력을 높여줄 모든 분석 데이터가 잠겨 있습니다.
                 </p>
                 <div className="pt-6 grid grid-cols-1 sm:grid-cols-2 gap-6 items-stretch">
-                    <a href={polarCheckoutUrl} target="_blank" rel="noopener noreferrer" className="block">
-                        <Button size="lg" className="w-full bg-primary font-black shadow-xl shadow-primary/30 h-16 rounded-2xl text-base hover:scale-105 transition-all gap-2">
-                            ⚡ 개별 리포트 구매 (₩3,900)
-                        </Button>
-                    </a>
-                    <Link href="/premium" className="block">
-                        <Button size="lg" variant="outline" className="w-full font-black border-2 border-muted hover:border-primary/50 h-16 rounded-2xl text-base hover:scale-105 transition-all">
-                            👑 프리미엄 구독 (₩9,900)
-                        </Button>
-                    </Link>
+                    <PolarCheckoutButton
+                        productId={productId3900}
+                        trendId={trend.id}
+                        successPath={`/trend/${trend.id}?unlocked=true`}
+                        className="w-full bg-primary font-black shadow-xl shadow-primary/30 h-16 rounded-2xl text-base hover:scale-105 transition-all gap-2"
+                    >
+                        ⚡ 개별 리포트 구매 (₩3,900)
+                    </PolarCheckoutButton>
+                    <PolarCheckoutButton
+                        productId={productId9900}
+                        successPath="/premium?subscribed=true"
+                        variant="outline"
+                        className="w-full font-black border-2 border-muted hover:border-primary/50 h-16 rounded-2xl text-base hover:scale-105 transition-all"
+                    >
+                        👑 프리미엄 구독 (₩9,900/월)
+                    </PolarCheckoutButton>
                 </div>
                 <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest opacity-65">
-                    Polar를 통한 즉시 잠금 해제 / 프리미엄 월간 무제한 이용권
+                    Polar 안전 결제 / 즉시 잠금 해제 · 프리미엄 구독 시 모든 리포트 무제한
                 </p>
             </div>
         </div>
@@ -534,11 +539,13 @@ ${(analysis?.solution_wizard as any)?.steps?.map((step: string, i: number) => `$
                                 <h3 className="font-black text-2xl mb-6 relative z-10 leading-[1.2] tracking-tighter">
                                     완벽한 타이밍을 <br />놓치지 마세요.
                                 </h3>
-                                <Link href="/premium" className="block w-full">
-                                    <Button size="lg" className="w-full bg-primary font-black shadow-lg shadow-primary/40 h-14 rounded-2xl relative z-10 text-lg hover:scale-[1.03] transition-all duration-300">
-                                        Premium 가입하기
-                                    </Button>
-                                </Link>
+                                <PolarCheckoutButton
+                                    productId={productId9900}
+                                    successPath="/premium?subscribed=true"
+                                    className="w-full bg-primary font-black shadow-lg shadow-primary/40 h-14 rounded-2xl relative z-10 text-lg hover:scale-[1.03] transition-all duration-300"
+                                >
+                                    Premium 가입하기 (₩9,900/월)
+                                </PolarCheckoutButton>
                             </div>
                         )}
                     </aside>
