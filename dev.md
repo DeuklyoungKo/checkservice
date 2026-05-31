@@ -7,6 +7,12 @@
     // polar 관리자
     https://sandbox.polar.sh/dashboard/gonsuit
 
+    //test card
+    #카드번호: 4242 4242 4242 4242
+    #만료일: 미래 날짜 아무거나 (예: 12/30)
+    #CVC: 아무 3자리 (예: 123)
+    #이름: 아무 값
+
 ## 수집실행
     cd trend-scouter
     node scripts/rss-collector.js
