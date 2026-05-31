@@ -2,6 +2,10 @@
     cd trend-scouter
     npm run dev
     ngrok http 3000
+    // 외부 접속용 사이트
+    https://nanometer-monoxide-bucked.ngrok-free.dev
+    // polar 관리자
+    https://sandbox.polar.sh/dashboard/gonsuit
 
 ## 수집실행
     cd trend-scouter
