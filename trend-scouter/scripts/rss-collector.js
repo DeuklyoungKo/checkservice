@@ -1,3 +1,4 @@
+const axios = require('axios');
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const Parser = require('rss-parser');
 const { createClient } = require('@supabase/supabase-js');
@@ -9,13 +10,18 @@ const { getKoreanDemandSignal, getFullKoreanTrendSnapshot } = require('./naver-d
 
 /**
  * 환경 변수 필수 검증
+ * DeepSeek 또는 Gemini 중 하나 이상 필수
  */
 function validateEnv() {
-    const required = ['NEXT_PUBLIC_SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY', 'GEMINI_API_KEY'];
+    const required = ['NEXT_PUBLIC_SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY'];
     const missing = required.filter(key => !process.env[key]);
     if (missing.length > 0) {
         console.error(`❌ 필수 환경 변수가 누락되었습니다: ${missing.join(', ')}`);
         console.error('GitHub Secrets 또는 .env.local 설정을 확인해 주세요.');
+        process.exit(1);
+    }
+    if (!process.env.DEEPSEEK_API_KEY && !process.env.GEMINI_API_KEY) {
+        console.error('❌ DEEPSEEK_API_KEY 또는 GEMINI_API_KEY 중 하나 이상 필요합니다.');
         process.exit(1);
     }
 }
@@ -23,12 +29,16 @@ function validateEnv() {
 validateEnv();
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const deepseekApiKey = process.env.DEEPSEEK_API_KEY;
 const geminiApiKey = process.env.GEMINI_API_KEY;
 const naverClientId = process.env.NAVER_CLIENT_ID;
 const naverClientSecret = process.env.NAVER_CLIENT_SECRET;
 
-console.log('🔑 Gemini API Key Status:', geminiApiKey ? `Loaded (${geminiApiKey.substring(0, 5)}...)` : '❌ NOT FOUND');
+// Gemini 폴백 초기화 (GEMINI_API_KEY 있을 때만)
+const genAI = geminiApiKey ? new GoogleGenerativeAI(geminiApiKey) : null;
+
+console.log('🔑 DeepSeek API Key:', deepseekApiKey ? `Loaded (${deepseekApiKey.substring(0, 8)}...)` : '⚠️  NOT SET (Gemini 폴백 사용)');
+console.log('🔑 Gemini API Key:', geminiApiKey ? `Loaded (${geminiApiKey.substring(0, 5)}...)` : '⚠️  NOT SET (폴백 불가)');
 console.log('🔑 Naver DataLab Status:', naverClientId ? `Loaded (${naverClientId.substring(0, 4)}...)` : '⚠️  NOT SET (교차검증 비활성화)');
 
 // DataLab 스냅샷 캐시 (한 번 조회 후 재사용 — API 호출 최소화)
@@ -76,8 +86,6 @@ async function calculateImpactScore(title, content) {
 }
 
 async function analyzeWithAI(title, content, source, isKorean = false, koreaDemand = null) {
-    // 3.1 모델을 우선 시도하되, 실패 시 1.5-flash로 폴백
-    const modelNames = ["gemini-3.1-flash-lite-preview", "gemini-1.5-flash"];
     let lastError = null;
     const koreanHint = isKorean
         ? `\n    ※ 이 데이터는 한국 소스(${source})에서 수집된 콘텐츠입니다. 한국 시장 맥락을 최우선으로 분석하세요.`
@@ -114,23 +122,65 @@ async function analyzeWithAI(title, content, source, isKorean = false, koreaDema
     - 5: 1 month+ (requires ML models training, custom complex backend)
     `;
 
-    for (const modelName of modelNames) {
+    // 1순위: DeepSeek V3
+    if (deepseekApiKey) {
         try {
-            const model = genAI.getGenerativeModel({ model: modelName });
-            const result = await model.generateContent(prompt);
-            const response = await result.response;
-            const resultText = response.text().replace(/```json\n?|```/g, '').trim();
+            const response = await axios.post(
+                'https://api.deepseek.com/chat/completions',
+                {
+                    model: 'deepseek-chat',
+                    messages: [
+                        {
+                            role: 'system',
+                            content: 'You are a business trend analyst specializing in Korean market insights. Always respond with valid JSON only, no markdown code blocks.'
+                        },
+                        { role: 'user', content: prompt }
+                    ],
+                    temperature: 0.7,
+                    max_tokens: 2000,
+                },
+                {
+                    headers: {
+                        'Authorization': `Bearer ${deepseekApiKey}`,
+                        'Content-Type': 'application/json',
+                    },
+                    timeout: 30000,
+                }
+            );
+
+            const resultText = response.data.choices[0].message.content
+                .replace(/```json\n?|```/g, '').trim();
             const analysis = JSON.parse(resultText);
-            
-            console.log(`✅ Analysis success (${modelName}): ${analysis.headline.substring(0, 40)}...`);
+
+            console.log(`✅ Analysis success (deepseek-chat): ${analysis.headline.substring(0, 40)}...`);
             return analysis;
         } catch (error) {
             lastError = error;
-            console.warn(`⚠️  Model ${modelName} failed, trying next... Error: ${error.message}`);
+            console.warn(`⚠️  DeepSeek failed: ${error.message} — Gemini 폴백 시도`);
         }
     }
 
-    console.error('❌ AI Analysis failed for all models:', lastError.message);
+    // 2순위 폴백: Gemini 2.5 Flash-Lite
+    if (genAI) {
+        const fallbackModels = ['gemini-3.5-flash', 'gemini-2.5-flash-lite'];
+        for (const modelName of fallbackModels) {
+            try {
+                const model = genAI.getGenerativeModel({ model: modelName });
+                const result = await model.generateContent(prompt);
+                const response = await result.response;
+                const resultText = response.text().replace(/```json\n?|```/g, '').trim();
+                const analysis = JSON.parse(resultText);
+
+                console.log(`✅ Analysis success (${modelName} fallback): ${analysis.headline.substring(0, 40)}...`);
+                return analysis;
+            } catch (error) {
+                lastError = error;
+                console.warn(`⚠️  ${modelName} fallback failed: ${error.message}`);
+            }
+        }
+    }
+
+    console.error('❌ AI Analysis failed (DeepSeek + Gemini 모두 실패):', lastError?.message);
     return null;
 }
 
@@ -237,7 +287,7 @@ async function collectRSS() {
                                 solution_wizard: analysis.solution_wizard,
                                 ai_brief: analysis.ai_brief || null,
                                 ai_buildability_score: analysis.ai_buildability_score || null,
-                                ai_model: 'gemini-3.1-or-1.5-flash-v5'
+                                ai_model: deepseekApiKey ? 'deepseek-chat' : 'gemini-2.5-flash-lite'
                             }, { onConflict: 'trend_id' });
 
                             if (aError) {

@@ -2,7 +2,7 @@ name: Trend Data Collection
 
 on:
   schedule:
-    - cron: '0 * * * *' # 매시간 정각 실행
+    - cron: '0 */2 * * *' # 2시간마다 실행 (Gemini 무료 티어 RPD 절약)
   workflow_dispatch: # 수동 실행 지원
 
 jobs:
@@ -31,6 +31,7 @@ jobs:
         run: |
           echo "SUPABASE_URL set: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL != '' }}"
           echo "SERVICE_KEY set: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY != '' }}"
+          echo "DEEPSEEK_KEY set: ${{ secrets.DEEPSEEK_API_KEY != '' }}"
           echo "GEMINI_KEY set: ${{ secrets.GEMINI_API_KEY != '' }}"
           echo "NAVER_CLIENT_ID set: ${{ secrets.NAVER_CLIENT_ID != '' }}"
           echo "NAVER_CLIENT_SECRET set: ${{ secrets.NAVER_CLIENT_SECRET != '' }}"
@@ -42,6 +43,7 @@ jobs:
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
           NAVER_CLIENT_ID: ${{ secrets.NAVER_CLIENT_ID }}
