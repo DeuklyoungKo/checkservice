@@ -102,25 +102,48 @@ export default async function Home() {
       <header className="relative overflow-hidden pt-20 pb-16 sm:pt-32 sm:pb-24 border-b bg-muted/30">
         <div className="absolute inset-0 bg-grid-white/[0.02] bg-[size:32px_32px]" />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-          <div className="max-w-3xl">
+          <div className="max-w-4xl">
             <Badge variant="outline" className="mb-6 px-4 py-1 text-primary border-primary/30 bg-primary/5 gap-2 uppercase tracking-widest font-bold">
               <IconSparkles size={14} />
-              Next Big Opportunity
+              Vibe Coding × Side Project
             </Badge>
             <h1 className="text-5xl sm:text-7xl font-extrabold tracking-tight mb-8 leading-[1.1]">
-              AI가 발견한<br />
-              유망한 <span className="text-primary italic underline decoration-primary/30">비즈니스</span> 기회
+              주말에 만들 수 있는<br />
+              <span className="text-primary italic underline decoration-primary/30">수익형 아이디어</span>를<br />
+              AI가 매일 발굴합니다
             </h1>
-            <p className="text-xl text-muted-foreground leading-relaxed mb-10 max-w-2xl">
-              실시간 데이터 분석을 통해 1인 개발로 시작 가능한 고수익 아이디어를 매일 아침 선별해 드립니다.
+            <p className="text-xl text-muted-foreground leading-relaxed mb-6 max-w-2xl">
+              Reddit, Product Hunt, GeekNews에서 사람들이 <strong className="text-foreground">실제로 돈을 내는 문제</strong>만 골라<br className="hidden sm:block"/>
+              Claude Code, ChatGPT 등 AI 코딩 도구에 바로 붙여넣을 수 있는 개발 브리프로 제공합니다.
             </p>
+            {/* 신뢰 지표 */}
+            <div className="flex flex-wrap gap-3 mb-10 text-xs font-bold text-muted-foreground">
+              <span className="flex items-center gap-1.5 bg-background border border-muted px-3 py-1.5 rounded-full">
+                <IconChartBar size={13} className="text-primary" /> PUFE 프레임워크 분석
+              </span>
+              <span className="flex items-center gap-1.5 bg-background border border-muted px-3 py-1.5 rounded-full">
+                <IconTrendingUp size={13} className="text-primary" /> 네이버 DataLab 한국 수요 검증
+              </span>
+              <span className="flex items-center gap-1.5 bg-background border border-muted px-3 py-1.5 rounded-full">
+                <IconRocket size={13} className="text-primary" /> AI 개발 브리프 즉시 복사
+              </span>
+              <span className="flex items-center gap-1.5 bg-background border border-muted px-3 py-1.5 rounded-full">
+                <IconClock size={13} className="text-primary" /> 2시간마다 자동 업데이트
+              </span>
+            </div>
             <div className="flex flex-wrap gap-4">
-              <Button size="lg" className="h-14 px-8 text-lg font-bold rounded-2xl shadow-xl shadow-primary/20">
-                지금 시작하기
-              </Button>
-              <Button size="lg" variant="outline" className="h-14 px-8 text-lg font-bold rounded-2xl">
-                분석 샘플 보기
-              </Button>
+              <Link href="/trends">
+                <Button size="lg" className="h-14 px-8 text-lg font-bold rounded-2xl shadow-xl shadow-primary/20 gap-2">
+                  <IconSparkles size={20} />
+                  아이디어 탐색하기
+                </Button>
+              </Link>
+              <Link href="/premium">
+                <Button size="lg" variant="outline" className="h-14 px-8 text-lg font-bold rounded-2xl gap-2">
+                  <IconCrown size={20} />
+                  프리미엄 멤버십
+                </Button>
+              </Link>
             </div>
           </div>
         </div>
@@ -230,28 +253,38 @@ export default async function Home() {
         </div>
       </main>
 
-      {/* Newsletter Section Replaced by Contact Inquiry Section */}
+      {/* Bottom CTA Section */}
         <section className="py-24 max-w-7xl mx-auto px-6 mb-20">
           <div className="bg-primary/5 rounded-[40px] px-6 py-16 md:py-24 border border-primary/20 text-center relative overflow-hidden group">
             <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-primary/5 opacity-50 transition-transform duration-700 group-hover:scale-105" />
-            
             <div className="relative z-10 max-w-2xl mx-auto">
-              <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/20 text-primary mb-8 animate-pulse shadow-glow">
-                <IconMail className="w-6 h-6" />
-              </div>
+              <Badge variant="secondary" className="bg-primary/10 text-primary px-4 py-1.5 text-xs font-black tracking-[0.2em] uppercase rounded-full mb-8 inline-flex gap-2">
+                <IconRocket size={14} />
+                Claude Code · ChatGPT · Gemini 호환
+              </Badge>
               <h2 className="text-3xl md:text-5xl font-black mb-6 tracking-tight text-foreground">
-                맞춤형 <span className="text-primary">트렌드 리포트</span>가 필요하신가요?
+                이번 주말,<br />
+                <span className="text-primary">수익형 사이드 프로젝트</span>를<br />
+                시작해보세요
               </h2>
               <p className="text-muted-foreground text-lg mb-10 leading-relaxed font-medium">
-                SaaS/AI 시장 진입 전략, 특정 산업별 심층 데이터가 필요하시다면<br className="hidden md:block"/>
-                언제든 비즈니스 문의를 남겨주세요.
+                분석된 아이디어를 AI 코딩 도구에 바로 붙여넣으면<br className="hidden md:block"/>
+                MVP 개발까지 하루~3일이면 충분합니다.
               </p>
-              
-              <Link href="/contact">
-                <Button className="h-14 px-10 rounded-2xl font-bold text-lg shadow-xl shadow-primary/20 hover:scale-[1.03] transition-transform">
-                  비즈니스 / 맞춤 리포트 문의하기
-                </Button>
-              </Link>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Link href="/trends">
+                  <Button className="h-14 px-10 rounded-2xl font-bold text-lg shadow-xl shadow-primary/20 hover:scale-[1.03] transition-transform gap-2">
+                    <IconSparkles size={20} />
+                    전체 트렌드 탐색하기
+                  </Button>
+                </Link>
+                <Link href="/contact">
+                  <Button variant="outline" className="h-14 px-10 rounded-2xl font-bold text-lg hover:scale-[1.03] transition-transform gap-2">
+                    <IconMail size={20} />
+                    맞춤 리포트 문의
+                  </Button>
+                </Link>
+              </div>
             </div>
           </div>
         </section>
