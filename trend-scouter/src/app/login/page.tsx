@@ -12,6 +12,7 @@ export default async function LoginPage({
     const params = await searchParams;
     const error = params.error as string;
     const message = params.message as string;
+    const redirectTo = params.redirectTo as string | undefined;
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4 font-sans focus-visible:selection:bg-primary/20">
@@ -45,6 +46,9 @@ export default async function LoginPage({
                         )}
 
                         <form className="space-y-4">
+                            {redirectTo && (
+                                <input type="hidden" name="redirectTo" value={redirectTo} />
+                            )}
                             <div className="space-y-2">
                                 <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1" htmlFor="email">이메일 주소</label>
                                 <div className="relative">
@@ -89,6 +93,9 @@ export default async function LoginPage({
                         </div>
 
                         <form>
+                            {redirectTo && (
+                                <input type="hidden" name="redirectTo" value={redirectTo} />
+                            )}
                             <Button
                                 formAction={signInWithGoogle}
                                 variant="outline"

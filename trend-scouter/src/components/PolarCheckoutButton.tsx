@@ -35,6 +35,12 @@ export function PolarCheckoutButton({
 
       const data = await res.json();
 
+      if (res.status === 401 && data.loginRequired) {
+        const currentPath = window.location.pathname + window.location.search;
+        window.location.href = `/login?redirectTo=${encodeURIComponent(currentPath)}`;
+        return;
+      }
+
       if (!res.ok) throw new Error(data.error || 'Checkout failed');
 
       window.location.href = data.url;

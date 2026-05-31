@@ -23,6 +23,7 @@ import {
 import { BookmarkButton } from "@/components/BookmarkButton";
 import { AIBriefCopyButton } from "@/components/AIBriefCopyButton";
 import { PolarCheckoutButton } from "@/components/PolarCheckoutButton";
+import { AIBriefViewer } from "@/components/AIBriefViewer";
 
 interface PageProps {
     params: Promise<{ id: string }>;
@@ -426,29 +427,42 @@ ${(analysis?.solution_wizard as any)?.steps?.map((step: string, i: number) => `$
                             {/* Premium Masking Layer */}
                             <div className={isUnlocked ? "" : "blur-3xl select-none pointer-events-none opacity-40 grayscale transition-all duration-1000"}>
                                 {/* 2. AI 개발 브리프 (Prompt Brief) */}
-                                <section className="space-y-10 bg-primary/5 p-12 rounded-[64px] border border-primary/20 shadow-inner group/brief mb-24 relative">
-                                    <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6 mb-8">
-                                        <div className="flex items-center gap-6">
-                                            <div className="w-16 h-16 bg-primary rounded-[28px] flex items-center justify-center shadow-xl shadow-primary/30 group-hover/brief:scale-110 transition-transform duration-500">
-                                                <IconSparkles className="text-primary-foreground w-8 h-8 animate-pulse" />
+                                <section className="group/brief mb-24">
+                                    {/* 섹션 헤더 */}
+                                    <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 mb-6">
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-14 h-14 bg-primary rounded-[24px] flex items-center justify-center shadow-lg shadow-primary/30 group-hover/brief:scale-110 transition-transform duration-500 flex-shrink-0">
+                                                <IconSparkles className="text-primary-foreground w-7 h-7" />
                                             </div>
                                             <div>
-                                                <p className="text-primary font-black text-[10px] uppercase tracking-[0.2em] mb-1.5 px-0.5 opacity-60">AI ready brief</p>
-                                                <h2 className="text-4xl font-black tracking-tighter">AI 개발 브리프 (Prompt Brief)</h2>
+                                                <p className="text-primary font-black text-[10px] uppercase tracking-[0.2em] opacity-60">AI Ready Brief</p>
+                                                <h2 className="text-3xl font-black tracking-tighter">AI 개발 브리프</h2>
                                             </div>
                                         </div>
-                                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
-                                            <div className="flex items-center gap-2 bg-background/50 border border-muted px-4 py-2 rounded-2xl text-xs font-bold text-muted-foreground shadow-sm">
-                                                <span className="opacity-75">⚡ 추천 AI 도구:</span>
-                                                <a href="https://console.anthropic.com" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors underline decoration-dotted">Claude Console</a>
+                                        <div className="flex flex-wrap items-center gap-3">
+                                            <div className="flex items-center gap-2 bg-muted/60 border border-muted px-3 py-1.5 rounded-xl text-xs font-bold text-muted-foreground">
+                                                <span className="opacity-60">추천:</span>
+                                                <a href="https://console.anthropic.com" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Claude</a>
                                                 <span className="opacity-30">|</span>
-                                                <a href="https://platform.openai.com" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors underline decoration-dotted">OpenAI API</a>
+                                                <a href="https://platform.openai.com" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">ChatGPT</a>
                                             </div>
                                             <AIBriefCopyButton briefText={analysis?.ai_brief || fallbackBrief} />
                                         </div>
                                     </div>
-                                    <div className="prose prose-lg prose-slate dark:prose-invert max-w-none text-foreground leading-relaxed bg-background/60 p-10 rounded-[40px] border border-muted shadow-inner">
-                                        <ReactMarkdown>{getSecureText(analysis?.ai_brief || fallbackBrief)}</ReactMarkdown>
+
+                                    {/* 마크다운 뷰어 카드 */}
+                                    <div className="bg-background border border-muted rounded-[40px] overflow-hidden shadow-sm">
+                                        {/* 상단 바 */}
+                                        <div className="flex items-center gap-2 px-6 py-4 border-b border-muted bg-muted/30">
+                                            <div className="w-3 h-3 rounded-full bg-red-400/60" />
+                                            <div className="w-3 h-3 rounded-full bg-yellow-400/60" />
+                                            <div className="w-3 h-3 rounded-full bg-green-400/60" />
+                                            <span className="ml-3 text-xs font-bold text-muted-foreground/60 uppercase tracking-widest">prompt-brief.md</span>
+                                        </div>
+                                        {/* 본문 */}
+                                        <div className="p-8 sm:p-10">
+                                            <AIBriefViewer content={getSecureText(analysis?.ai_brief || fallbackBrief)} />
+                                        </div>
                                     </div>
                                 </section>
 
@@ -535,16 +549,20 @@ ${(analysis?.solution_wizard as any)?.steps?.map((step: string, i: number) => `$
                         </div>
 
                         {!userProfile?.is_premium && (
-                            <div className="bg-gradient-to-br from-primary/20 via-primary/10 to-background border-2 border-primary/20 rounded-[48px] p-10 shadow-xl shadow-primary/5 relative overflow-hidden group">
-                                <h3 className="font-black text-2xl mb-6 relative z-10 leading-[1.2] tracking-tighter">
-                                    완벽한 타이밍을 <br />놓치지 마세요.
-                                </h3>
+                            <div className="bg-gradient-to-br from-primary/20 via-primary/10 to-background border-2 border-primary/20 rounded-[48px] p-8 shadow-xl shadow-primary/5 relative overflow-hidden group">
+                                <div className="relative z-10 space-y-1 mb-5">
+                                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/60">Premium Membership</p>
+                                    <h3 className="font-black text-xl leading-snug tracking-tighter">
+                                        완벽한 타이밍을<br />놓치지 마세요.
+                                    </h3>
+                                    <p className="text-xs text-muted-foreground font-medium pt-0.5">모든 리포트 무제한 열람</p>
+                                </div>
                                 <PolarCheckoutButton
                                     productId={productId9900}
                                     successPath="/premium?subscribed=true"
-                                    className="w-full bg-primary font-black shadow-lg shadow-primary/40 h-14 rounded-2xl relative z-10 text-lg hover:scale-[1.03] transition-all duration-300"
+                                    className="w-full bg-primary font-bold shadow-md shadow-primary/10 h-9 rounded-full relative z-10 text-sm hover:scale-[1.02] transition-all duration-300 gap-2"
                                 >
-                                    Premium 가입하기 (₩9,900/월)
+                                    👑 구독하기 · ₩9,900/월
                                 </PolarCheckoutButton>
                             </div>
                         )}

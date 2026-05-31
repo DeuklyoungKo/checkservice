@@ -47,48 +47,89 @@ export default async function PremiumPage({ searchParams }: PageProps) {
       </nav>
 
       <main className="max-w-7xl mx-auto px-4 py-16 sm:py-24">
-        {/* Success State - 구독 완료 시 전체 교체 */}
+        {/* Success State */}
         {subscribed === 'true' && (
-          <div className="max-w-2xl mx-auto text-center space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <div className="w-28 h-28 bg-green-500/15 rounded-[40px] flex items-center justify-center mx-auto border-2 border-green-500/30">
-              <IconCircleCheck size={56} className="text-green-500" />
-            </div>
-            <div className="space-y-4">
-              <h1 className="text-5xl font-black tracking-tighter">구독 완료!</h1>
-              <p className="text-xl text-muted-foreground font-medium leading-relaxed">
-                프리미엄 구독이 성공적으로 처리되었습니다.<br />
-                모든 트렌드 심층 리포트가 잠금 해제됩니다.
-              </p>
-            </div>
-            <div className="bg-muted/30 rounded-[32px] p-8 border border-muted space-y-3 text-left">
-              <p className="font-black text-sm uppercase tracking-widest text-muted-foreground">다음 단계</p>
-              {[
-                "로그인 상태라면 트렌드 페이지에서 즉시 전체 리포트 열람 가능",
-                "로그아웃 상태라면 로그인 후 자동으로 프리미엄 권한이 적용됩니다",
-                "반영까지 최대 1분이 소요될 수 있습니다",
-              ].map((text, i) => (
-                <div key={i} className="flex items-start gap-3">
-                  <div className="w-6 h-6 bg-green-500/20 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <IconCheck size={14} className="text-green-600" />
+          <div className="max-w-3xl mx-auto animate-in fade-in slide-in-from-bottom-6 duration-700">
+
+            {/* Hero */}
+            <div className="relative text-center mb-12">
+              {/* 배경 장식 */}
+              <div className="absolute inset-0 -z-10 overflow-hidden rounded-[64px]">
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl" />
+              </div>
+
+              <div className="py-16 px-8 space-y-8">
+                {/* 크라운 + 스파크 아이콘 조합 */}
+                <div className="relative inline-flex items-center justify-center">
+                  <div className="w-32 h-32 bg-gradient-to-br from-primary/20 to-primary/5 rounded-[40px] flex items-center justify-center border border-primary/20 shadow-2xl shadow-primary/10">
+                    <IconCrown size={60} className="text-primary" />
                   </div>
-                  <p className="text-sm font-medium">{text}</p>
+                  <div className="absolute -top-2 -right-2 w-10 h-10 bg-green-500 rounded-2xl flex items-center justify-center shadow-lg shadow-green-500/30">
+                    <IconCheck size={20} className="text-white" strokeWidth={3} />
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <p className="text-primary font-black text-xs uppercase tracking-[0.3em] opacity-70">Premium Activated</p>
+                  <h1 className="text-6xl sm:text-7xl font-black tracking-tighter leading-[1.0]">
+                    환영합니다,<br />
+                    <span className="text-primary">Premium</span> 멤버!
+                  </h1>
+                  <p className="text-lg text-muted-foreground font-medium max-w-lg mx-auto leading-relaxed pt-2">
+                    이제 모든 트렌드 심층 리포트, GTM 전략, 실행 체크리스트에<br className="hidden sm:block" />
+                    무제한으로 접근할 수 있습니다.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* 혜택 카드 3개 */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
+              {[
+                { icon: "📊", title: "심층 리포트 무제한", desc: "모든 트렌드의 PUFE 분석, GTM 전략 전체 열람" },
+                { icon: "⚡", title: "즉시 잠금 해제", desc: "결제 직후 자동 활성화, 새로고침 한 번이면 완료" },
+                { icon: "🔄", title: "월간 갱신", desc: "매월 자동 갱신, Polar 대시보드에서 언제든 해지 가능" },
+              ].map(({ icon, title, desc }) => (
+                <div key={title} className="bg-card border border-muted rounded-[32px] p-6 text-center space-y-2 hover:border-primary/30 transition-colors">
+                  <div className="text-3xl mb-3">{icon}</div>
+                  <p className="font-black text-sm">{title}</p>
+                  <p className="text-xs text-muted-foreground font-medium leading-relaxed">{desc}</p>
                 </div>
               ))}
             </div>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
+
+            {/* 다음 단계 */}
+            <div className="bg-primary/5 border border-primary/15 rounded-[32px] p-8 mb-10 space-y-4">
+              <p className="font-black text-xs uppercase tracking-[0.2em] text-primary/60 mb-4">다음 단계</p>
+              {[
+                { step: "1", text: user ? "트렌드 목록으로 이동해 바로 전체 리포트를 열람하세요" : "로그인 후 자동으로 프리미엄 권한이 적용됩니다" },
+                { step: "2", text: "트렌드 상세 페이지에서 잠금 해제된 PUFE 분석, GTM 전략을 확인하세요" },
+                { step: "3", text: "반영까지 최대 1분 소요 — 페이지 새로고침 후 이용 가능합니다" },
+              ].map(({ step, text }) => (
+                <div key={step} className="flex items-start gap-4">
+                  <div className="w-7 h-7 bg-primary/10 text-primary rounded-xl flex items-center justify-center flex-shrink-0 font-black text-xs mt-0.5">{step}</div>
+                  <p className="text-sm font-medium text-foreground/80 leading-relaxed">{text}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* CTA 버튼 */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/trends">
-                <Button size="lg" className="h-14 px-10 rounded-2xl font-black text-base shadow-lg shadow-primary/20 hover:scale-[1.02] transition-all">
+                <Button size="lg" className="h-16 px-12 rounded-2xl font-black text-base shadow-xl shadow-primary/20 hover:scale-[1.02] transition-all gap-2">
+                  <IconSparkles size={20} />
                   전체 트렌드 보러 가기
                 </Button>
               </Link>
               {!user && (
                 <Link href="/login">
-                  <Button size="lg" variant="outline" className="h-14 px-10 rounded-2xl font-black text-base border-2 hover:scale-[1.02] transition-all">
+                  <Button size="lg" variant="outline" className="h-16 px-12 rounded-2xl font-black text-base border-2 hover:scale-[1.02] transition-all">
                     로그인하기
                   </Button>
                 </Link>
               )}
             </div>
+
           </div>
         )}
 

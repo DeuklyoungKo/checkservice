@@ -5,20 +5,17 @@ import { createClient } from '@/utils/supabase/server'
 export async function GET(request: Request) {
     const { searchParams, origin } = new URL(request.url)
     const code = searchParams.get('code')
-    // if "next" is in search params, use it as the redirection URL after successful pairing
-    const next = searchParams.get('next') ?? '/'
+    const redirectTo = searchParams.get('redirectTo');
+    const next = redirectTo || searchParams.get('next') || '/'
 
     if (code) {
         const supabase = await createClient()
         const { error } = await supabase.auth.exchangeCodeForSession(code)
         if (!error) {
-            const forwardedHost = request.headers.get('x-forwarded-host') // cookie domain
-            const isLocalEnv = process.env.NODE_ENV === 'development'
-            if (isLocalEnv) {
-                // we can be sure that there is no proxy involved in local development
-                return NextResponse.redirect(`${origin}${next}`)
-            } else if (forwardedHost) {
-                return NextResponse.redirect(`https://${forwardedHost}${next}`)
+            const forwardedHost = request.headers.get('x-forwarded-host')
+            const forwardedProto = request.headers.get('x-forwarded-proto') || 'https'
+            if (forwardedHost) {
+                return NextResponse.redirect(`${forwardedProto}://${forwardedHost}${next}`)
             } else {
                 return NextResponse.redirect(`${origin}${next}`)
             }

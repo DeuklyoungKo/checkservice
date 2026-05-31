@@ -13,6 +13,10 @@ export async function POST(request: Request) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
+    if (!user) {
+      return NextResponse.json({ loginRequired: true }, { status: 401 });
+    }
+
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
     const accessToken = process.env.POLAR_ACCESS_TOKEN;
 
