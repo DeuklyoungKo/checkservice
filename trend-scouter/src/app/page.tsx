@@ -19,6 +19,7 @@ import {
   IconRocket,
 } from "@tabler/icons-react";
 import { BookmarkButton } from "@/components/BookmarkButton";
+import { BetaEmailSignup } from "@/components/BetaEmailSignup";
 
 import { createClient } from "@/utils/supabase/server";
 import { signOut } from "./login/actions";
@@ -90,7 +91,7 @@ export default async function Home() {
       description: analysis.summary || "현재 비즈니스 분석이 진행 중입니다.",
       tags: [trend.source, analysis.pain_category || 'General'].filter(Boolean),
       isBookmarked: bookmarkedIds.has(trend.id),
-      isUnlocked: analysis.is_unlocked || userIsPremium,
+      isUnlocked: true, // 베타 기간(~ 2026-08-31) 전체 공개
     });
     return acc;
   }, []);
@@ -113,8 +114,8 @@ export default async function Home() {
               AI가 매일 발굴합니다
             </h1>
             <p className="text-xl text-muted-foreground leading-relaxed mb-6 max-w-2xl">
-              Reddit, Product Hunt, GeekNews에서 사람들이 <strong className="text-foreground">실제로 돈을 내는 문제</strong>만 골라<br className="hidden sm:block"/>
-              Claude Code, ChatGPT 등 AI 코딩 도구에 바로 붙여넣을 수 있는 개발 브리프로 제공합니다.
+              사람들이 <strong className="text-foreground">실제로 돈을 내는 문제</strong>만 골라<br className="hidden sm:block" />
+              Claude Code, ChatGPT 등 AI 코딩 도구에 바로 붙여넣을 수 있는<br />개발 브리프로 제공합니다.
             </p>
             {/* 신뢰 지표 */}
             <div className="flex flex-wrap gap-3 mb-10 text-xs font-bold text-muted-foreground">
@@ -138,10 +139,10 @@ export default async function Home() {
                   아이디어 탐색하기
                 </Button>
               </Link>
-              <Link href="/premium">
-                <Button size="lg" variant="outline" className="h-14 px-8 text-lg font-bold rounded-2xl gap-2">
-                  <IconCrown size={20} />
-                  프리미엄 멤버십
+              <Link href="/contact">
+                <Button size="lg" variant="outline" className="h-14 px-8 text-lg font-bold rounded-2xl gap-2 border-amber-400 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/30">
+                  <IconMail size={20} />
+                  베타 피드백 남기기
                 </Button>
               </Link>
             </div>
@@ -253,41 +254,40 @@ export default async function Home() {
         </div>
       </main>
 
-      {/* Bottom CTA Section */}
-        <section className="py-24 max-w-7xl mx-auto px-6 mb-20">
-          <div className="bg-primary/5 rounded-[40px] px-6 py-16 md:py-24 border border-primary/20 text-center relative overflow-hidden group">
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-primary/5 opacity-50 transition-transform duration-700 group-hover:scale-105" />
-            <div className="relative z-10 max-w-2xl mx-auto">
-              <Badge variant="secondary" className="bg-primary/10 text-primary px-4 py-1.5 text-xs font-black tracking-[0.2em] uppercase rounded-full mb-8 inline-flex gap-2">
-                <IconRocket size={14} />
-                Claude Code · ChatGPT · Gemini 호환
-              </Badge>
-              <h2 className="text-3xl md:text-5xl font-black mb-6 tracking-tight text-foreground">
-                이번 주말,<br />
-                <span className="text-primary">수익형 사이드 프로젝트</span>를<br />
-                시작해보세요
-              </h2>
-              <p className="text-muted-foreground text-lg mb-10 leading-relaxed font-medium">
-                분석된 아이디어를 AI 코딩 도구에 바로 붙여넣으면<br className="hidden md:block"/>
-                MVP 개발까지 하루~3일이면 충분합니다.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link href="/trends">
-                  <Button className="h-14 px-10 rounded-2xl font-bold text-lg shadow-xl shadow-primary/20 hover:scale-[1.03] transition-transform gap-2">
-                    <IconSparkles size={20} />
-                    전체 트렌드 탐색하기
-                  </Button>
-                </Link>
-                <Link href="/contact">
-                  <Button variant="outline" className="h-14 px-10 rounded-2xl font-bold text-lg hover:scale-[1.03] transition-transform gap-2">
-                    <IconMail size={20} />
-                    맞춤 리포트 문의
-                  </Button>
-                </Link>
-              </div>
+      {/* Bottom CTA Section — 베타 이메일 등록 */}
+      <section className="py-24 max-w-7xl mx-auto px-6 mb-20">
+        <div className="bg-amber-500/5 rounded-[40px] px-6 py-16 md:py-24 border border-amber-400/30 text-center relative overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-br from-amber-400/10 via-transparent to-primary/5 opacity-50 transition-transform duration-700 group-hover:scale-105" />
+          <div className="relative z-10 max-w-2xl mx-auto">
+            <Badge variant="secondary" className="bg-amber-500/10 text-amber-600 dark:text-amber-400 px-4 py-1.5 text-xs font-black tracking-[0.2em] uppercase rounded-full mb-8 inline-flex gap-2">
+              <IconRocket size={14} />
+              베타 서비스 무료 이용 중 · ~ 2026. 8. 31
+            </Badge>
+            <h2 className="text-3xl md:text-5xl font-black mb-6 tracking-tight text-foreground">
+              베타 기간,<br />
+              <span className="text-amber-500">모든 분석 데이터</span>를<br />
+              무료로 이용하세요
+            </h2>
+            <p className="text-muted-foreground text-lg mb-4 leading-relaxed font-medium">
+              이메일을 등록하시면 베타 종료 전 미리 알려드립니다.<br className="hidden md:block" />
+              서비스 개선을 위한 피드백도 언제든 환영합니다.
+            </p>
+            <p className="text-xs text-muted-foreground/60 mb-10 font-medium">
+              베타 종료일: 2026년 8월 31일 예정 (상황에 따라 변경될 수 있습니다)
+            </p>
+            <BetaEmailSignup />
+            <div className="mt-6">
+              <Link href="/trends">
+                <Button variant="ghost" className="gap-2 text-muted-foreground hover:text-foreground font-bold">
+                  <IconSparkles size={16} />
+                  이메일 없이 바로 탐색하기
+                  <IconArrowRight size={16} />
+                </Button>
+              </Link>
             </div>
           </div>
-        </section>
+        </div>
+      </section>
 
       {/* Footer */}
       <footer className="border-t py-16 bg-muted/50 text-center">

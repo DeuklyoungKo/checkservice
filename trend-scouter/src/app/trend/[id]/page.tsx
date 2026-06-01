@@ -75,7 +75,8 @@ export default async function TrendDetailPage({ params }: PageProps) {
     ]);
 
     const analysis = analysisData;
-    const isUnlocked = (analysis?.is_unlocked || userProfile?.is_premium) ?? false;
+    // 베타 기간(~ 2026-08-31) 동안 전체 공개
+    const isUnlocked = true;
 
     // Stats-Only: Use AI-generated headline and summary directly
     const displayTitle = analysis?.headline || "분석 중인 트렌드";
@@ -288,6 +289,9 @@ ${(analysis?.solution_wizard as any)?.steps?.map((step: string, i: number) => `$
                         </Badge>
                         <Badge variant="outline" className="text-xs font-black uppercase tracking-widest text-muted-foreground bg-background/50">
                             수집일: {new Date(trend.created_at).toLocaleDateString()}
+                        </Badge>
+                        <Badge className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-400/30 px-3 py-1 text-xs font-black tracking-widest uppercase gap-1.5">
+                            🎉 베타 무료 공개 · ~ 2026. 8. 31
                         </Badge>
                     </div>
                     <h1 className="text-5xl sm:text-7xl font-black tracking-tighter mb-12 leading-[1.05] text-balance">

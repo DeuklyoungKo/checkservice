@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Noto_Sans_KR } from "next/font/google";
 import "./globals.css";
 import GlobalNav from "@/components/GlobalNav";
+import { BetaBanner } from "@/components/BetaBanner";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -30,6 +31,7 @@ export default function RootLayout({
         className={`${inter.variable} ${notoSansKR.variable} antialiased font-sans`}
         suppressHydrationWarning
       >
+        <BetaBanner />
         <GlobalNav />
         {children}
       </body>

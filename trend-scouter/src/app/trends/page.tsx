@@ -67,7 +67,7 @@ export default async function TrendsPage() {
             description: analysis.summary || "현재 비즈니스 분석이 진행 중입니다.",
             tags: [trend.source, analysis.pain_category || 'General'].filter(Boolean),
             isBookmarked: bookmarkedIds.has(trend.id),
-            isUnlocked: analysis.is_unlocked || userIsPremium,
+            isUnlocked: true, // 베타 기간(~ 2026-08-31) 전체 공개
         });
         return acc;
     }, []);
