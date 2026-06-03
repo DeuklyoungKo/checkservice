@@ -13,7 +13,7 @@
     #CVC: 아무 3자리 (예: 123)
     #이름: 아무 값
 
-## 수집실행
+## 수집실행 
     cd trend-scouter
     node scripts/rss-collector.js
 
