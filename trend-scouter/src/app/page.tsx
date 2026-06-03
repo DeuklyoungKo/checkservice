@@ -96,8 +96,55 @@ export default async function Home() {
     return acc;
   }, []);
 
+  // JSON-LD: WebSite + FAQPage 스키마 (SEO·AEO)
+  const jsonLd = [
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Trend Scouter",
+      "url": "https://trend.gonsuit.com",
+      "description": "Reddit·Product Hunt·GeekNews에서 실제 페인포인트를 PUFE 프레임워크로 분석해 AI 개발 브리프를 제공하는 서비스",
+      "inLanguage": "ko-KR",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": { "@type": "EntryPoint", "urlTemplate": "https://trend.gonsuit.com/trends?q={search_term_string}" },
+        "query-input": "required name=search_term_string",
+      },
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "PUFE 스코어란 무엇인가요?",
+          "acceptedAnswer": { "@type": "Answer", "text": "PUFE는 Pain(고통), Urgency(긴급), Frequency(빈도), Existing Solution(기존 대안)의 4가지 지표로 아이디어의 수익 가능성을 0~100점으로 평가하는 프레임워크입니다." },
+        },
+        {
+          "@type": "Question",
+          "name": "AI 개발 브리프를 어떤 도구에 사용할 수 있나요?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Claude Code, ChatGPT, Gemini, Cursor 등 어떤 AI 코딩 도구에도 바로 붙여넣기 가능한 마크다운 형식으로 제공됩니다." },
+        },
+        {
+          "@type": "Question",
+          "name": "AI Buildability Score는 무엇인가요?",
+          "acceptedAnswer": { "@type": "Answer", "text": "AI 코딩 도구로 해당 아이디어를 구현하는 데 걸리는 예상 시간입니다. 1단계(하루)부터 5단계(한 달 이상)까지 평가합니다." },
+        },
+        {
+          "@type": "Question",
+          "name": "Trend Scouter는 어떤 데이터 소스를 사용하나요?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Reddit, Product Hunt, Hacker News, Dev.to, GeekNews(한국) 등 글로벌 커뮤니티 RSS 데이터를 2시간마다 수집하고 네이버 DataLab으로 한국 수요를 교차 검증합니다." },
+        },
+      ],
+    },
+  ];
+
   return (
     <div className="min-h-screen bg-background text-foreground font-sans selection:bg-primary/20 transition-all duration-500">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
 
       {/* Hero Section */}
       <header className="relative overflow-hidden pt-20 pb-16 sm:pt-32 sm:pb-24 border-b bg-muted/30">

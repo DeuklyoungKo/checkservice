@@ -151,6 +151,98 @@ Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
 | `refactor` | 리팩터링 |
 | `chore` | 패키지·설정 변경 |
 
+### SEO · AEO 준수 규칙
+
+> 페이지를 새로 만들거나 수정할 때 아래 기준을 **항상** 확인한다.
+
+#### 1. 메타데이터 필수 항목
+모든 페이지(서버 컴포넌트)에 `metadata` 또는 `generateMetadata`를 선언한다.
+
+```ts
+// 정적 페이지
+export const metadata: Metadata = {
+  title: "페이지 제목 (55자 이내) — Trend Scouter",
+  description: "핵심 가치 + 타겟 행동 유도 (120~160자)",
+  openGraph: {
+    title: "페이지 제목",
+    description: "설명",
+    url: "https://trend.gonsuit.com/[경로]",
+    siteName: "Trend Scouter",
+    images: [{ url: "/og-image.png", width: 1200, height: 630 }],
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "페이지 제목",
+    description: "설명",
+    images: ["/og-image.png"],
+  },
+  alternates: { canonical: "https://trend.gonsuit.com/[경로]" },
+};
+
+// 동적 페이지 (trend/[id] 등)
+export async function generateMetadata({ params }) {
+  // DB에서 데이터 가져와 title/description/og 동적 생성
+}
+```
+
+#### 2. layout.tsx `metadataBase` 필수
+```ts
+export const metadata: Metadata = {
+  metadataBase: new URL("https://trend.gonsuit.com"),
+  // ...
+};
+```
+
+#### 3. 구조화 데이터 (JSON-LD) — AEO 핵심
+AI 답변 엔진(ChatGPT, Perplexity, Google AI Overview)이 콘텐츠를 이해할 수 있도록
+상세 페이지에 JSON-LD를 삽입한다.
+
+```tsx
+// 트렌드 상세 페이지 예시
+<script
+  type="application/ld+json"
+  dangerouslySetInnerHTML={{ __html: JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": trend.title,
+    "description": analysis.summary,
+    "datePublished": trend.created_at,
+    "publisher": { "@type": "Organization", "name": "Trend Scouter" },
+  })}}
+/>
+```
+
+홈페이지에는 `WebSite` + `SiteLinksSearchBox` 스키마 추가.
+
+#### 4. sitemap.ts / robots.ts 필수 파일
+- `src/app/sitemap.ts` — 트렌드 상세 페이지를 동적으로 포함
+- `src/app/robots.ts` — `Allow: /`, `Disallow: /api/, /workspace, /login`
+
+#### 5. AEO — Answer Engine Optimization 원칙
+AI 검색 엔진(Perplexity, ChatGPT Search, Google AI Overview)에 인용되려면:
+
+- **질문형 헤딩 사용**: "PUFE 스코어란?" 형태의 `<h2>` 포함
+- **직접적 답변 먼저**: 본론을 첫 문장에 배치 (역피라미드 구조)
+- **FAQ 섹션 추가**: 주요 페이지에 Q&A 블록 + `FAQPage` JSON-LD
+- **수치 명시**: "PUFE 스코어 80점 이상", "AI 코딩 도구로 1일 구현" 등 구체적 숫자
+- **출처 명시**: 데이터 기반 근거 ("Reddit 342회 언급", "네이버 월 검색량 8,900") 포함
+
+#### 6. 타이틀·설명 작성 기준
+| 항목 | 기준 |
+|------|------|
+| `title` | 55자 이내, 핵심 키워드 앞에 배치, `— Trend Scouter` 접미 |
+| `description` | 120~160자, 사용자 행동 유도 포함, 중복 금지 |
+| OG 이미지 | 1200×630px, 텍스트 포함, 페이지별 동적 생성 권장 |
+
+#### 7. 미구현 항목 (구현 예정)
+- [ ] `src/app/sitemap.ts` — 트렌드 상세 페이지 동적 포함
+- [ ] `src/app/robots.ts` — 크롤 정책 설정
+- [ ] `layout.tsx` `metadataBase` + 전체 OG 태그 추가
+- [ ] 트렌드 상세 페이지 JSON-LD (`Article` 스키마)
+- [ ] 홈페이지 JSON-LD (`WebSite` + `FAQPage` 스키마)
+- [ ] `/public/og-image.png` 기본 OG 이미지 추가
+
 ### 코딩 원칙
 - App Router 기반 — `"use client"` 최소화, 서버 컴포넌트 우선
 - Supabase 클라이언트: 서버 측 `@supabase/ssr`, 클라이언트 측 `createBrowserClient`

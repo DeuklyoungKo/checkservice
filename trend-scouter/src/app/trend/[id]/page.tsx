@@ -25,6 +25,7 @@ import { AIBriefCopyButton } from "@/components/AIBriefCopyButton";
 import { PolarCheckoutButton } from "@/components/PolarCheckoutButton";
 import { AIBriefViewer } from "@/components/AIBriefViewer";
 import { IS_BETA } from "@/lib/beta";
+import { PufeReasoning } from "@/components/PufeReasoning";
 
 interface PageProps {
     params: Promise<{ id: string }>;
@@ -43,10 +44,28 @@ export async function generateMetadata({ params }: PageProps) {
 
     const analysis = trend.analysis?.[0];
     const displayTitle = analysis?.headline || "분석 중인 트렌드";
+    const description = analysis?.summary || "비즈니스 기회를 분석하고 있습니다.";
+    const url = `https://trend.gonsuit.com/trend/${id}`;
 
     return {
-        title: `${displayTitle} - Trend Scouter`,
-        description: analysis?.summary || "비즈니스 기회를 분석하고 있습니다.",
+        title: displayTitle,
+        description,
+        alternates: { canonical: url },
+        openGraph: {
+            type: "article",
+            url,
+            title: displayTitle,
+            description,
+            siteName: "Trend Scouter",
+            images: [{ url: "/og-image.png", width: 1200, height: 630, alt: displayTitle }],
+            publishedTime: trend.created_at,
+        },
+        twitter: {
+            card: "summary_large_image",
+            title: displayTitle,
+            description,
+            images: ["/og-image.png"],
+        },
     };
 }
 
@@ -262,8 +281,27 @@ ${(analysis?.solution_wizard as any)?.steps?.map((step: string, i: number) => `$
         </div>
     );
 
+    // JSON-LD: Article 스키마 (SEO·AEO)
+    const jsonLd = {
+        "@context": "https://schema.org",
+        "@type": "Article",
+        "headline": displayTitle,
+        "description": mainSummary,
+        "datePublished": trend.created_at,
+        "dateModified": trend.updated_at ?? trend.created_at,
+        "author": { "@type": "Organization", "name": "Trend Scouter", "url": "https://trend.gonsuit.com" },
+        "publisher": { "@type": "Organization", "name": "Trend Scouter", "url": "https://trend.gonsuit.com" },
+        "mainEntityOfPage": { "@type": "WebPage", "@id": `https://trend.gonsuit.com/trend/${trend.id}` },
+        "keywords": `${analysis?.pain_category || "SaaS"}, 수익형 사이드 프로젝트, AI 개발 브리프, ${trend.source}`,
+        "inLanguage": "ko-KR",
+    };
+
     return (
         <div className="min-h-screen bg-background text-foreground font-sans selection:bg-primary/20 transition-all duration-500">
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+            />
             <main className="max-w-7xl mx-auto px-4 py-8">
                 {/* 뒤로가기 + 북마크 */}
                 <div className="flex items-center justify-between mb-8">
@@ -472,16 +510,17 @@ ${(analysis?.solution_wizard as any)?.steps?.map((step: string, i: number) => `$
                                 </section>
 
                                 {/* 3. Reasoning */}
-                                <section className="space-y-10 bg-muted/20 p-12 rounded-[64px] border border-muted-foreground/5 shadow-sm group/reasoning mb-24">
-                                    <div className="flex items-center gap-6 mb-4">
+                                <section className="space-y-6 bg-muted/20 p-12 rounded-[64px] border border-muted-foreground/5 shadow-sm group/reasoning mb-24">
+                                    <div className="flex items-center gap-6 mb-2">
                                         <div className="w-16 h-16 bg-primary rounded-[28px] flex items-center justify-center shadow-xl shadow-primary/30 group-hover/reasoning:scale-110 transition-transform duration-500">
                                             <IconTarget className="text-primary-foreground w-8 h-8" />
                                         </div>
-                                        <h2 className="text-4xl font-black tracking-tighter">점수 부여 상세 근거</h2>
+                                        <div>
+                                            <h2 className="text-4xl font-black tracking-tighter">점수 부여 상세 근거</h2>
+                                            <p className="text-sm text-muted-foreground mt-1 font-medium">PUFE 각 항목의 점수 산출 근거입니다</p>
+                                        </div>
                                     </div>
-                                    <div className="prose prose-lg prose-slate dark:prose-invert max-w-none text-foreground leading-relaxed bg-background/60 p-10 rounded-[40px] border border-muted shadow-inner">
-                                        <ReactMarkdown>{formatReasoningText(getSecureText(reasoning))}</ReactMarkdown>
-                                    </div>
+                                    <PufeReasoning text={getSecureText(reasoning)} />
                                 </section>
 
                                 {/* 3. GTM Strategy */}

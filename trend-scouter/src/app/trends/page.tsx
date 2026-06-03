@@ -11,8 +11,22 @@ import {
 } from "@tabler/icons-react";
 
 export const metadata = {
-    title: "전체 트렌드 — Trend Scouter",
-    description: "AI가 분석한 글로벌 트렌드를 모두 탐색하세요. 검색, 필터, 정렬 기능을 제공합니다.",
+    title: "전체 트렌드 목록",
+    description: "AI가 분석한 수익형 사이드 프로젝트 아이디어를 탐색하세요. PUFE 스코어·AI 난이도 필터로 주말에 만들 수 있는 아이디어를 빠르게 찾을 수 있습니다.",
+    alternates: { canonical: "https://trend.gonsuit.com/trends" },
+    openGraph: {
+        type: "website",
+        url: "https://trend.gonsuit.com/trends",
+        title: "전체 트렌드 목록 — Trend Scouter",
+        description: "AI가 분석한 수익형 사이드 프로젝트 아이디어를 탐색하세요.",
+        images: [{ url: "/og-image.png", width: 1200, height: 630 }],
+    },
+    twitter: {
+        card: "summary_large_image",
+        title: "전체 트렌드 목록 — Trend Scouter",
+        description: "AI가 분석한 수익형 사이드 프로젝트 아이디어를 탐색하세요.",
+        images: ["/og-image.png"],
+    },
 };
 
 export default async function TrendsPage() {

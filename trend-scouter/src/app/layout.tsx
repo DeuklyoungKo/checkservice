@@ -19,9 +19,42 @@ const notoSansKR = Noto_Sans_KR({
   weight: ["100", "300", "400", "500", "700", "900"],
 });
 
+const BASE_URL = "https://trend.gonsuit.com";
+
 export const metadata: Metadata = {
-  title: "Trend Scouter - AI 기반 비즈니스 기회 포착 서비스",
-  description: "글로벌 비즈니스 트렌드를 실시간으로 분석하여 성공 가능한 수익화 아이디어를 제안합니다.",
+  metadataBase: new URL(BASE_URL),
+  title: {
+    default: "Trend Scouter — 주말에 만들 수 있는 수익형 AI 사이드 프로젝트 아이디어",
+    template: "%s — Trend Scouter",
+  },
+  description:
+    "Reddit·Product Hunt·GeekNews에서 실제로 돈을 내는 문제만 골라 PUFE 프레임워크로 분석합니다. Claude Code·ChatGPT·Gemini에 바로 붙여넣을 수 있는 AI 개발 브리프를 무료로 제공합니다.",
+  keywords: [
+    "수익형 사이드 프로젝트", "AI 코딩", "바이브 코딩", "vibe coding",
+    "Claude Code", "ChatGPT", "Gemini", "사이드 프로젝트 아이디어",
+    "PUFE 분석", "1인 창업", "SaaS 아이디어", "AI 개발 브리프",
+  ],
+  authors: [{ name: "Trend Scouter", url: BASE_URL }],
+  creator: "Trend Scouter",
+  openGraph: {
+    type: "website",
+    locale: "ko_KR",
+    url: BASE_URL,
+    siteName: "Trend Scouter",
+    title: "Trend Scouter — 주말에 만들 수 있는 수익형 AI 사이드 프로젝트 아이디어",
+    description:
+      "Reddit·Product Hunt·GeekNews 페인포인트를 PUFE 프레임워크로 분석. AI 개발 브리프 즉시 복사 가능.",
+    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "Trend Scouter" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Trend Scouter — 주말에 만들 수 있는 수익형 AI 사이드 프로젝트 아이디어",
+    description:
+      "Reddit·Product Hunt·GeekNews 페인포인트를 PUFE 프레임워크로 분석. AI 개발 브리프 즉시 복사 가능.",
+    images: ["/og-image.png"],
+  },
+  alternates: { canonical: BASE_URL },
+  robots: { index: true, follow: true },
 };
 
 export default function RootLayout({
