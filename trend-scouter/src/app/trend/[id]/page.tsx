@@ -24,6 +24,7 @@ import { BookmarkButton } from "@/components/BookmarkButton";
 import { AIBriefCopyButton } from "@/components/AIBriefCopyButton";
 import { PolarCheckoutButton } from "@/components/PolarCheckoutButton";
 import { AIBriefViewer } from "@/components/AIBriefViewer";
+import { IS_BETA } from "@/lib/beta";
 
 interface PageProps {
     params: Promise<{ id: string }>;
@@ -552,7 +553,7 @@ ${(analysis?.solution_wizard as any)?.steps?.map((step: string, i: number) => `$
                             </a>
                         </div>
 
-                        {!userProfile?.is_premium && (
+                        {!userProfile?.is_premium && !IS_BETA && (
                             <div className="bg-gradient-to-br from-primary/20 via-primary/10 to-background border-2 border-primary/20 rounded-[48px] p-8 shadow-xl shadow-primary/5 relative overflow-hidden group">
                                 <div className="relative z-10 space-y-1 mb-5">
                                     <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/60">Premium Membership</p>

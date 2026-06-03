@@ -11,6 +11,7 @@ import {
 } from "@tabler/icons-react";
 import { createClient } from "@/utils/supabase/server";
 import { signOut } from "@/app/login/actions";
+import { IS_BETA } from "@/lib/beta";
 
 export default async function GlobalNav() {
     const supabase = await createClient();
@@ -82,7 +83,7 @@ export default async function GlobalNav() {
                             </Link>
                         )}
 
-                        {!isPremium && (
+                        {!isPremium && !IS_BETA && (
                             <Link href="/premium">
                                 <Button size="sm" className="gap-2 rounded-full font-bold shadow-md shadow-primary/10">
                                     <IconCrown size={18} />
@@ -107,7 +108,7 @@ export default async function GlobalNav() {
                                 </Button>
                             </Link>
                         )}
-                        {!isPremium && (
+                        {!isPremium && !IS_BETA && (
                             <Link href="/premium">
                                 <Button size="sm" className="gap-1 rounded-full font-bold text-xs">
                                     <IconCrown size={14} />

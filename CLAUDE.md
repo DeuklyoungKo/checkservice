@@ -119,6 +119,38 @@ POLAR_WEBHOOK_SECRET
   - 새로운 항목이 추가된 경우 해당 섹션에 추가
   - 전체 공정률(%) 및 최우선 과제 문구도 현황에 맞게 갱신
 
+### Git 커밋 규칙
+
+> ⚠️ **Claude는 직접 `git commit` / `git push`를 실행하지 않는다.**
+
+#### 배경
+Vercel은 GitHub `main` 브랜치에 push가 발생하면 **자동으로 프로덕션 배포**를 트리거한다.
+Claude가 작업 중간에 임의로 커밋·푸시하면 미완성 코드가 프로덕션에 즉시 반영될 수 있다.
+
+#### 규칙
+- Claude는 코드 작업 완료 후 **커밋 메시지만 제안**한다.
+- 실제 `git add` / `git commit` / `git push`는 **사용자가 직접 실행**한다.
+- 사용자가 명시적으로 "커밋해줘", "푸시해줘"라고 요청한 경우에만 예외적으로 실행한다.
+
+#### 커밋 메시지 제안 형식
+```
+<type>: <제목 (한글 또는 영문)>
+
+- 변경 내용 bullet 1
+- 변경 내용 bullet 2
+
+Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
+```
+
+| type | 용도 |
+|------|------|
+| `feat` | 새 기능 추가 |
+| `fix` | 버그 수정 |
+| `docs` | 문서·주석 변경 |
+| `style` | UI/CSS 변경 (기능 무관) |
+| `refactor` | 리팩터링 |
+| `chore` | 패키지·설정 변경 |
+
 ### 코딩 원칙
 - App Router 기반 — `"use client"` 최소화, 서버 컴포넌트 우선
 - Supabase 클라이언트: 서버 측 `@supabase/ssr`, 클라이언트 측 `createBrowserClient`
