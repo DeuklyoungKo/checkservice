@@ -3,6 +3,7 @@ import { Inter, Noto_Sans_KR } from "next/font/google";
 import "./globals.css";
 import GlobalNav from "@/components/GlobalNav";
 import { BetaBanner } from "@/components/BetaBanner";
+import { Analytics } from "@vercel/analytics/next";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -34,6 +35,7 @@ export default function RootLayout({
         <BetaBanner />
         <GlobalNav />
         {children}
+        <Analytics />
       </body>
     </html>
   );
