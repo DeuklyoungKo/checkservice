@@ -347,10 +347,10 @@ export default async function Home() {
             <p className="text-muted-foreground text-sm">
               © 2026 Trend Scouter. Built with Precision & AI.
             </p>
-            <div className="flex gap-6 mt-4">
-              <Button variant="link" className="text-muted-foreground hover:text-primary p-0">Terms</Button>
-              <Button variant="link" className="text-muted-foreground hover:text-primary p-0">Privacy</Button>
-              <Button variant="link" className="text-muted-foreground hover:text-primary p-0">Twitter</Button>
+            <div className="flex flex-wrap justify-center gap-6 mt-4">
+              <Link href="/terms" className="text-sm text-muted-foreground hover:text-primary transition-colors">이용약관 / Terms</Link>
+              <Link href="/privacy" className="text-sm text-muted-foreground hover:text-primary transition-colors">개인정보처리방침 / Privacy</Link>
+              <Link href="/refund" className="text-sm text-muted-foreground hover:text-primary transition-colors">환불정책 / Refund</Link>
             </div>
           </div>
         </div>
