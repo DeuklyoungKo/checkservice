@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/utils/supabase/server'
+import { getSiteUrl } from '@/lib/site-url'
 
 export async function login(formData: FormData) {
     const supabase = await createClient()
@@ -46,9 +47,8 @@ export async function signInWithGoogle(formData: FormData) {
     const supabase = await createClient()
     const redirectTo = formData.get('redirectTo') as string | null;
 
-    const callbackUrl = new URL(
-        `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/callback`
-    );
+    const siteUrl = await getSiteUrl();
+    const callbackUrl = new URL(`${siteUrl}/auth/callback`);
     if (redirectTo) {
         callbackUrl.searchParams.set('redirectTo', redirectTo);
     }
