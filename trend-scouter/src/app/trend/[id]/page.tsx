@@ -26,6 +26,7 @@ import { PolarCheckoutButton } from "@/components/PolarCheckoutButton";
 import { AIBriefViewer } from "@/components/AIBriefViewer";
 import { IS_BETA } from "@/lib/beta";
 import { PufeReasoning } from "@/components/PufeReasoning";
+import { TrendViewTracker } from "@/components/TrendViewTracker";
 
 interface PageProps {
     params: Promise<{ id: string }>;
@@ -302,6 +303,7 @@ ${(analysis?.solution_wizard as any)?.steps?.map((step: string, i: number) => `$
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
             />
+            <TrendViewTracker trendId={trend.id} />
             <main className="max-w-7xl mx-auto px-4 py-8">
                 {/* 뒤로가기 + 북마크 */}
                 <div className="flex items-center justify-between mb-8">
@@ -489,7 +491,7 @@ ${(analysis?.solution_wizard as any)?.steps?.map((step: string, i: number) => `$
                                                 <span className="opacity-30">|</span>
                                                 <a href="https://platform.openai.com" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">ChatGPT</a>
                                             </div>
-                                            <AIBriefCopyButton briefText={analysis?.ai_brief || fallbackBrief} />
+                                            <AIBriefCopyButton briefText={analysis?.ai_brief || fallbackBrief} trendId={trend.id} />
                                         </div>
                                     </div>
 

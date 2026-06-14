@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { IconMail, IconCheck, IconLoader2 } from "@tabler/icons-react";
+import { trackEvent } from "@/lib/analytics";
 
 export function BetaEmailSignup() {
     const [email, setEmail] = useState("");
@@ -28,6 +29,7 @@ export function BetaEmailSignup() {
 
             if (res.ok) {
                 setStatus("done");
+                trackEvent("beta_email_signup");
             } else {
                 setStatus("error");
             }

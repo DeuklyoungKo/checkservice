@@ -3,18 +3,22 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { IconCopy, IconCheck } from '@tabler/icons-react'
+import { trackEvent } from '@/lib/analytics'
 
 interface AIBriefCopyButtonProps {
     briefText: string
+    trendId?: string
 }
 
-export function AIBriefCopyButton({ briefText }: AIBriefCopyButtonProps) {
+export function AIBriefCopyButton({ briefText, trendId }: AIBriefCopyButtonProps) {
     const [copied, setCopied] = useState(false)
 
     const handleCopy = async () => {
         try {
             await navigator.clipboard.writeText(briefText)
             setCopied(true)
+            // 핵심 가치 지표: AI 브리프 복사 이벤트
+            trackEvent('brief_copied', trendId ? { trend_id: trendId } : undefined)
             setTimeout(() => {
                 setCopied(false)
             }, 2000)

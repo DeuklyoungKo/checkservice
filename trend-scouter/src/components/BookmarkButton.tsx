@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react'
 import { Button } from '@/components/ui/button'
 import { IconBookmark, IconBookmarkFilled } from '@tabler/icons-react'
 import { toggleBookmark } from '@/app/actions/workspace'
+import { trackEvent } from '@/lib/analytics'
 
 interface BookmarkButtonProps {
     trendId: string
@@ -22,6 +23,11 @@ export function BookmarkButton({ trendId, initialIsBookmarked, size = 'default' 
         // 낙관적 업데이트
         const previousState = isBookmarked
         setIsBookmarked(!previousState)
+
+        // 북마크 추가 시에만 이벤트 발화 (해제는 제외)
+        if (!previousState) {
+            trackEvent('bookmark_added', { trend_id: trendId })
+        }
 
         startTransition(async () => {
             try {
