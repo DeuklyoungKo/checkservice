@@ -215,7 +215,7 @@ export function TrendList({ initialTrends }: TrendListProps) {
                                         <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider flex items-center gap-1">
                                             <IconChartBar size={12} /> 잠재력
                                         </p>
-                                        <p className={`text-sm font-bold ${trend.potential === '높음' ? 'text-orange-500' : 'text-foreground'}`}>
+                                        <p className={`text-sm font-bold ${trend.potential === '매우 높음' ? 'text-rose-600 dark:text-rose-500' : trend.potential === '높음' ? 'text-orange-500' : 'text-foreground'}`}>
                                             {trend.potential}
                                         </p>
                                     </div>
