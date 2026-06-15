@@ -58,14 +58,13 @@ export async function generateMetadata({ params }: PageProps) {
             title: displayTitle,
             description,
             siteName: "Trend Scouter",
-            images: [{ url: "/og-image.png", width: 1200, height: 630, alt: displayTitle }],
+            // og:image는 같은 폴더의 opengraph-image.tsx가 트렌드별로 동적 생성.
             publishedTime: trend.created_at,
         },
         twitter: {
             card: "summary_large_image",
             title: displayTitle,
             description,
-            images: ["/og-image.png"],
         },
     };
 }

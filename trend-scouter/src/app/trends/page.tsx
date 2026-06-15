@@ -19,13 +19,12 @@ export const metadata = {
         url: "https://trend.gonsuit.com/trends",
         title: "전체 트렌드 목록 — Trend Scouter",
         description: "AI가 분석한 수익형 사이드 프로젝트 아이디어를 탐색하세요.",
-        images: [{ url: "/og-image.png", width: 1200, height: 630 }],
+        // og:image는 app/opengraph-image.tsx(루트 동적 생성)를 상속.
     },
     twitter: {
         card: "summary_large_image",
         title: "전체 트렌드 목록 — Trend Scouter",
         description: "AI가 분석한 수익형 사이드 프로젝트 아이디어를 탐색하세요.",
-        images: ["/og-image.png"],
     },
 };
 

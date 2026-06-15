@@ -44,14 +44,14 @@ export const metadata: Metadata = {
     title: "Trend Scouter — 주말에 만들 수 있는 수익형 AI 사이드 프로젝트 아이디어",
     description:
       "Reddit·Product Hunt·GeekNews 페인포인트를 PUFE 프레임워크로 분석. AI 개발 브리프 즉시 복사 가능.",
-    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "Trend Scouter" }],
+    // og:image는 app/opengraph-image.tsx가 동적 생성하여 자동 주입 (하위 라우트에 상속).
   },
   twitter: {
     card: "summary_large_image",
     title: "Trend Scouter — 주말에 만들 수 있는 수익형 AI 사이드 프로젝트 아이디어",
     description:
       "Reddit·Product Hunt·GeekNews 페인포인트를 PUFE 프레임워크로 분석. AI 개발 브리프 즉시 복사 가능.",
-    images: ["/og-image.png"],
+    // twitter:image도 opengraph-image.tsx 결과를 자동 사용.
   },
   alternates: { canonical: BASE_URL },
   robots: { index: true, follow: true },

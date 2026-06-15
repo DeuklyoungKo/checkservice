@@ -26,8 +26,7 @@ import {
     IconCheck, 
     IconArrowLeft,
     IconLoader2,
-    IconLock,
-    IconExternalLink
+    IconLock
 } from "@tabler/icons-react";
 import Link from "next/link";
 import { analyzeUserIdea } from "@/app/actions/wizard";
@@ -221,13 +220,11 @@ export default function WizardPage() {
                                         <h3 className="text-3xl font-black tracking-tight text-white">아이디어를 실제로 실현할 도구가 준비되었습니다</h3>
                                         <p className="text-lg text-white/70 font-medium">아이디어 검증 패키지를 해제하고 린 캔버스와 Vibe Coding 기획서를 즉시 받으세요.</p>
                                     </div>
-                                    <Link href="https://polar.sh/your-checkout-link" target="_blank" rel="noopener noreferrer">
-                                        <Button size="lg" className="h-20 px-12 rounded-full text-2xl font-black bg-primary text-primary-foreground shadow-2xl hover:scale-105 active:scale-95 transition-all gap-3 border-none">
-                                            $3로 아이디어 검증 패스 해제하기
-                                            <IconExternalLink size={24} />
-                                        </Button>
-                                    </Link>
-                                    <p className="text-white/40 text-xs font-black uppercase tracking-widest">Secured by Polar / Stripe</p>
+                                    <Button size="lg" disabled className="h-20 px-12 rounded-full text-2xl font-black bg-primary/80 text-primary-foreground shadow-2xl gap-3 border-none cursor-not-allowed opacity-80">
+                                        부스터 패키지 출시 예정
+                                        <IconRocket size={24} />
+                                    </Button>
+                                    <p className="text-white/40 text-xs font-black uppercase tracking-widest">Coming Soon · 베타 종료 후 제공 예정</p>
                                 </div>
                             </div>
                         </section>
