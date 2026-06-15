@@ -31,7 +31,7 @@ export default function OgImage() {
                 <div style={{
                     display: "flex", alignItems: "center", gap: 8,
                     background: "rgba(245,158,11,0.15)", border: "1px solid rgba(245,158,11,0.4)",
-                    borderRadius: 999, padding: "8px 20px", marginBottom: 32, width: "fit-content",
+                    borderRadius: 999, padding: "8px 20px", marginBottom: 32, alignSelf: "flex-start",
                 }}>
                     <span style={{ color: "#f59e0b", fontSize: 14, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase" }}>
                         🎉 Beta Open · Vibe Coding × Side Project
