@@ -75,6 +75,7 @@ export default async function Home() {
     id: string; title: string; category: string; score: number;
     difficulty: string; aiBuildabilityScore: number; potential: string; description: string;
     tags: string[]; isBookmarked: boolean; isUnlocked: boolean;
+    koreaDemand: { group: string; ratio: number } | null;
   };
   const trends: TrendItem[] = (latestAnalyses || []).reduce<TrendItem[]>((acc, analysis) => {
     const trend = rawTrends?.find(t => t.id === analysis.trend_id);
@@ -92,6 +93,10 @@ export default async function Home() {
       tags: [trend.source, analysis.pain_category || 'General'].filter(Boolean),
       isBookmarked: bookmarkedIds.has(trend.id),
       isUnlocked: true, // 베타 기간(~ 2026-08-31) 전체 공개
+      // 네이버 DataLab 한국 검색 관심도 (상대 지수 0~100 + 카테고리). 절대 검색량 아님.
+      koreaDemand: trend.stats_data?.korea_demand
+        ? { group: trend.stats_data.korea_demand.group, ratio: trend.stats_data.korea_demand.ratio }
+        : null,
     });
     return acc;
   }, []);
@@ -269,6 +274,22 @@ export default async function Home() {
                     <p className={`text-sm font-bold ${trend.potential === '높음' ? 'text-orange-500' : 'text-foreground'}`}>{trend.potential}</p>
                   </div>
                 </div>
+                {trend.koreaDemand && (
+                  <div className="mt-4 pt-4 border-t border-dashed border-muted">
+                    <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider flex items-center gap-1 mb-1.5">
+                      <IconTrendingUp size={12} /> 한국 검색 관심도
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold text-foreground">
+                        {trend.koreaDemand.ratio}<span className="text-muted-foreground font-normal text-xs">/100</span>
+                      </span>
+                      <Badge variant="outline" className="rounded-md border-muted text-muted-foreground text-[10px]">
+                        {trend.koreaDemand.group}
+                      </Badge>
+                    </div>
+                    <p className="text-[9px] text-muted-foreground/50 mt-1">네이버 DataLab 상대 지수</p>
+                  </div>
+                )}
               </CardContent>
               <CardFooter className="bg-muted/30 p-4 mt-auto">
                 <Link href={`/trend/${trend.id}`} className="w-full">
