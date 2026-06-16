@@ -25,6 +25,7 @@ import { AIBriefCopyButton } from "@/components/AIBriefCopyButton";
 import { PolarCheckoutButton } from "@/components/PolarCheckoutButton";
 import { AIBriefViewer } from "@/components/AIBriefViewer";
 import { IS_BETA } from "@/lib/beta";
+import { getUnlockedTrendIds, isTrendUnlocked } from "@/lib/unlock";
 import { PufeReasoning } from "@/components/PufeReasoning";
 import { TrendViewTracker } from "@/components/TrendViewTracker";
 
@@ -95,8 +96,9 @@ export default async function TrendDetailPage({ params }: PageProps) {
     ]);
 
     const analysis = analysisData;
-    // 베타 기간(~ 2026-08-31) 동안 전체 공개
-    const isUnlocked = true;
+    // 사용자별 잠금 판정: 베타 전체공개 || 프리미엄 || 본인이 이 트렌드를 단건 결제 해제
+    const unlockedIds = await getUnlockedTrendIds(supabase, user?.id);
+    const isUnlocked = isTrendUnlocked(id, { isPremium: userProfile?.is_premium || false, unlockedIds });
 
     // Stats-Only: Use AI-generated headline and summary directly
     const displayTitle = analysis?.headline || "분석 중인 트렌드";
