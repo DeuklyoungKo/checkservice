@@ -712,9 +712,7 @@ ${(analysis?.solution_wizard as any)?.steps?.map((step: string, i: number) => `$
             <footer className="border-t py-24 bg-muted/20 relative z-10">
                 <div className="max-w-7xl mx-auto px-4 flex flex-col items-center gap-6">
                     <div className="flex items-center gap-3 opacity-40">
-                        <div className="p-2 bg-foreground rounded-lg">
-                            <IconBulb size={24} className="text-background" />
-                        </div>
+                        <img src="/logo.png" alt="Trend Scouter" width={40} height={40} className="w-10 h-10 rounded-lg" />
                         <span className="text-2xl font-black tracking-tighter">Trend Scouter</span>
                     </div>
                     <p className="text-muted-foreground text-xs font-black uppercase tracking-widest opacity-60">

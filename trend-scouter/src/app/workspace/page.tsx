@@ -6,7 +6,6 @@ import { Separator } from "@/components/ui/separator";
 import { BookmarkButton } from "@/components/BookmarkButton";
 import Link from "next/link";
 import {
-    IconBulb,
     IconTrendingUp,
     IconClock,
     IconChartBar,
@@ -88,9 +87,7 @@ export default async function WorkspacePage() {
             <nav className="border-b bg-background/80 backdrop-blur-md sticky top-0 z-50">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
                     <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-                        <div className="w-9 h-9 bg-primary rounded-xl flex items-center justify-center shadow-lg">
-                            <IconBulb className="text-primary-foreground w-5 h-5" />
-                        </div>
+                        <img src="/logo.png" alt="Trend Scouter" width={36} height={36} className="w-9 h-9 rounded-xl" />
                         <span className="text-xl font-black tracking-tight text-primary">Trend Scouter</span>
                     </Link>
                     <div className="flex items-center gap-4">

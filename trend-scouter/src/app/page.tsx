@@ -362,7 +362,7 @@ export default async function Home() {
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex flex-col items-center gap-4">
             <div className="flex items-center gap-2 opacity-50">
-              <IconBulb size={24} />
+              <img src="/logo.png" alt="Trend Scouter" width={24} height={24} className="w-6 h-6 rounded-md" />
               <span className="text-lg font-bold">Trend Scouter</span>
             </div>
             <p className="text-muted-foreground text-sm">

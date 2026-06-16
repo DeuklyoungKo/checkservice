@@ -1,7 +1,7 @@
 import { login, signup, signInWithGoogle } from './actions'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { IconBrandGoogle, IconBulb, IconMail, IconLock } from "@tabler/icons-react";
+import { IconBrandGoogle, IconMail, IconLock } from "@tabler/icons-react";
 import Link from "next/link";
 
 export default async function LoginPage({
@@ -19,9 +19,7 @@ export default async function LoginPage({
             <div className="w-full max-w-md space-y-8">
                 <div className="text-center space-y-2">
                     <Link href="/" className="inline-flex items-center gap-2 mb-4">
-                        <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
-                            <IconBulb className="text-primary-foreground w-6 h-6" />
-                        </div>
+                        <img src="/logo.png" alt="Trend Scouter" width={40} height={40} className="w-10 h-10 rounded-xl" />
                         <span className="text-2xl font-black tracking-tight text-primary">Trend Scouter</span>
                     </Link>
                     <h1 className="text-3xl font-extrabold tracking-tight">다시 오신 것을 환영합니다</h1>

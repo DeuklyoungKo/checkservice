@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
-    IconBulb,
     IconArrowRight,
 } from "@tabler/icons-react";
 
@@ -53,9 +52,7 @@ export default function ContactPage() {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between h-16 items-center">
                         <Link href="/" className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
-                                <IconBulb className="text-primary-foreground w-6 h-6" />
-                            </div>
+                            <img src="/logo.png" alt="Trend Scouter" width={40} height={40} className="w-10 h-10 rounded-xl" />
                             <span className="text-xl font-bold tracking-tight text-primary">Trend Scouter</span>
                         </Link>
                         <Link href="/">
@@ -254,7 +251,7 @@ export default function ContactPage() {
                 <div className="max-w-7xl mx-auto px-4">
                     <div className="flex flex-col items-center gap-4">
                         <div className="flex items-center gap-2 opacity-50">
-                            <IconBulb size={24} />
+                            <img src="/logo.png" alt="Trend Scouter" width={24} height={24} className="w-6 h-6 rounded-md" />
                             <span className="text-lg font-bold">Trend Scouter</span>
                         </div>
                         <p className="text-muted-foreground text-sm">
