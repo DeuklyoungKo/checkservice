@@ -75,7 +75,7 @@ export default async function WorkspacePage() {
             category: `${a.pain_category} Pain`,
             score: a.pufe_total || 0,
             description: a.summary || "분석 내용이 없습니다.",
-            isUnlocked: a.is_unlocked,
+            isUnlocked: true,
             isUserIdea: true,
             createdAt: a.created_at
         };
