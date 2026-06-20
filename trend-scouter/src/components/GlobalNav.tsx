@@ -2,7 +2,6 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import {
-    IconBulb,
     IconCrown,
     IconUser,
     IconLogout,
@@ -30,9 +29,7 @@ export default async function GlobalNav() {
                 <div className="flex justify-between h-16 items-center">
                     {/* Logo */}
                     <Link href="/" className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
-                            <IconBulb className="text-primary-foreground w-6 h-6" />
-                        </div>
+                        <img src="/logo.png" alt="Trend Scouter" width={40} height={40} className="w-10 h-10 rounded-xl" />
                         <span className="text-xl font-bold tracking-tight text-primary">Trend Scouter</span>
                     </Link>
 

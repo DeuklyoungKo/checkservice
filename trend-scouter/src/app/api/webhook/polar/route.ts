@@ -88,17 +88,23 @@ export async function POST(request: Request) {
 
         console.log(`Premium granted via checkout to user: ${userId}`);
       } else if (!isRecurring && trendId) {
-        // 개별 리포트 결제 완료 → 잠금 해제
+        // 개별 리포트 결제 완료 → 결제한 '본인에게만' 잠금 해제 (전역 플래그 금지).
+        // user_id가 없으면 권한을 부여할 대상을 특정할 수 없으므로 거부 (결제 전 로그인 필수 정책).
+        if (!userId || userId === 'anonymous') {
+          console.error('개별 결제에 user_id가 없어 unlock을 부여할 수 없습니다.', { trendId });
+          return NextResponse.json({ error: 'Missing user_id for unlock' }, { status: 400 });
+        }
+
+        // upsert로 웹훅 재시도 시 중복 INSERT 방지 (UNIQUE(user_id, trend_id))
         const { error: unlockError } = await supabaseAdmin
-          .from('analysis')
-          .update({ is_unlocked: true })
-          .eq('trend_id', trendId);
+          .from('unlocks')
+          .upsert({ user_id: userId, trend_id: trendId }, { onConflict: 'user_id,trend_id' });
 
         if (unlockError) {
-          console.error('Error unlocking analysis:', unlockError);
+          console.error('Error inserting unlock:', unlockError);
           return NextResponse.json({ error: 'Database update failed' }, { status: 500 });
         }
-        console.log(`Unlocked trend analysis: ${trendId}`);
+        console.log(`Unlocked trend ${trendId} for user ${userId}`);
       }
 
       if (userId && userId !== 'anonymous') {

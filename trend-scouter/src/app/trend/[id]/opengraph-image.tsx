@@ -1,5 +1,6 @@
 import { ImageResponse } from "next/og";
 import { createClient } from "@supabase/supabase-js";
+import { LOGO_DATA_URI } from "@/lib/logo-data";
 
 export const runtime = "edge";
 export const alt = "Trend Scouter — 트렌드 분석 리포트";
@@ -80,12 +81,7 @@ export default async function Image({ params }: { params: Promise<{ id: string }
                 {/* 하단: PUFE 점수 + 도메인 */}
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                        <div style={{
-                            width: 44, height: 44, background: "#6366f1", borderRadius: 12,
-                            display: "flex", alignItems: "center", justifyContent: "center",
-                        }}>
-                            <span style={{ color: "white", fontSize: 22 }}>💡</span>
-                        </div>
+                        <img src={LOGO_DATA_URI} width={44} height={44} style={{ borderRadius: 12 }} />
                         <span style={{ color: "#6366f1", fontSize: 22, fontWeight: 700 }}>trend.gonsuit.com</span>
                     </div>
                     {score !== null ? (

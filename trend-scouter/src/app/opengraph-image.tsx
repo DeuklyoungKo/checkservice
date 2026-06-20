@@ -1,4 +1,5 @@
 import { ImageResponse } from "next/og";
+import { LOGO_DATA_URI } from "@/lib/logo-data";
 
 export const runtime = "edge";
 export const alt = "Trend Scouter — 주말에 만들 수 있는 수익형 AI 사이드 프로젝트 아이디어";
@@ -59,12 +60,7 @@ export default function OgImage() {
 
                 {/* 하단 도메인 */}
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                    <div style={{
-                        width: 44, height: 44, background: "#6366f1", borderRadius: 12,
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                    }}>
-                        <span style={{ color: "white", fontSize: 22 }}>💡</span>
-                    </div>
+                    <img src={LOGO_DATA_URI} width={44} height={44} style={{ borderRadius: 12 }} />
                     <span style={{ color: "#6366f1", fontSize: 22, fontWeight: 700 }}>trend.gonsuit.com</span>
                 </div>
             </div>

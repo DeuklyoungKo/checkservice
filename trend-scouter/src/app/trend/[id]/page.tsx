@@ -25,6 +25,7 @@ import { AIBriefCopyButton } from "@/components/AIBriefCopyButton";
 import { PolarCheckoutButton } from "@/components/PolarCheckoutButton";
 import { AIBriefViewer } from "@/components/AIBriefViewer";
 import { IS_BETA } from "@/lib/beta";
+import { getUnlockedTrendIds, isTrendUnlocked } from "@/lib/unlock";
 import { PufeReasoning } from "@/components/PufeReasoning";
 import { TrendViewTracker } from "@/components/TrendViewTracker";
 
@@ -95,8 +96,9 @@ export default async function TrendDetailPage({ params }: PageProps) {
     ]);
 
     const analysis = analysisData;
-    // 베타 기간(~ 2026-08-31) 동안 전체 공개
-    const isUnlocked = true;
+    // 사용자별 잠금 판정: 베타 전체공개 || 프리미엄 || 본인이 이 트렌드를 단건 결제 해제
+    const unlockedIds = await getUnlockedTrendIds(supabase, user?.id);
+    const isUnlocked = isTrendUnlocked(id, { isPremium: userProfile?.is_premium || false, unlockedIds });
 
     // Stats-Only: Use AI-generated headline and summary directly
     const displayTitle = analysis?.headline || "분석 중인 트렌드";
@@ -712,9 +714,7 @@ ${(analysis?.solution_wizard as any)?.steps?.map((step: string, i: number) => `$
             <footer className="border-t py-24 bg-muted/20 relative z-10">
                 <div className="max-w-7xl mx-auto px-4 flex flex-col items-center gap-6">
                     <div className="flex items-center gap-3 opacity-40">
-                        <div className="p-2 bg-foreground rounded-lg">
-                            <IconBulb size={24} className="text-background" />
-                        </div>
+                        <img src="/logo.png" alt="Trend Scouter" width={40} height={40} className="w-10 h-10 rounded-lg" />
                         <span className="text-2xl font-black tracking-tighter">Trend Scouter</span>
                     </div>
                     <p className="text-muted-foreground text-xs font-black uppercase tracking-widest opacity-60">

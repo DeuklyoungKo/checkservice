@@ -1,10 +1,10 @@
 import { createClient } from "@/utils/supabase/server";
+import { getUnlockedTrendIds, isTrendUnlocked } from "@/lib/unlock";
 import { TrendList } from "@/components/TrendList";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import {
-    IconBulb,
     IconTrendingUp,
     IconSparkles,
     IconArrowLeft,
@@ -57,6 +57,8 @@ export default async function TrendsPage() {
 
     const userIsPremium = userProfile?.is_premium || false;
     const bookmarkedIds = new Set(userBookmarks?.map(b => b.trend_id) || []);
+    // 사용자별 단건 잠금 해제 집합 (베타·비로그인 시 빈 집합)
+    const unlockedIds = await getUnlockedTrendIds(supabase, user?.id);
 
     if (error) console.error("Error fetching trends:", error);
 
@@ -80,7 +82,7 @@ export default async function TrendsPage() {
             description: analysis.summary || "현재 비즈니스 분석이 진행 중입니다.",
             tags: [trend.source, analysis.pain_category || 'General'].filter(Boolean),
             isBookmarked: bookmarkedIds.has(trend.id),
-            isUnlocked: true, // 베타 기간(~ 2026-08-31) 전체 공개
+            isUnlocked: isTrendUnlocked(trend.id, { isPremium: userIsPremium, unlockedIds }),
         });
         return acc;
     }, []);
@@ -122,7 +124,7 @@ export default async function TrendsPage() {
                 <div className="max-w-7xl mx-auto px-4">
                     <div className="flex flex-col items-center gap-3">
                         <div className="flex items-center gap-2 opacity-50">
-                            <IconBulb size={20} />
+                            <img src="/logo.png" alt="Trend Scouter" width={20} height={20} className="w-5 h-5 rounded-md" />
                             <span className="text-base font-bold">Trend Scouter</span>
                         </div>
                         <p className="text-muted-foreground text-sm">© 2026 Trend Scouter. Built with Precision & AI.</p>
