@@ -46,9 +46,9 @@ let datalabSnapshot = null;
 
 const parser = new Parser({
     headers: {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+        // 봇임을 정직하게 식별 + 연락처 노출 (브라우저 위장 ❌). 상세: 3.LEGAL_CHECKLIST.md FIX-5
+        'User-Agent': 'TrendScouterBot/1.0 (+https://trend.gonsuit.com; trend@gonsuit.com)',
         'Accept': 'application/rss+xml, application/xml;q=0.9, */*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.5',
     },
 });
 
@@ -61,11 +61,10 @@ const RSS_FEEDS = [
     { name: 'hacker-news',       url: 'https://hnrss.org/newest?q=SaaS+OR+Automation&points=20',   isKorean: false },
     { name: 'dev-to',            url: 'https://dev.to/feed',                                        isKorean: false },
     // --- [Tier 2] 한국 소스 (Korea Data Pipeline - 단계적 추가) ---
-    { name: 'zdnet-korea',       url: 'https://zdnet.co.kr/feed',                                   isKorean: true  },
+    // NOTE: zdnet-korea(상업 언론사 RSS)는 저작권 위험으로 제거함. 상세: 3.LEGAL_CHECKLIST.md FIX-2
     { name: 'geek-news',         url: 'https://news.hada.io/rss/news',                              isKorean: true  }, // 한국 개발자 커뮤니티 인기 토픽
 ];
 
-const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36';
 // 분석 대상 핵심 키워드 (글로벌 + 한국)
 const TARGET_KEYWORDS = [
     // 글로벌
