@@ -7,6 +7,7 @@ const path = require('path');
 // .env.local 로드 (로컬 개발용)
 require('dotenv').config({ path: path.join(__dirname, '../.env.local') });
 const { getKoreanDemandSignal, getFullKoreanTrendSnapshot } = require('./naver-datalab');
+const { fetchHackerNewsItems } = require('./hn-collector');
 
 /**
  * 환경 변수 필수 검증
@@ -56,14 +57,19 @@ const parser = new Parser({
 const RSS_FEEDS = [
     // --- [Tier 1] 글로벌 소스 ---
     // NOTE: reddit-sideproject는 Reddit Responsible Builder Policy(상업 이용 사전허가) 위험으로 제거함. 상세: 3.LEGAL_CHECKLIST.md FIX-3
+    // NOTE: hacker-news / indie-hackers(hnrss 비공식)는 공식 HN 검색 API로 승격 → 아래 API_SOURCES 참조 (C-1)
     // sensitive: true → 저작권 민감 소스. original_title 미저장 (Stats-Only 강화). 현재 해당 소스 없음.
-    { name: 'indie-hackers',     url: 'https://hnrss.org/newest?q=Indie+Hackers&points=20',        isKorean: false },
     { name: 'product-hunt',      url: 'https://www.producthunt.com/feed',                           isKorean: false },
-    { name: 'hacker-news',       url: 'https://hnrss.org/newest?q=SaaS+OR+Automation&points=20',   isKorean: false },
     { name: 'dev-to',            url: 'https://dev.to/feed',                                        isKorean: false },
     // --- [Tier 2] 한국 소스 (Korea Data Pipeline - 단계적 추가) ---
     // NOTE: zdnet-korea(상업 언론사 RSS)는 저작권 위험으로 제거함. 상세: 3.LEGAL_CHECKLIST.md FIX-2
     { name: 'geek-news',         url: 'https://news.hada.io/rss/news',                              isKorean: true  }, // 한국 개발자 커뮤니티 인기 토픽
+];
+
+// API 기반 소스 (RSS 아님). fetch()가 RSS item과 호환되는 정규화 배열을 반환한다.
+// minScore: 0 → API 쿼리 단계에서 이미 관련성 필터링됨 (키워드 재필터 불필요).
+const API_SOURCES = [
+    { name: 'hacker-news', isKorean: false, sensitive: false, minScore: 0, fetch: fetchHackerNewsItems }, // C-1: 공식 HN 검색 API
 ];
 
 // 분석 대상 핵심 키워드 (글로벌 + 한국)
@@ -208,105 +214,120 @@ async function collectRSS() {
             console.log(`📡 Fetching ${feed.name}...`);
             const data = await parser.parseURL(feed.url);
 
-            for (const item of data.items) {
-                try {
-                    const impactScore = await calculateImpactScore(item.title, item.contentSnippet || item.content || '');
-                    // 한국 소스는 필터 기준을 낮춤 (한국어 키워드가 적어 점수가 낮게 나올 수 있음)
-                    const minScore = feed.isKorean ? 5 : 10;
-                    if (impactScore < minScore) continue;
-
-                    const externalId = item.guid || item.id || item.link;
-                    
-                    // DB 조회 에러 핸들링 추가
-                    const { data: existing, error: checkError } = await supabase
-                        .from('trends')
-                        .select('id, impact_score')
-                        .eq('external_id', externalId)
-                        .maybeSingle();
-
-                    if (checkError) {
-                        console.error(`❌ DB Check Error: ${checkError.message}`);
-                        continue;
-                    }
-
-                    if (existing && existing.impact_score >= impactScore) {
-                        continue;
-                    }
-
-                    // 네이버 DataLab 교차검증 — 해당 아이템의 한국 수요 신호 추출
-                    let koreaDemand = null;
-                    if (naverClientId && naverClientSecret) {
-                        koreaDemand = await getKoreanDemandSignal(item.title, naverClientId, naverClientSecret);
-                        if (koreaDemand) {
-                            console.log(`   📊 [DataLab] "${koreaDemand.group}" 지수: ${koreaDemand.ratio}/100, 성장률: ${koreaDemand.growth > 0 ? '+' : ''}${koreaDemand.growth}%`);
-                        }
-                    }
-
-                    console.log(`✨ [${feed.isKorean ? '🇰🇷 KR' : '🌐 GL'}] Analyzing: ${item.title.substring(0, 40)}... (Score: ${impactScore})`);
-                    const analysis = await analyzeWithAI(item.title, item.content || item.contentSnippet || '', feed.name, feed.isKorean, koreaDemand);
-
-                    if (analysis) {
-                        const { data: trend, error: tError } = await supabase.from('trends').upsert({
-                            source: feed.name,
-                            external_id: externalId,
-                            url: item.link,
-                            impact_score: impactScore,
-                            stats_data: {
-                                keyword_hits: TARGET_KEYWORDS.filter(k => (item.title + (item.content || '')).toLowerCase().includes(k.toLowerCase())),
-                                // 저작권 민감 소스(feed.sensitive)는 원문 제목 verbatim 저장을 생략 (Stats-Only 강화). 상세: 3.LEGAL_CHECKLIST.md FIX-4
-                                ...(feed.sensitive ? {} : { original_title: item.title }),
-                                // 네이버 DataLab 교차검증 데이터
-                                korea_demand: koreaDemand ? {
-                                    group: koreaDemand.group,
-                                    ratio: koreaDemand.ratio,
-                                    growth: koreaDemand.growth,
-                                    period: koreaDemand.period,
-                                } : null,
-                            }
-                        }, { onConflict: 'source,external_id' }).select().single();
-
-                        if (tError) {
-                            console.error(`❌ Trend Upsert Error: ${tError.message}`);
-                            continue;
-                        }
-
-                        if (trend) {
-                            const { error: aError } = await supabase.from('analysis').upsert({
-                                trend_id: trend.id,
-                                headline: analysis.headline,
-                                pufe_p: analysis.pufe.p,
-                                pufe_u: analysis.pufe.u,
-                                pufe_f: analysis.pufe.f,
-                                pufe_e: analysis.pufe.e,
-                                pufe_total: (analysis.pufe.p || 0) + (analysis.pufe.u || 0) + (analysis.pufe.f || 0) + (analysis.pufe.e || 0),
-                                pain_category: analysis.pain_category,
-                                summary: analysis.summary,
-                                reasoning: analysis.pufe.reasoning,
-                                gtm_strategy: analysis.gtm_strategy,
-                                tech_stack_suggestion: JSON.stringify(analysis.tech_stack_suggestion),
-                                korea_localization_tips: analysis.korea_localization_tips,
-                                solution_wizard: analysis.solution_wizard,
-                                ai_brief: analysis.ai_brief || null,
-                                ai_buildability_score: analysis.ai_buildability_score || null,
-                                ai_model: deepseekApiKey ? 'deepseek-chat' : 'gemini-2.5-flash-lite'
-                            }, { onConflict: 'trend_id' });
-
-                            if (aError) {
-                                console.error(`❌ Analysis save failed [${trend.id}]:`, aError.message, aError.code);
-                            } else {
-                                console.log(`💾 Analysis saved: ${analysis.headline?.substring(0, 40)}`);
-                            }
-                        }
-                    }
-                } catch (itemError) {
-                    console.error(`⚠️  Item skip error: ${item.title?.substring(0, 30)} | ${itemError.message}`);
-                }
-            }
+            for (const item of data.items) await processItem(item, feed);
         } catch (error) {
             console.error(`❌ Source failed: ${feed.name} | ${error.message} | ${error.code || ''}`);
         }
     }
+
+    // API 기반 소스 (공식 API). RSS와 동일 파이프라인(processItem)으로 처리.
+    for (const src of API_SOURCES) {
+        try {
+            console.log(`📡 Fetching ${src.name} (API)...`);
+            const items = await src.fetch();
+            console.log(`   ↳ ${items.length} items fetched`);
+            for (const item of items) await processItem(item, src);
+        } catch (error) {
+            console.error(`❌ API Source failed: ${src.name} | ${error.message}`);
+        }
+    }
     console.log('✅ 수집 및 분석 작업이 완료되었습니다.');
+}
+
+// 단일 아이템 처리: 임팩트 점수 → 중복체크 → DataLab 교차검증 → AI 분석 → DB 저장.
+// RSS item과 API item(_stats 포함)을 동일 파이프라인으로 처리한다.
+async function processItem(item, feed) {
+    try {
+        const impactScore = await calculateImpactScore(item.title, item.contentSnippet || item.content || '');
+        // minScore: API 소스는 쿼리 단계에서 이미 관련성 필터됨(0). 한국 소스는 낮춤(5). 그 외 10.
+        const minScore = feed.minScore ?? (feed.isKorean ? 5 : 10);
+        if (impactScore < minScore) return;
+
+        const externalId = item.guid || item.id || item.link;
+
+        const { data: existing, error: checkError } = await supabase
+            .from('trends')
+            .select('id, impact_score')
+            .eq('external_id', externalId)
+            .maybeSingle();
+
+        if (checkError) {
+            console.error(`❌ DB Check Error: ${checkError.message}`);
+            return;
+        }
+
+        if (existing && existing.impact_score >= impactScore) return;
+
+        // 네이버 DataLab 교차검증 — 해당 아이템의 한국 수요 신호 추출
+        let koreaDemand = null;
+        if (naverClientId && naverClientSecret) {
+            koreaDemand = await getKoreanDemandSignal(item.title, naverClientId, naverClientSecret);
+            if (koreaDemand) {
+                console.log(`   📊 [DataLab] "${koreaDemand.group}" 지수: ${koreaDemand.ratio}/100, 성장률: ${koreaDemand.growth > 0 ? '+' : ''}${koreaDemand.growth}%`);
+            }
+        }
+
+        console.log(`✨ [${feed.isKorean ? '🇰🇷 KR' : '🌐 GL'}] Analyzing: ${item.title.substring(0, 40)}... (Score: ${impactScore})`);
+        const analysis = await analyzeWithAI(item.title, item.content || item.contentSnippet || '', feed.name, feed.isKorean, koreaDemand);
+
+        if (!analysis) return;
+
+        const { data: trend, error: tError } = await supabase.from('trends').upsert({
+            source: feed.name,
+            external_id: externalId,
+            url: item.link,
+            impact_score: impactScore,
+            stats_data: {
+                keyword_hits: TARGET_KEYWORDS.filter(k => (item.title + (item.content || '')).toLowerCase().includes(k.toLowerCase())),
+                // 저작권 민감 소스(feed.sensitive)는 원문 제목 verbatim 저장을 생략 (Stats-Only 강화). 상세: 3.LEGAL_CHECKLIST.md FIX-4
+                ...(feed.sensitive ? {} : { original_title: item.title }),
+                // API 소스 참여 수치 (HN points/comments 등) — Stats-Only 데이터
+                ...(item._stats ? { engagement: item._stats } : {}),
+                // 네이버 DataLab 교차검증 데이터
+                korea_demand: koreaDemand ? {
+                    group: koreaDemand.group,
+                    ratio: koreaDemand.ratio,
+                    growth: koreaDemand.growth,
+                    period: koreaDemand.period,
+                } : null,
+            }
+        }, { onConflict: 'source,external_id' }).select().single();
+
+        if (tError) {
+            console.error(`❌ Trend Upsert Error: ${tError.message}`);
+            return;
+        }
+
+        if (trend) {
+            const { error: aError } = await supabase.from('analysis').upsert({
+                trend_id: trend.id,
+                headline: analysis.headline,
+                pufe_p: analysis.pufe.p,
+                pufe_u: analysis.pufe.u,
+                pufe_f: analysis.pufe.f,
+                pufe_e: analysis.pufe.e,
+                pufe_total: (analysis.pufe.p || 0) + (analysis.pufe.u || 0) + (analysis.pufe.f || 0) + (analysis.pufe.e || 0),
+                pain_category: analysis.pain_category,
+                summary: analysis.summary,
+                reasoning: analysis.pufe.reasoning,
+                gtm_strategy: analysis.gtm_strategy,
+                tech_stack_suggestion: JSON.stringify(analysis.tech_stack_suggestion),
+                korea_localization_tips: analysis.korea_localization_tips,
+                solution_wizard: analysis.solution_wizard,
+                ai_brief: analysis.ai_brief || null,
+                ai_buildability_score: analysis.ai_buildability_score || null,
+                ai_model: deepseekApiKey ? 'deepseek-chat' : 'gemini-2.5-flash-lite'
+            }, { onConflict: 'trend_id' });
+
+            if (aError) {
+                console.error(`❌ Analysis save failed [${trend.id}]:`, aError.message, aError.code);
+            } else {
+                console.log(`💾 Analysis saved: ${analysis.headline?.substring(0, 40)}`);
+            }
+        }
+    } catch (itemError) {
+        console.error(`⚠️  Item skip error: ${item.title?.substring(0, 30)} | ${itemError.message}`);
+    }
 }
 
 // 메인 실행부: 에러 발생 시 프로세스 종료 코드 전달
