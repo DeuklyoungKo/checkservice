@@ -8,6 +8,7 @@ const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '../.env.local') });
 const { getKoreanDemandSignal, getFullKoreanTrendSnapshot } = require('./naver-datalab');
 const { fetchHackerNewsItems } = require('./hn-collector');
+const { fetchGithubItems } = require('./gh-collector');
 
 /**
  * 환경 변수 필수 검증
@@ -70,6 +71,8 @@ const RSS_FEEDS = [
 // minScore: 0 → API 쿼리 단계에서 이미 관련성 필터링됨 (키워드 재필터 불필요).
 const API_SOURCES = [
     { name: 'hacker-news', isKorean: false, sensitive: false, minScore: 0, fetch: fetchHackerNewsItems }, // C-1: 공식 HN 검색 API
+    { name: 'github',      isKorean: false, sensitive: false, minScore: 0, fetch: fetchGithubItems },     // C-3: GitHub Search API
+    // NOTE: Stack Overflow(so-collector.js)는 디버깅 노이즈 비율이 높아 미연동(보관). 상세: 3.LEGAL_CHECKLIST.md C-2
 ];
 
 // 분석 대상 핵심 키워드 (글로벌 + 한국)
