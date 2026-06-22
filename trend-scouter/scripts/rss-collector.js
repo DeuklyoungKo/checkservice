@@ -55,8 +55,9 @@ const parser = new Parser({
 // 수집 대상 RSS 피드 리스트 (글로벌 Tier 1 + 한국 Tier 2)
 const RSS_FEEDS = [
     // --- [Tier 1] 글로벌 소스 ---
+    // NOTE: reddit-sideproject는 Reddit Responsible Builder Policy(상업 이용 사전허가) 위험으로 제거함. 상세: 3.LEGAL_CHECKLIST.md FIX-3
+    // sensitive: true → 저작권 민감 소스. original_title 미저장 (Stats-Only 강화). 현재 해당 소스 없음.
     { name: 'indie-hackers',     url: 'https://hnrss.org/newest?q=Indie+Hackers&points=20',        isKorean: false },
-    { name: 'reddit-sideproject',url: 'https://www.reddit.com/r/sideproject/.rss',                  isKorean: false },
     { name: 'product-hunt',      url: 'https://www.producthunt.com/feed',                           isKorean: false },
     { name: 'hacker-news',       url: 'https://hnrss.org/newest?q=SaaS+OR+Automation&points=20',   isKorean: false },
     { name: 'dev-to',            url: 'https://dev.to/feed',                                        isKorean: false },
@@ -252,7 +253,8 @@ async function collectRSS() {
                             impact_score: impactScore,
                             stats_data: {
                                 keyword_hits: TARGET_KEYWORDS.filter(k => (item.title + (item.content || '')).toLowerCase().includes(k.toLowerCase())),
-                                original_title: item.title,
+                                // 저작권 민감 소스(feed.sensitive)는 원문 제목 verbatim 저장을 생략 (Stats-Only 강화). 상세: 3.LEGAL_CHECKLIST.md FIX-4
+                                ...(feed.sensitive ? {} : { original_title: item.title }),
                                 // 네이버 DataLab 교차검증 데이터
                                 korea_demand: koreaDemand ? {
                                     group: koreaDemand.group,
