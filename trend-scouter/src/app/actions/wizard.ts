@@ -14,6 +14,12 @@ export async function analyzeUserIdea(painPoint: string) {
         throw new Error('AI 분석 설정이 완료되지 않았습니다.');
     }
 
+    // ⛔ Gemini 비용 차단 가드 — ENABLE_GEMINI_FALLBACK=true 일 때만 작동 (수집기와 동일 정책).
+    // 사유: DeepSeek 미충전 상태에서 Gemini 출혈 차단. 위저드는 PHASE 2 보류 기능이라 비활성화해도 영향 없음.
+    if (process.env.ENABLE_GEMINI_FALLBACK !== 'true') {
+        throw new Error('아이디어 컨버터는 현재 점검 중입니다. 잠시 후 다시 이용해 주세요.');
+    }
+
     const prompt = `
     Analyze the following user-submitted 'Pain Point' and provide a business architecture based on the PUFE framework.
     User Entry: "${painPoint}"
