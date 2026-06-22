@@ -1,9 +1,11 @@
 name: Trend Data Collection
 
 on:
-  schedule:
-    - cron: '0 */2 * * *' # 2시간마다 실행 (Gemini 무료 티어 RPD 절약)
-  workflow_dispatch: # 수동 실행 지원
+  # ⛔ 자동 수집 일시 중지 (2026-06-22) — Gemini 출혈 차단.
+  # 사유: DeepSeek 미충전 → 전량 Gemini 폴백으로 하루 ~1만원 소진. DeepSeek 충전 후 아래 schedule 주석 해제.
+  # schedule:
+  #   - cron: '0 */2 * * *' # 2시간마다 실행 (Gemini 무료 티어 RPD 절약)
+  workflow_dispatch: # 수동 실행 지원 (필요 시 수동으로만 실행)
 
 jobs:
   collect-trends:

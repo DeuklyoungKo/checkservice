@@ -36,11 +36,13 @@ const geminiApiKey = process.env.GEMINI_API_KEY;
 const naverClientId = process.env.NAVER_CLIENT_ID;
 const naverClientSecret = process.env.NAVER_CLIENT_SECRET;
 
-// Gemini 폴백 초기화 (GEMINI_API_KEY 있을 때만)
-const genAI = geminiApiKey ? new GoogleGenerativeAI(geminiApiKey) : null;
+// Gemini 폴백 초기화 — ⛔ 비용 차단을 위해 기본 OFF. 명시적으로 ENABLE_GEMINI_FALLBACK=true 일 때만 활성화.
+// 사유: DeepSeek 미충전 시 전량 Gemini로 폴백되어 비용 폭증(하루 ~1만원). DeepSeek 충전 후 이 가드 유지(Gemini는 의도적 재활성화 시에만).
+const enableGeminiFallback = process.env.ENABLE_GEMINI_FALLBACK === 'true';
+const genAI = (geminiApiKey && enableGeminiFallback) ? new GoogleGenerativeAI(geminiApiKey) : null;
 
 console.log('🔑 DeepSeek API Key:', deepseekApiKey ? `Loaded (${deepseekApiKey.substring(0, 8)}...)` : '⚠️  NOT SET (Gemini 폴백 사용)');
-console.log('🔑 Gemini API Key:', geminiApiKey ? `Loaded (${geminiApiKey.substring(0, 5)}...)` : '⚠️  NOT SET (폴백 불가)');
+console.log('🔑 Gemini Fallback:', genAI ? '✅ ENABLED (ENABLE_GEMINI_FALLBACK=true)' : '⛔ DISABLED (비용 차단 — 활성화하려면 ENABLE_GEMINI_FALLBACK=true)');
 console.log('🔑 Naver DataLab Status:', naverClientId ? `Loaded (${naverClientId.substring(0, 4)}...)` : '⚠️  NOT SET (교차검증 비활성화)');
 
 // DataLab 스냅샷 캐시 (한 번 조회 후 재사용 — API 호출 최소화)
