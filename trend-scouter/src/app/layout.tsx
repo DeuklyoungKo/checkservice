@@ -28,7 +28,7 @@ export const metadata: Metadata = {
     template: "%s — Trend Scouter",
   },
   description:
-    "Product Hunt·Hacker News·GitHub·GeekNews에서 실제로 돈을 내는 문제만 골라 PUFE 프레임워크로 분석하고, 네이버 DataLab으로 한국 수요까지 동시에 교차 검증합니다. Claude Code·ChatGPT·Gemini에 바로 붙여넣을 수 있는 AI 개발 브리프를 무료로 제공합니다.",
+    "Hacker News·GitHub·Dev.to·GeekNews에서 실제로 돈을 내는 문제만 골라 PUFE 프레임워크로 분석하고, 네이버 DataLab으로 한국 수요까지 동시에 교차 검증합니다. Claude Code·ChatGPT·Gemini에 바로 붙여넣을 수 있는 AI 개발 브리프를 무료로 제공합니다.",
   keywords: [
     "수익형 사이드 프로젝트", "AI 코딩", "바이브 코딩", "vibe coding",
     "Claude Code", "ChatGPT", "Gemini", "사이드 프로젝트 아이디어",

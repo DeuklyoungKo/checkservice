@@ -1,7 +1,7 @@
 # CLAUDE.md — Trend Scouter
 
 바이브 코더(Vibe Coder)를 위한 수익형 사이드 프로젝트 아이디어 발굴 서비스.
-Reddit·Product Hunt·GeekNews에서 실제 페인포인트를 PUFE 프레임워크로 분석하고,
+Hacker News·GitHub·Dev.to·GeekNews에서 실제 페인포인트를 PUFE 프레임워크로 분석하고,
 AI 코딩 도구(Claude Code, ChatGPT, Gemini 등)에 바로 붙여넣을 수 있는 개발 브리프를 제공한다.
 
 ---
@@ -69,7 +69,8 @@ AI 코딩 도구로 구현 시 예상 소요 시간.
 `impact_score`, `stats_data` (언급 횟수·상승률·upvotes) 중심으로만 저장.
 
 ### 데이터 파이프라인
-- **Tier 1 (글로벌)**: Reddit, Product Hunt, HN, Dev.to, GeekNews RSS → Gemini 분석 → Supabase
+- **Tier 1 (글로벌)**: Hacker News(공식 API), GitHub(공식 API), Dev.to(RSS), GeekNews(RSS) → Gemini 분석 → Supabase
+  - ⚠️ 저작권/약관 사유로 제거된 소스: Reddit, Product Hunt, ZDNet Korea (상세: [3.LEGAL_CHECKLIST.md](3.LEGAL_CHECKLIST.md))
 - **Tier 2 (한국)**: GeekNews(`isKorean: true`) + 네이버 DataLab API 교차검증 → `analysis.stats_data.korea_demand`
 
 ---

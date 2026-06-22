@@ -111,7 +111,7 @@ export default async function Home() {
       "@type": "WebSite",
       "name": "Trend Scouter",
       "url": "https://trend.gonsuit.com",
-      "description": "Product Hunt·Hacker News·GitHub·GeekNews에서 실제 페인포인트를 PUFE로 분석하고, 네이버 DataLab으로 한국 수요를 교차 검증해 AI 개발 브리프를 제공하는 서비스",
+      "description": "Hacker News·GitHub·Dev.to·GeekNews에서 실제 페인포인트를 PUFE로 분석하고, 네이버 DataLab으로 한국 수요를 교차 검증해 AI 개발 브리프를 제공하는 서비스",
       "inLanguage": "ko-KR",
       "potentialAction": {
         "@type": "SearchAction",
@@ -141,7 +141,7 @@ export default async function Home() {
         {
           "@type": "Question",
           "name": "Trend Scouter는 어떤 데이터 소스를 사용하나요?",
-          "acceptedAnswer": { "@type": "Answer", "text": "Product Hunt, Hacker News, GitHub, Dev.to, GeekNews(한국) 등의 공개 데이터와 공식 API를 2시간마다 수집하고, 네이버 DataLab 공식 API로 한국 검색 수요를 교차 검증합니다." },
+          "acceptedAnswer": { "@type": "Answer", "text": "Hacker News, GitHub, Dev.to, GeekNews(한국) 등의 공개 데이터와 공식 API를 2시간마다 수집하고, 네이버 DataLab 공식 API로 한국 검색 수요를 교차 검증합니다." },
         },
       ],
     },
@@ -383,7 +383,7 @@ export default async function Home() {
             </div>
             {/* 데이터 출처·면책 고지 (Phase E) */}
             <p className="text-[11px] text-muted-foreground/50 mt-6 max-w-2xl mx-auto leading-relaxed">
-              본 서비스는 Product Hunt·Hacker News·GitHub·Dev.to·GeekNews 등의 공개 데이터와 네이버 DataLab 등 공식 API의 통계를 가공·분석해 제공합니다.
+              본 서비스는 Hacker News·GitHub·Dev.to·GeekNews 등의 공개 데이터와 네이버 DataLab 등 공식 API의 통계를 가공·분석해 제공합니다.
               원문 저작권은 각 출처에 있으며, 본문은 저장하지 않고 원문 링크를 통해 확인할 수 있습니다.
             </p>
           </div>

@@ -59,8 +59,8 @@ const RSS_FEEDS = [
     // --- [Tier 1] 글로벌 소스 ---
     // NOTE: reddit-sideproject는 Reddit Responsible Builder Policy(상업 이용 사전허가) 위험으로 제거함. 상세: 3.LEGAL_CHECKLIST.md FIX-3
     // NOTE: hacker-news / indie-hackers(hnrss 비공식)는 공식 HN 검색 API로 승격 → 아래 API_SOURCES 참조 (C-1)
+    // NOTE: product-hunt는 API/ToS상 상업적 이용 금지(E-4 확인)로 제거함. 상세: 3.LEGAL_CHECKLIST.md E-4
     // sensitive: true → 저작권 민감 소스. original_title 미저장 (Stats-Only 강화). 현재 해당 소스 없음.
-    { name: 'product-hunt',      url: 'https://www.producthunt.com/feed',                           isKorean: false },
     { name: 'dev-to',            url: 'https://dev.to/feed',                                        isKorean: false },
     // --- [Tier 2] 한국 소스 (Korea Data Pipeline - 단계적 추가) ---
     // NOTE: zdnet-korea(상업 언론사 RSS)는 저작권 위험으로 제거함. 상세: 3.LEGAL_CHECKLIST.md FIX-2
