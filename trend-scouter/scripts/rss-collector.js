@@ -1,5 +1,4 @@
 const axios = require('axios');
-const { GoogleGenerativeAI } = require("@google/generative-ai");
 const Parser = require('rss-parser');
 const { createClient } = require('@supabase/supabase-js');
 const path = require('path');
@@ -12,18 +11,14 @@ const { fetchGithubItems } = require('./gh-collector');
 
 /**
  * 환경 변수 필수 검증
- * DeepSeek 또는 Gemini 중 하나 이상 필수
+ * AI 분석 엔진은 MiniMax M3 단독 (MINIMAX_API_KEY 필수). 폴백 없음.
  */
 function validateEnv() {
-    const required = ['NEXT_PUBLIC_SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY'];
+    const required = ['NEXT_PUBLIC_SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY', 'MINIMAX_API_KEY'];
     const missing = required.filter(key => !process.env[key]);
     if (missing.length > 0) {
         console.error(`❌ 필수 환경 변수가 누락되었습니다: ${missing.join(', ')}`);
         console.error('GitHub Secrets 또는 .env.local 설정을 확인해 주세요.');
-        process.exit(1);
-    }
-    if (!process.env.DEEPSEEK_API_KEY && !process.env.GEMINI_API_KEY) {
-        console.error('❌ DEEPSEEK_API_KEY 또는 GEMINI_API_KEY 중 하나 이상 필요합니다.');
         process.exit(1);
     }
 }
@@ -31,18 +26,11 @@ function validateEnv() {
 validateEnv();
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
-const deepseekApiKey = process.env.DEEPSEEK_API_KEY;
-const geminiApiKey = process.env.GEMINI_API_KEY;
+const minimaxApiKey = process.env.MINIMAX_API_KEY;
 const naverClientId = process.env.NAVER_CLIENT_ID;
 const naverClientSecret = process.env.NAVER_CLIENT_SECRET;
 
-// Gemini 폴백 초기화 — ⛔ 비용 차단을 위해 기본 OFF. 명시적으로 ENABLE_GEMINI_FALLBACK=true 일 때만 활성화.
-// 사유: DeepSeek 미충전 시 전량 Gemini로 폴백되어 비용 폭증(하루 ~1만원). DeepSeek 충전 후 이 가드 유지(Gemini는 의도적 재활성화 시에만).
-const enableGeminiFallback = process.env.ENABLE_GEMINI_FALLBACK === 'true';
-const genAI = (geminiApiKey && enableGeminiFallback) ? new GoogleGenerativeAI(geminiApiKey) : null;
-
-console.log('🔑 DeepSeek API Key:', deepseekApiKey ? `Loaded (${deepseekApiKey.substring(0, 8)}...)` : '⚠️  NOT SET (Gemini 폴백 사용)');
-console.log('🔑 Gemini Fallback:', genAI ? '✅ ENABLED (ENABLE_GEMINI_FALLBACK=true)' : '⛔ DISABLED (비용 차단 — 활성화하려면 ENABLE_GEMINI_FALLBACK=true)');
+console.log('🔑 MiniMax API Key:', minimaxApiKey ? `Loaded (${minimaxApiKey.substring(0, 6)}...)` : '⚠️  NOT SET');
 console.log('🔑 Naver DataLab Status:', naverClientId ? `Loaded (${naverClientId.substring(0, 4)}...)` : '⚠️  NOT SET (교차검증 비활성화)');
 
 // DataLab 스냅샷 캐시 (한 번 조회 후 재사용 — API 호출 최소화)
@@ -98,7 +86,6 @@ async function calculateImpactScore(title, content) {
 }
 
 async function analyzeWithAI(title, content, source, isKorean = false, koreaDemand = null) {
-    let lastError = null;
     const koreanHint = isKorean
         ? `\n    ※ 이 데이터는 한국 소스(${source})에서 수집된 콘텐츠입니다. 한국 시장 맥락을 최우선으로 분석하세요.`
         : `\n    ※ 이 데이터는 글로벌 소스(${source})에서 수집되었습니다. 한국 시장에 이식 가능한 관점으로 분석하세요.`;
@@ -134,66 +121,50 @@ async function analyzeWithAI(title, content, source, isKorean = false, koreaDema
     - 5: 1 month+ (requires ML models training, custom complex backend)
     `;
 
-    // 1순위: DeepSeek V3
-    if (deepseekApiKey) {
-        try {
-            const response = await axios.post(
-                'https://api.deepseek.com/chat/completions',
-                {
-                    model: 'deepseek-chat',
-                    messages: [
-                        {
-                            role: 'system',
-                            content: 'You are a business trend analyst specializing in Korean market insights. Always respond with valid JSON only, no markdown code blocks.'
-                        },
-                        { role: 'user', content: prompt }
-                    ],
-                    temperature: 0.7,
-                    max_tokens: 2000,
-                },
-                {
-                    headers: {
-                        'Authorization': `Bearer ${deepseekApiKey}`,
-                        'Content-Type': 'application/json',
+    // AI 분석 — MiniMax M3 단독 (OpenAI 호환 API). 폴백 없음(비용 차단). 실패 시 해당 아이템 스킵.
+    try {
+        const response = await axios.post(
+            'https://api.minimax.io/v1/chat/completions',
+            {
+                model: 'MiniMax-M3',
+                messages: [
+                    {
+                        role: 'system',
+                        content: 'You are a business trend analyst specializing in Korean market insights. Always respond with valid JSON only, no markdown code blocks.'
                     },
-                    timeout: 30000,
-                }
-            );
-
-            const resultText = response.data.choices[0].message.content
-                .replace(/```json\n?|```/g, '').trim();
-            const analysis = JSON.parse(resultText);
-
-            console.log(`✅ Analysis success (deepseek-chat): ${analysis.headline.substring(0, 40)}...`);
-            return analysis;
-        } catch (error) {
-            lastError = error;
-            console.warn(`⚠️  DeepSeek failed: ${error.message} — Gemini 폴백 시도`);
-        }
-    }
-
-    // 2순위 폴백: Gemini 2.5 Flash-Lite
-    if (genAI) {
-        const fallbackModels = ['gemini-3.5-flash', 'gemini-2.5-flash-lite'];
-        for (const modelName of fallbackModels) {
-            try {
-                const model = genAI.getGenerativeModel({ model: modelName });
-                const result = await model.generateContent(prompt);
-                const response = await result.response;
-                const resultText = response.text().replace(/```json\n?|```/g, '').trim();
-                const analysis = JSON.parse(resultText);
-
-                console.log(`✅ Analysis success (${modelName} fallback): ${analysis.headline.substring(0, 40)}...`);
-                return analysis;
-            } catch (error) {
-                lastError = error;
-                console.warn(`⚠️  ${modelName} fallback failed: ${error.message}`);
+                    { role: 'user', content: prompt }
+                ],
+                temperature: 0.7,
+                max_tokens: 4000,
+            },
+            {
+                headers: {
+                    'Authorization': `Bearer ${minimaxApiKey}`,
+                    'Content-Type': 'application/json',
+                },
+                timeout: 60000,
             }
-        }
-    }
+        );
 
-    console.error('❌ AI Analysis failed (DeepSeek + Gemini 모두 실패):', lastError?.message);
-    return null;
+        const raw = response.data.choices[0].message.content;
+        const resultText = raw.replace(/```json\n?|```/g, '').trim();
+        let analysis;
+        try {
+            analysis = JSON.parse(resultText);
+        } catch (parseErr) {
+            // 추론형 모델이 JSON 앞뒤에 설명을 덧붙일 경우 대비: 첫 '{' ~ 마지막 '}' 추출 후 재시도
+            const s = resultText.indexOf('{');
+            const e = resultText.lastIndexOf('}');
+            if (s === -1 || e === -1) throw parseErr;
+            analysis = JSON.parse(resultText.slice(s, e + 1));
+        }
+
+        console.log(`✅ Analysis success (MiniMax-M3): ${analysis.headline.substring(0, 40)}...`);
+        return analysis;
+    } catch (error) {
+        console.error(`❌ AI Analysis failed (MiniMax-M3): ${error.message}`);
+        return null;
+    }
 }
 
 async function collectRSS() {
@@ -322,7 +293,7 @@ async function processItem(item, feed) {
                 solution_wizard: analysis.solution_wizard,
                 ai_brief: analysis.ai_brief || null,
                 ai_buildability_score: analysis.ai_buildability_score || null,
-                ai_model: deepseekApiKey ? 'deepseek-chat' : 'gemini-2.5-flash-lite'
+                ai_model: 'MiniMax-M3'
             }, { onConflict: 'trend_id' });
 
             if (aError) {

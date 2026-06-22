@@ -24,7 +24,7 @@ AI 코딩 도구(Claude Code, ChatGPT, Gemini 등)에 바로 붙여넣을 수 �
 │   │       ├── polar/          ← Polar 결제 연동
 │   │       └── webhook/        ← Polar 결제 완료 웹훅
 │   ├── scripts/
-│   │   ├── rss-collector.js    ← 핵심: 다중 소스 수집 + Gemini 분석 + DB 저장
+│   │   ├── rss-collector.js    ← 핵심: 다중 소스 수집 + AI 분석(MiniMax M3) + DB 저장
 │   │   ├── naver-datalab.js    ← 네이버 DataLab API 교차검증
 │   │   └── automate_analysis.js← 배치 분석 스크립트
 │   └── supabase/               ← DB 스키마 및 마이그레이션
@@ -41,7 +41,7 @@ AI 코딩 도구(Claude Code, ChatGPT, Gemini 등)에 바로 붙여넣을 수 �
 | Frontend | Next.js 16 (App Router) + Tailwind CSS v4 |
 | UI 컴포넌트 | shadcn/ui + lucide-react + @tabler/icons-react |
 | DB / Auth | Supabase (PostgreSQL + GoTrue) |
-| AI 엔진 | Google Gemini API (`@google/generative-ai`) / DeepSeek V3 폴백 |
+| AI 엔진 | MiniMax M3 (OpenAI 호환 API, `api.minimax.io/v1`) — 단독, 폴백 없음 |
 | 수집 워커 | Node.js (`rss-parser`) → GitHub Actions cron |
 | 결제 | Polar (`@polar-sh/sdk`) — $3 단건, 웹훅으로 즉시 잠금 해제 |
 | 배포 | Vercel (`trend.gonsuit.com`) |
@@ -69,7 +69,7 @@ AI 코딩 도구로 구현 시 예상 소요 시간.
 `impact_score`, `stats_data` (언급 횟수·상승률·upvotes) 중심으로만 저장.
 
 ### 데이터 파이프라인
-- **Tier 1 (글로벌)**: Hacker News(공식 API), GitHub(공식 API), Dev.to(RSS), GeekNews(RSS) → Gemini 분석 → Supabase
+- **Tier 1 (글로벌)**: Hacker News(공식 API), GitHub(공식 API), Dev.to(RSS), GeekNews(RSS) → AI 분석(MiniMax M3) → Supabase
   - ⚠️ 저작권/약관 사유로 제거된 소스: Reddit, Product Hunt, ZDNet Korea (상세: [3.LEGAL_CHECKLIST.md](3.LEGAL_CHECKLIST.md))
 - **Tier 2 (한국)**: GeekNews(`isKorean: true`) + 네이버 DataLab API 교차검증 → `analysis.stats_data.korea_demand`
 
@@ -81,7 +81,7 @@ AI 코딩 도구로 구현 시 예상 소요 시간.
 
 ### 완료
 - Stats-Only 수집 파이프라인 (GitHub Actions 1시간 cron)
-- PUFE 스코어 분석 엔진 (Gemini API)
+- PUFE 스코어 분석 엔진 (MiniMax M3)
 - GeekNews 한국 소스 연동
 - Polar 결제 + 웹훅 잠금 해제
 - 워크스페이스(북마크) 기능
@@ -106,8 +106,7 @@ AI 코딩 도구로 구현 시 예상 소요 시간.
 ```
 NEXT_PUBLIC_SUPABASE_URL
 NEXT_PUBLIC_SUPABASE_ANON_KEY
-GOOGLE_GEMINI_API_KEY
-DEEPSEEK_API_KEY          # 발급 완료, 충전 후 자동 전환
+MINIMAX_API_KEY           # AI 분석 엔진 (MiniMax M3, OpenAI 호환) — 단독 사용
 NAVER_CLIENT_ID           # DataLab API (미등록)
 NAVER_CLIENT_SECRET       # DataLab API (미등록)
 POLAR_ACCESS_TOKEN

@@ -1,6 +1,6 @@
 # Trend Scouter — 트렌드 수집 파이프라인 가이드
 
-> 최종 업데이트: 2026-05-31
+> 최종 업데이트: 2026-06-22 (AI 엔진 MiniMax M3 단독 전환)
 
 ---
 
@@ -12,7 +12,7 @@ GitHub Actions (매시간)
        ├─ 7개 RSS 피드 수집 (글로벌 5 + 한국 2)
        ├─ 키워드 필터링 (임팩트 스코어 산정)
        ├─ 네이버 DataLab API 교차검증 (한국 검색 수요)
-       ├─ Google Gemini AI 분석 (PUFE 스코어 + 브리프 생성)
+       ├─ MiniMax M3 AI 분석 (PUFE 스코어 + 브리프 생성)
        └─ Supabase DB 저장 (trends / analysis 테이블)
 ```
 
@@ -74,10 +74,10 @@ GitHub Actions (매시간)
    └─ 10개 키워드 그룹의 최근 3개월 검색 지수(0~100) + 전월 성장률 조회
    └─ 1회 조회 후 캐시 — 실행당 API 호출 최소화
 
-4. DeepSeek V3 AI 분석
-   └─ 모델: deepseek-chat (DeepSeek V3, 2025년 3월 학습 기준)
-   └─ JSON 출력 정확도·한국어 품질 최고 수준
-   └─ 폴백: gemini-2.5-flash-lite (DeepSeek API 장애 시)
+4. MiniMax M3 AI 분석 (단독, 폴백 없음)
+   └─ 모델: MiniMax-M3 (OpenAI 호환 API — api.minimax.io/v1)
+   └─ 인증: Authorization: Bearer ${MINIMAX_API_KEY}
+   └─ JSON 출력 + 한국어 품질 양호 (※ 첫 운영 시 JSON 파싱 성공률 확인 권장)
    └─ 출력: PUFE 스코어, 헤드라인, 요약, GTM 전략, 기술 스택, AI 브리프 등
 
 5. Supabase 저장
@@ -108,38 +108,29 @@ GitHub Actions (매시간)
 
 ## 6. 예상 비용
 
-### 6-1. DeepSeek API ← 현재 적용 예정
+### 6-1. MiniMax M3 ← 현재 적용 (단독, 폴백 없음)
 
 | 항목 | 내용 |
 |------|------|
-| **사용 모델** | `deepseek-chat` (DeepSeek V3) |
-| **학습 데이터 기준** | 2025년 3월 (비교군 중 최신) |
-| 입력 토큰 단가 | **$0.07 / 1M 토큰** (캐시 히트 시 $0.014) |
-| 출력 토큰 단가 | **$1.10 / 1M 토큰** |
-| 분석 건수 | 실행당 최대 20~50건 |
+| **사용 모델** | `MiniMax-M3` (OpenAI 호환 API) |
+| **엔드포인트** | `https://api.minimax.io/v1/chat/completions` |
+| **과금 방식** | 사용자 **MiniMax Plus 구독($20/월)** 포함 쿼터 사용 → 수집기 한계비용 **~0원** |
+| 포함 쿼터 | **1.7B 토큰/월** (텍스트·이미지·음성·음악 공유) |
+| 수집기 사용량 | 월 ~5~10M 토큰 = **쿼터의 <1%** |
+| 분석 건수 | 실행당 신규 아이템만 (중복 스킵) |
 | 실행 횟수 | **12회/일** (2시간마다) |
 
-**일간 예상 호출량**: 12회 × 평균 30건 = **약 360건/일**
+> 💡 핵심: 이미 지불 중인 구독 쿼터를 활용하므로 수집기 운영에 **추가 비용이 발생하지 않는다.**
+> ⚠️ 공유 쿼터 주의: 이미지·음악 생성을 많이 쓰면 같은 풀을 소모. 단 수집기 비중(<1%)은 무시 가능.
+> ⚠️ 폴백 없음: M3 호출 실패 시 해당 아이템만 스킵(전체 중단 없음). DeepSeek·Gemini 폴백은 비용 차단을 위해 제거됨.
 
-**비용 추정**:
+### 6-1-A. AI 모델 변천 (선택 배경)
 
-| 구분 | 토큰 수/일 | 단가 | 일 비용 |
-|------|-----------|------|---------|
-| 입력 | 360 × 1,250 = 450K 토큰 | $0.07/1M | **~$0.032** |
-| 출력 | 360 × 650 = 234K 토큰 | $1.10/1M | **~$0.257** |
-| **합계** | | | **~$0.29/일 (~₩400)** |
-| **월 합계** | | | **~$8.70/월 (~₩12,000)** |
-
-> 💡 프롬프트 캐싱 적용 시 입력 단가 $0.014/1M → **월 $5~6 수준**으로 절감 가능
-> ⚠️ 폴백: DeepSeek API 장애 시 `gemini-2.5-flash-lite` (무료 티어)로 자동 전환
-
-### 6-1-A. AI 모델 비교 (선택 배경)
-
-| 모델 | 비용/월 | 한국어 품질 | JSON 정확도 | 비고 |
-|------|---------|------------|------------|------|
-| **DeepSeek V3** ✅ 선택 | ~$9 | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | 학습 기준 2025.03 |
-| Gemini 2.5 Flash-Lite | $0 | ⭐⭐⭐⭐ | ⭐⭐⭐ | 무료, RPD 제한 있음 |
-| Groq + Llama 3.3 70B | $0 | ⭐⭐⭐ | ⭐⭐⭐⭐ | 무료, 학습 기준 2023.12 |
+| 모델 | 상태 | 비고 |
+|------|------|------|
+| **MiniMax M3** ✅ 현재 | 단독 사용 | MiniMax Plus 구독 쿼터 포함 → 추가 비용 ~0원 |
+| ~~DeepSeek V3/V4~~ | 미사용 | 저가($0.14/$0.28)·고품질이나 별도 충전 필요 → 구독 쿼터가 더 효율적이라 미채택 |
+| ~~Gemini 2.5/3.5 Flash~~ | 제거 | 폴백 의존 시 출혈(월 ~30만원) 발생하여 완전 제거 |
 
 ### 6-2. 네이버 DataLab API
 
@@ -172,11 +163,13 @@ GitHub Actions (매시간)
 
 | 항목 | 월 비용 |
 |------|---------|
-| DeepSeek API | ~$9 (~₩12,000) |
+| MiniMax M3 (구독 포함 쿼터) | **₩0 (추가 비용 없음)** |
 | 네이버 DataLab | 무료 |
 | GitHub Actions | 무료 |
 | Supabase (Free) | 무료 |
-| **합계** | **~$9/월 (~₩12,000)** |
+| **합계 (수집기 추가 비용)** | **₩0/월** |
+
+> ※ MiniMax Plus 구독료($20/월)는 사용자 개인 용도로 어차피 지출하는 비용이며, 수집기는 그 쿼터의 <1%만 사용한다.
 
 ---
 
@@ -187,14 +180,13 @@ GitHub Actions에서 사용하는 Secrets 목록:
 ```
 NEXT_PUBLIC_SUPABASE_URL      # Supabase 프로젝트 URL
 SUPABASE_SERVICE_ROLE_KEY     # Supabase 서비스 롤 키 (DB 쓰기 권한)
-DEEPSEEK_API_KEY              # DeepSeek API 키 ← 신규 추가
-GEMINI_API_KEY                # Google Gemini API 키 (폴백용, 유지)
+MINIMAX_API_KEY               # MiniMax M3 API 키 (AI 분석 엔진, 단독) ← 필수
 NAVER_CLIENT_ID               # 네이버 DataLab 클라이언트 ID (선택)
 NAVER_CLIENT_SECRET           # 네이버 DataLab 클라이언트 시크릿 (선택)
 ```
 
 > GitHub 레포 → Settings → Secrets and variables → Actions → `trendscouter` Environment에 등록
-> DeepSeek API 키 발급: [platform.deepseek.com](https://platform.deepseek.com)
+> MiniMax API 키 발급: [platform.minimax.io](https://platform.minimax.io)
 
 ---
 
@@ -202,6 +194,6 @@ NAVER_CLIENT_SECRET           # 네이버 DataLab 클라이언트 시크릿 (선
 
 - **중복 방지**: `external_id` (RSS guid/link) 기준으로 upsert — 같은 트렌드가 재수집되어도 impact_score가 높을 때만 업데이트
 - **분석 실패 처리**: AI 분석 실패 시 해당 아이템 스킵 (전체 중단 없음)
-- **모델 폴백**: DeepSeek API 장애 시 자동으로 `gemini-2.5-flash-lite`로 전환
+- **폴백 없음**: MiniMax M3 호출 실패 시 해당 아이템만 스킵(전체 중단 없음). 비용 차단을 위해 DeepSeek·Gemini 폴백 제거.
 - **DataLab 캐시**: 실행 1회당 네이버 API를 1번만 호출하고 결과를 메모리에 캐시 → API 한도 절약
 - **수동 실행**: GitHub Actions 탭 → `Trend Data Collection` → `Run workflow`로 즉시 실행 가능

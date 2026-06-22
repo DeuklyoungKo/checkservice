@@ -3,20 +3,20 @@
 import axios from 'axios';
 import { createClient } from "@/utils/supabase/server";
 
-const geminiApiKey = process.env.GEMINI_API_KEY;
+const minimaxApiKey = process.env.MINIMAX_API_KEY;
 
 export async function analyzeUserIdea(painPoint: string) {
     if (!painPoint || painPoint.length < 10) {
         throw new Error('페인포인트를 10자 이상 구체적으로 입력해 주세요.');
     }
 
-    if (!geminiApiKey) {
+    if (!minimaxApiKey) {
         throw new Error('AI 분석 설정이 완료되지 않았습니다.');
     }
 
-    // ⛔ Gemini 비용 차단 가드 — ENABLE_GEMINI_FALLBACK=true 일 때만 작동 (수집기와 동일 정책).
-    // 사유: DeepSeek 미충전 상태에서 Gemini 출혈 차단. 위저드는 PHASE 2 보류 기능이라 비활성화해도 영향 없음.
-    if (process.env.ENABLE_GEMINI_FALLBACK !== 'true') {
+    // ⛔ 위저드는 PHASE 2 보류 기능 → 기본 비활성화 (ENABLE_WIZARD=true 일 때만 작동).
+    // AI 엔진은 수집기와 동일하게 MiniMax M3 단독. 활성화 시 MiniMax Plus 구독 쿼터 사용.
+    if (process.env.ENABLE_WIZARD !== 'true') {
         throw new Error('아이디어 컨버터는 현재 점검 중입니다. 잠시 후 다시 이용해 주세요.');
     }
 
@@ -58,13 +58,26 @@ export async function analyzeUserIdea(painPoint: string) {
         const { data: { user } } = await supabase.auth.getUser();
 
         const response = await axios.post(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${geminiApiKey}`,
+            'https://api.minimax.io/v1/chat/completions',
             {
-                contents: [{ parts: [{ text: prompt + "\n\nProvide the result exactly as a valid JSON object without any markdown wrapping. Ensure 'vibe_coding_md' is highly detailed for AI coding tools." }] }]
+                model: 'MiniMax-M3',
+                messages: [
+                    { role: 'system', content: 'You are a Korean business analyst. Respond with valid JSON only, no markdown code blocks.' },
+                    { role: 'user', content: prompt + "\n\nProvide the result exactly as a valid JSON object without any markdown wrapping. Ensure 'vibe_coding_md' is highly detailed for AI coding tools." }
+                ],
+                temperature: 0.7,
+                max_tokens: 4000,
+            },
+            {
+                headers: {
+                    'Authorization': `Bearer ${minimaxApiKey}`,
+                    'Content-Type': 'application/json',
+                },
+                timeout: 60000,
             }
         );
 
-        let responseText = response.data.candidates[0].content.parts[0].text;
+        let responseText = response.data.choices[0].message.content;
         responseText = responseText.replace(/```json\n?|```/g, '').trim();
         const result = JSON.parse(responseText);
 
@@ -84,7 +97,7 @@ export async function analyzeUserIdea(painPoint: string) {
                 booster_package: result.booster_package // booster 데이터도 저장
             },
             summary: `[User Input Analysis] ${result.summary}\n\n### ⚖️ PUFE 분석 근거\n${result.pufe.reasoning}`,
-            ai_model: 'gemini-2.5-flash-lite-wizard-v2',
+            ai_model: 'MiniMax-M3-wizard',
         }).select().single();
 
         return {
