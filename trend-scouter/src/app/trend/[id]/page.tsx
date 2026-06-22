@@ -100,6 +100,9 @@ export default async function TrendDetailPage({ params }: PageProps) {
     const unlockedIds = await getUnlockedTrendIds(supabase, user?.id);
     const isUnlocked = isTrendUnlocked(id, { isPremium: userProfile?.is_premium || false, unlockedIds });
 
+    // 네이버 DataLab 한국 검색 관심도 (상대 지수 0~100). 절대 검색량 아님. (Phase D: 한국 앵글 전면화)
+    const koreaDemand = (trend.stats_data as any)?.korea_demand ?? null;
+
     // Stats-Only: Use AI-generated headline and summary directly
     const displayTitle = analysis?.headline || "분석 중인 트렌드";
     const mainSummary = analysis?.summary || "현재 비즈니스 분석이 진행 중입니다.";
@@ -594,6 +597,26 @@ ${(analysis?.solution_wizard as any)?.steps?.map((step: string, i: number) => `$
                                 </Button>
                             </a>
                         </div>
+
+                        {/* 한국 검색 관심도 (네이버 DataLab) — 핵심 차별점: 글로벌 트렌드의 한국 수요 검증 */}
+                        {koreaDemand && (
+                            <div className="bg-card border-2 border-primary/20 rounded-[48px] p-10 shadow-sm">
+                                <h3 className="font-black text-xl mb-6 flex items-center gap-3">
+                                    <IconWorld size={24} className="text-primary" /> 한국 검색 관심도
+                                </h3>
+                                <div className="flex items-baseline gap-2 mb-3">
+                                    <span className="text-5xl font-black text-primary leading-none">{koreaDemand.ratio}</span>
+                                    <span className="text-sm font-bold text-muted-foreground">/ 100</span>
+                                </div>
+                                <div className="w-full h-3 bg-muted rounded-full overflow-hidden mb-4">
+                                    <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${Math.min(100, Math.max(0, koreaDemand.ratio))}%` }} />
+                                </div>
+                                <Badge variant="outline" className="rounded-full font-bold text-xs mb-3">{koreaDemand.group}</Badge>
+                                <p className="text-[11px] text-muted-foreground/70 leading-relaxed">
+                                    네이버 DataLab 상대 지수 (0~100). 글로벌 트렌드가 <strong className="text-foreground/80">한국에서도 수요가 있는지</strong> 교차 검증한 값입니다.
+                                </p>
+                            </div>
+                        )}
 
                         {!userProfile?.is_premium && !IS_BETA && (
                             <div className="bg-gradient-to-br from-primary/20 via-primary/10 to-background border-2 border-primary/20 rounded-[48px] p-8 shadow-xl shadow-primary/5 relative overflow-hidden group">

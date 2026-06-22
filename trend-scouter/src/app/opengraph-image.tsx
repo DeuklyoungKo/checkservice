@@ -54,8 +54,8 @@ export default function OgImage() {
 
                 {/* 서브 설명 */}
                 <p style={{ color: "#94a3b8", fontSize: 22, lineHeight: 1.5, marginBottom: 48, maxWidth: 700 }}>
-                    Reddit · Product Hunt · GeekNews 페인포인트를 PUFE 프레임워크로 분석.
-                    Claude Code · ChatGPT · Gemini에 바로 붙여넣을 수 있는 개발 브리프 제공.
+                    글로벌 트렌드 + 네이버 DataLab 한국 수요 동시 검증.
+                    Claude Code · ChatGPT · Gemini에 바로 붙여넣는 AI 개발 브리프 제공.
                 </p>
 
                 {/* 하단 도메인 */}

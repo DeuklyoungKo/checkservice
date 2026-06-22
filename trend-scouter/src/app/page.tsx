@@ -111,7 +111,7 @@ export default async function Home() {
       "@type": "WebSite",
       "name": "Trend Scouter",
       "url": "https://trend.gonsuit.com",
-      "description": "Reddit·Product Hunt·GeekNews에서 실제 페인포인트를 PUFE 프레임워크로 분석해 AI 개발 브리프를 제공하는 서비스",
+      "description": "Product Hunt·Hacker News·GitHub·GeekNews에서 실제 페인포인트를 PUFE로 분석하고, 네이버 DataLab으로 한국 수요를 교차 검증해 AI 개발 브리프를 제공하는 서비스",
       "inLanguage": "ko-KR",
       "potentialAction": {
         "@type": "SearchAction",
@@ -141,7 +141,7 @@ export default async function Home() {
         {
           "@type": "Question",
           "name": "Trend Scouter는 어떤 데이터 소스를 사용하나요?",
-          "acceptedAnswer": { "@type": "Answer", "text": "Reddit, Product Hunt, Hacker News, Dev.to, GeekNews(한국) 등 글로벌 커뮤니티 RSS 데이터를 2시간마다 수집하고 네이버 DataLab으로 한국 수요를 교차 검증합니다." },
+          "acceptedAnswer": { "@type": "Answer", "text": "Product Hunt, Hacker News, GitHub, Dev.to, GeekNews(한국) 등의 공개 데이터와 공식 API를 2시간마다 수집하고, 네이버 DataLab 공식 API로 한국 검색 수요를 교차 검증합니다." },
         },
       ],
     },
@@ -171,6 +171,11 @@ export default async function Home() {
             <p className="text-xl text-muted-foreground leading-relaxed mb-6 max-w-2xl">
               사람들이 <strong className="text-foreground">실제로 돈을 내는 문제</strong>만 골라<br className="hidden sm:block" />
               Claude Code, ChatGPT 등 AI 코딩 도구에 바로 붙여넣을 수 있는<br />개발 브리프로 제공합니다.
+            </p>
+            {/* 차별점: 글로벌 + 한국 수요 동시 검증 */}
+            <p className="text-base sm:text-lg font-bold text-foreground mb-10 max-w-2xl flex items-start gap-2">
+              <span aria-hidden className="text-xl leading-none">🇰🇷</span>
+              <span>글로벌에서 뜨는 아이디어가 <span className="text-primary underline decoration-primary/30">한국에서도 팔리는지</span>, 네이버 DataLab으로 동시에 검증합니다.</span>
             </p>
             {/* 신뢰 지표 */}
             <div className="flex flex-wrap gap-3 mb-10 text-xs font-bold text-muted-foreground">
