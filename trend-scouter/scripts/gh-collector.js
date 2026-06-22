@@ -16,14 +16,18 @@ const axios = require('axios');
 const GH_SEARCH = 'https://api.github.com/search/repositories';
 
 // 서비스 니치 검색어. created 한정으로 "최근 만들어진" 레포만 → 트렌드성 확보.
-const GH_QUERIES = ['saas', 'ai agent', 'automation tool', 'no-code', 'indie hacker', 'side project'];
+// 품질 역전(권장 2): 쿼리·수집량 확대로 GitHub을 카탈로그 백본화. (비인증 검색 10req/분 한도 유의)
+const GH_QUERIES = [
+    'saas', 'ai agent', 'ai tool', 'automation tool', 'no-code',
+    'developer tool', 'cli tool', 'chrome extension', 'side project',
+];
 
 /**
  * 최근 인기 레포를 정규화된 item 배열로 반환한다.
  * @param {Object} opts - { minStars, perQuery, monthsBack }
  * @returns {Promise<Array>} rss-parser 호환 item ( _stats 포함 )
  */
-async function fetchGithubItems({ minStars = 100, perQuery = 15, monthsBack = 6 } = {}) {
+async function fetchGithubItems({ minStars = 100, perQuery = 30, monthsBack = 6 } = {}) {
     const since = new Date(Date.now() - monthsBack * 30 * 24 * 3600 * 1000).toISOString().split('T')[0];
     const token = process.env.GITHUB_TOKEN;
     const headers = {

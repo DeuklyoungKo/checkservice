@@ -61,7 +61,8 @@ const RSS_FEEDS = [
     // NOTE: hacker-news / indie-hackers(hnrss 비공식)는 공식 HN 검색 API로 승격 → 아래 API_SOURCES 참조 (C-1)
     // NOTE: product-hunt는 API/ToS상 상업적 이용 금지(E-4 확인)로 제거함. 상세: 3.LEGAL_CHECKLIST.md E-4
     // sensitive: true → 저작권 민감 소스. original_title 미저장 (Stats-Only 강화). 현재 해당 소스 없음.
-    { name: 'dev-to',            url: 'https://dev.to/feed',                                        isKorean: false },
+    // 품질 역전(권장 2): Dev.to는 저신호(튜토리얼·의견 글) 비중이 높아 minScore 상향(키워드 2+ 매칭 요구)으로 유입 억제.
+    { name: 'dev-to',            url: 'https://dev.to/feed',                                        isKorean: false, minScore: 20 },
     // --- [Tier 2] 한국 소스 (Korea Data Pipeline - 단계적 추가) ---
     // NOTE: zdnet-korea(상업 언론사 RSS)는 저작권 위험으로 제거함. 상세: 3.LEGAL_CHECKLIST.md FIX-2
     { name: 'geek-news',         url: 'https://news.hada.io/rss/news',                              isKorean: true  }, // 한국 개발자 커뮤니티 인기 토픽

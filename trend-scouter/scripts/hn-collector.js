@@ -17,7 +17,11 @@ const axios = require('axios');
 const ALGOLIA_SEARCH = 'https://hn.algolia.com/api/v1/search';
 
 // 서비스 니치(수익형 사이드 프로젝트)에 맞춘 검색어. 쿼리 기반이라 관련성이 보장됨.
-const HN_QUERIES = ['SaaS', 'AI tool', 'automation', 'no-code', 'indie hacker', 'side project'];
+// 품질 역전(권장 2): 쿼리·수집량 확대로 HN을 카탈로그 백본화.
+const HN_QUERIES = [
+    'SaaS', 'micro saas', 'AI tool', 'AI agent', 'automation', 'no-code',
+    'indie hacker', 'side project', 'developer tool', 'chrome extension', 'API',
+];
 
 /**
  * HN 인기 스토리를 정규화된 item 배열로 반환한다.
@@ -25,7 +29,7 @@ const HN_QUERIES = ['SaaS', 'AI tool', 'automation', 'no-code', 'indie hacker', 
  * @param {Object} opts - { minPoints, perQuery }
  * @returns {Promise<Array>}
  */
-async function fetchHackerNewsItems({ minPoints = 20, perQuery = 30 } = {}) {
+async function fetchHackerNewsItems({ minPoints = 20, perQuery = 50 } = {}) {
     const seen = new Set();
     const items = [];
 
