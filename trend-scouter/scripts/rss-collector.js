@@ -53,9 +53,9 @@ const RSS_FEEDS = [
     // sensitive: true → 저작권 민감 소스. original_title 미저장 (Stats-Only 강화). 현재 해당 소스 없음.
     // 품질 역전(권장 2): Dev.to는 저신호(튜토리얼·의견 글) 비중이 높아 minScore 상향(키워드 2+ 매칭 요구)으로 유입 억제.
     { name: 'dev-to',            url: 'https://dev.to/feed',                                        isKorean: false, minScore: 20 },
-    // --- [Tier 2] 한국 소스 (Korea Data Pipeline - 단계적 추가) ---
-    // NOTE: zdnet-korea(상업 언론사 RSS)는 저작권 위험으로 제거함. 상세: 3.LEGAL_CHECKLIST.md FIX-2
-    { name: 'geek-news',         url: 'https://news.hada.io/rss/news',                              isKorean: true  }, // 한국 개발자 커뮤니티 인기 토픽
+    // --- [Tier 2] 한국 소스 ---
+    // NOTE: 한국 콘텐츠 RSS는 모두 제거됨 — zdnet-korea(상업 언론사·저작권), geek-news(운영자가 상업적 이용 명시적 거절, 2026-06). 상세: 3.LEGAL_CHECKLIST.md
+    // 한국 시장 신호는 네이버 DataLab 공식 API(교차검증)로만 확보한다.
 ];
 
 // API 기반 소스 (RSS 아님). fetch()가 RSS item과 호환되는 정규화 배열을 반환한다.
