@@ -31,24 +31,22 @@ GitHub Actions (매시간)
 
 ## 3. 수집 소스
 
-### 3-1. 글로벌 소스 (Tier 1)
+### 3-1. 글로벌 소스 (Tier 1 — 현재 라이브)
 
-| 소스명 | RSS URL | 특징 |
-|--------|---------|------|
-| **Indie Hackers** | `hnrss.org/newest?q=Indie+Hackers&points=20` | 업보트 20 이상 필터 |
-| **Reddit r/sideproject** | `reddit.com/r/sideproject/.rss` | 사이드 프로젝트 커뮤니티 |
-| **Product Hunt** | `producthunt.com/feed` | 신규 런칭 제품 |
-| **Hacker News** | `hnrss.org/newest?q=SaaS+OR+Automation&points=20` | SaaS/자동화 키워드 필터 |
-| **Dev.to** | `dev.to/feed` | 개발자 커뮤니티 아티클 |
+| 소스명 | 수집 방법 | 특징 |
+|--------|-----------|------|
+| **Hacker News** | 공식 검색 API (Algolia HN Search) | SaaS·AI·메이커 인기 스토리 (`hn-collector.js`) |
+| **GitHub** | 공식 Search API | 최근 인기 레포(stars>100) = 지금 만들어지는 것 (`gh-collector.js`) |
+| **Dev.to** | RSS (`dev.to/feed`) | 개발자 커뮤니티 아티클 (minScore 20으로 저신호 억제) |
 
 ### 3-2. 한국 소스 (Tier 2 — Korea Data Pipeline)
 
-| 소스명 | RSS URL | 특징 |
-|--------|---------|------|
-| **GeekNews** | `news.hada.io/rss/news` | 한국 개발자 커뮤니티 인기 토픽 |
-| **ZDNet Korea** | `zdnet.co.kr/feed` | 한국 IT 뉴스 |
+| 소스명 | 수집 방법 | 특징 |
+|--------|-----------|------|
+| **네이버 DataLab** | 공식 API | 한국 검색 관심도 지수(0~100) 교차검증 → `analysis.stats_data.korea_demand` |
 
-> **한국 소스 필터 기준**: 글로벌(임팩트 스코어 ≥ 10) vs 한국(임팩트 스코어 ≥ 5) — 한국어 키워드 점수가 낮게 나오는 특성 반영
+> ⚠️ **약관/저작권 사유로 제거된 소스**: Reddit·Product Hunt·ZDNet Korea·GeekNews·Indie Hackers(hnrss). 상세: [3.LEGAL_CHECKLIST.md](3.LEGAL_CHECKLIST.md). 한국 *콘텐츠* RSS는 없고, 한국 신호는 DataLab 공식 API로 일원화함.
+> **필터 기준**: 글로벌 RSS(임팩트 스코어 ≥ 10), Dev.to(≥ 20), API 소스(쿼리 단계에서 관련성 필터).
 
 ### 3-3. 필터링 키워드
 

@@ -28,7 +28,7 @@
 #### After (수정안)
 > **"Cursor로 주말에 만들 수 있는 수익형 프로젝트 아이디어"**
 > 
-> - 부제: "Reddit, Product Hunt에서 사람들이 실제로 돈 내는 문제만 골라드립니다"
+> - 부제: "Hacker News, GitHub, Dev.to에서 사람들이 실제로 돈 내는 문제만 골라드립니다"
 > - 타겟: 바이브 코딩 하는 개발자 & 비개발자 (Cursor, Bolt.new, v0 등 사용자)
 
 **왜 이게 나은가?**
@@ -100,7 +100,7 @@ ai_stack_hint: ["Next.js", "Supabase", "Stripe", "Tailwind"]
 ### 4. **한국 데이터 우선순위 조정**
 
 **즉시 추가 (1주 안에)**:
-- ✅ GeekNews RSS (이미 완료)
+- ❌ GeekNews RSS (제거됨 — 운영자 상업 이용 거절, 2026-06)
 - 🔥 **네이버 DataLab API** (가장 중요)
   - 글로벌 키워드 → 한국 검색량 매핑
   - "AI resume builder" → "AI 이력서 작성" 검색량 8,900/월

@@ -3,7 +3,7 @@
 -- 1. Trends Table: Stores aggregated statistics and impact metrics (Strict Stats-Only)
 CREATE TABLE public.trends (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    source TEXT NOT NULL, -- 'product-hunt', 'reddit', 'indie-hackers', 'hacker-news', etc.
+    source TEXT NOT NULL, -- 'hacker-news', 'github', 'dev-to' (라이브). 제거: 'product-hunt','reddit','zdnet-korea','geek-news'
     external_id TEXT NOT NULL, -- Original ID/Link Hash
     impact_score INTEGER DEFAULT 0, -- Calculated index based on engagement/keywords
     stats_data JSONB, -- Aggregated metrics like keyword frequencies, upvotes, etc.

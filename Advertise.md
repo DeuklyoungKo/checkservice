@@ -8,7 +8,7 @@
   개인적으로 사이드 프로젝트를 시작할 때마다 "뭘 만들지"에서 가장 오래 막혔습니다.
   트렌드 글은 많은데, 정작 "이게 한국에서도 수요가 있나? AI로 며칠이면 만들 수 있나?"는
   직접 일일이 검증해야 했고요.
-  그래서 Reddit · Product Hunt · Hacker News · Dev.to · GeekNews의 글을
+  그래서 Hacker News · GitHub · Dev.to의 글을
   2시간마다 수집해, 반복되는 페인포인트를 점수화하는 도구를 만들었습니다.
   동작 방식
   - 본문 전문은 저장하지 않고(저작권 이슈 회피), 언급 빈도·upvote 같은 '통계'만 추출합니다.
@@ -40,7 +40,7 @@
   는 결국 직접 다 찾아봐야 했습니다.
   그래서 이 과정을 자동화해봤어요. Trend Scouter입니다.
   ■ 뭘 하나요
-  Reddit·ProductHunt·HN·GeekNews 글을 2시간마다 모아서,
+  Hacker News·GitHub·Dev.to 글을 2시간마다 모아서,
   반복되는 페인포인트를 PUFE 점수(Pain·Urgency·Frequency·기존대안) 0~100점으로 매깁니다.
   + "AI로 만들기 난이도" 1~5단계, + 네이버 DataLab 한국 검색 관심도까지 붙여서요.
   ■ 핵심은 '바로 실행'이에요
