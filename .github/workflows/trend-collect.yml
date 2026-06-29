@@ -1,9 +1,11 @@
 name: Trend Data Collection
 
 on:
-  schedule:
-    - cron: '0 */2 * * *' # 2시간마다 실행 (AI 엔진 = MiniMax M3, 구독 쿼터 사용으로 추가 비용 없음)
-  workflow_dispatch: # 수동 실행 지원
+  # [동결] 2026-06-29: 실험 종료에 따라 자동 수집 중단 — AI 분석 비용 차단을 위해 cron 비활성화.
+  # 개인용 온디맨드 수집이 필요하면 Actions 탭에서 수동 실행(workflow_dispatch)으로만 돌린다.
+  # schedule:
+  #   - cron: '0 */2 * * *'
+  workflow_dispatch: # 수동 실행 지원 (개인용 온디맨드)
 
 jobs:
   collect-trends:
