@@ -335,8 +335,8 @@ ${(analysis?.solution_wizard as any)?.steps?.map((step: string, i: number) => `$
                         <Badge variant="outline" className="text-xs font-black uppercase tracking-widest text-muted-foreground bg-background/50">
                             수집일: {new Date(trend.created_at).toLocaleDateString()}
                         </Badge>
-                        <Badge className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-400/30 px-3 py-1 text-xs font-black tracking-widest uppercase gap-1.5">
-                            🎉 베타 무료 공개 · ~ 2026. 8. 31
+                        <Badge className="bg-muted text-muted-foreground border px-3 py-1 text-xs font-black tracking-widest uppercase gap-1.5">
+                            Archived · 자유 열람
                         </Badge>
                     </div>
                     <h1 className="text-5xl sm:text-7xl font-black tracking-tighter mb-12 leading-[1.05] text-balance">

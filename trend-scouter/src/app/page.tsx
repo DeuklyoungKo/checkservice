@@ -17,9 +17,9 @@ import {
   IconClock,
   IconChartBar,
   IconRocket,
+  IconArchive,
 } from "@tabler/icons-react";
 import { BookmarkButton } from "@/components/BookmarkButton";
-import { BetaEmailSignup } from "@/components/BetaEmailSignup";
 
 import { createClient } from "@/utils/supabase/server";
 import { getUnlockedTrendIds, isTrendUnlocked } from "@/lib/unlock";
@@ -141,7 +141,7 @@ export default async function Home() {
         {
           "@type": "Question",
           "name": "Trend Scouter는 어떤 데이터 소스를 사용하나요?",
-          "acceptedAnswer": { "@type": "Answer", "text": "Hacker News, GitHub, Dev.to 등의 공개 데이터와 공식 API를 2시간마다 수집하고, 네이버 DataLab 공식 API로 한국 검색 수요를 교차 검증합니다." },
+          "acceptedAnswer": { "@type": "Answer", "text": "Hacker News, GitHub, Dev.to 등의 공개 데이터와 공식 API를 수집하고 네이버 DataLab 공식 API로 한국 검색 수요를 교차 검증했습니다. 현재는 실험을 마쳐 데이터 수집을 종료했으며, 기존 분석 데이터는 자유롭게 열람할 수 있습니다." },
         },
       ],
     },
@@ -189,7 +189,7 @@ export default async function Home() {
                 <IconRocket size={13} className="text-primary" /> AI 개발 브리프 즉시 복사
               </span>
               <span className="flex items-center gap-1.5 bg-background border border-muted px-3 py-1.5 rounded-full">
-                <IconClock size={13} className="text-primary" /> 2시간마다 자동 업데이트
+                <IconArchive size={13} className="text-primary" /> 수집 종료 · 자유 열람
               </span>
             </div>
             <div className="flex flex-wrap gap-4">
@@ -200,9 +200,9 @@ export default async function Home() {
                 </Button>
               </Link>
               <Link href="/contact">
-                <Button size="lg" variant="outline" className="h-14 px-8 text-lg font-bold rounded-2xl gap-2 border-amber-400 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/30">
+                <Button size="lg" variant="outline" className="h-14 px-8 text-lg font-bold rounded-2xl gap-2">
                   <IconMail size={20} />
-                  베타 피드백 남기기
+                  문의하기
                 </Button>
               </Link>
             </div>
@@ -330,37 +330,28 @@ export default async function Home() {
         </div>
       </main>
 
-      {/* Bottom CTA Section — 베타 이메일 등록 */}
+      {/* Bottom Section — 보관/열람 안내 (실험 종료) */}
       <section className="py-24 max-w-7xl mx-auto px-6 mb-20">
-        <div className="bg-amber-500/5 rounded-[40px] px-6 py-16 md:py-24 border border-amber-400/30 text-center relative overflow-hidden group">
-          <div className="absolute inset-0 bg-gradient-to-br from-amber-400/10 via-transparent to-primary/5 opacity-50 transition-transform duration-700 group-hover:scale-105" />
+        <div className="bg-muted/30 rounded-[40px] px-6 py-16 md:py-24 border text-center relative overflow-hidden">
           <div className="relative z-10 max-w-2xl mx-auto">
-            <Badge variant="secondary" className="bg-amber-500/10 text-amber-600 dark:text-amber-400 px-4 py-1.5 text-xs font-black tracking-[0.2em] uppercase rounded-full mb-8 inline-flex gap-2">
-              <IconRocket size={14} />
-              베타 서비스 무료 이용 중 · ~ 2026. 8. 31
+            <Badge variant="secondary" className="bg-muted text-muted-foreground px-4 py-1.5 text-xs font-black tracking-[0.2em] uppercase rounded-full mb-8 inline-flex gap-2">
+              <IconArchive size={14} />
+              Archived · 실험 종료
             </Badge>
             <h2 className="text-3xl md:text-5xl font-black mb-6 tracking-tight text-foreground">
-              베타 기간,<br />
-              <span className="text-amber-500">모든 분석 데이터</span>를<br />
-              무료로 이용하세요
+              실험을 마친 프로젝트입니다
             </h2>
-            <p className="text-muted-foreground text-lg mb-4 leading-relaxed font-medium">
-              이메일을 등록하시면 베타 종료 전 미리 알려드립니다.<br className="hidden md:block" />
-              서비스 개선을 위한 피드백도 언제든 환영합니다.
+            <p className="text-muted-foreground text-lg mb-10 leading-relaxed font-medium">
+              데이터 자동 수집은 종료되었지만, 그동안 분석된 트렌드와 AI 개발 브리프는<br className="hidden md:block" />
+              그대로 자유롭게 열람하실 수 있습니다.
             </p>
-            <p className="text-xs text-muted-foreground/60 mb-10 font-medium">
-              베타 종료일: 2026년 8월 31일 예정 (상황에 따라 변경될 수 있습니다)
-            </p>
-            <BetaEmailSignup />
-            <div className="mt-6">
-              <Link href="/trends">
-                <Button variant="ghost" className="gap-2 text-muted-foreground hover:text-foreground font-bold">
-                  <IconSparkles size={16} />
-                  이메일 없이 바로 탐색하기
-                  <IconArrowRight size={16} />
-                </Button>
-              </Link>
-            </div>
+            <Link href="/trends">
+              <Button size="lg" className="gap-2 rounded-2xl font-bold shadow-lg shadow-primary/10">
+                <IconSparkles size={18} />
+                분석 데이터 둘러보기
+                <IconArrowRight size={18} />
+              </Button>
+            </Link>
           </div>
         </div>
       </section>

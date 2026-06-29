@@ -28,14 +28,14 @@ export default function OgImage() {
                     backgroundImage: "radial-gradient(circle at 20% 50%, rgba(99,102,241,0.15) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(99,102,241,0.1) 0%, transparent 40%)",
                 }} />
 
-                {/* 베타 뱃지 */}
+                {/* 보관 뱃지 (실험 종료) */}
                 <div style={{
                     display: "flex", alignItems: "center", gap: 8,
-                    background: "rgba(245,158,11,0.15)", border: "1px solid rgba(245,158,11,0.4)",
+                    background: "rgba(148,163,184,0.15)", border: "1px solid rgba(148,163,184,0.4)",
                     borderRadius: 999, padding: "8px 20px", marginBottom: 32, alignSelf: "flex-start",
                 }}>
-                    <span style={{ color: "#f59e0b", fontSize: 14, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase" }}>
-                        🎉 Beta Open · Vibe Coding × Side Project
+                    <span style={{ color: "#94a3b8", fontSize: 14, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase" }}>
+                        Archived · Vibe Coding × Side Project
                     </span>
                 </div>
 

@@ -136,14 +136,14 @@ export default async function PremiumPage({ searchParams }: PageProps) {
 
         {subscribed !== 'true' && (<>
 
-        {/* 베타 안내 — 베타 기간 중 전체 무료, 결제는 종료 후 활성화 */}
+        {/* 보관 안내 — 실험 종료, 결제 미운영, 전체 무료 열람 */}
         {IS_BETA && (
-          <div className="max-w-3xl mx-auto mb-12 rounded-3xl border border-amber-400/30 bg-amber-500/5 px-6 py-5 text-center">
-            <p className="text-amber-600 dark:text-amber-400 font-black text-sm mb-1">
-              🎉 베타 기간 중 모든 리포트 무료 (~ 2026. 8. 31)
+          <div className="max-w-3xl mx-auto mb-12 rounded-3xl border bg-muted/30 px-6 py-5 text-center">
+            <p className="text-foreground font-black text-sm mb-1">
+              이 프로젝트는 실험을 마쳐 결제를 운영하지 않습니다.
             </p>
             <p className="text-muted-foreground text-sm font-medium">
-              아래 가격은 베타 종료 후 적용 예정입니다. 지금은 결제 없이 모든 분석을 이용하실 수 있습니다.
+              모든 분석 데이터는 무료로 열람하실 수 있습니다. (아래 가격은 참고용 기록입니다.)
             </p>
           </div>
         )}

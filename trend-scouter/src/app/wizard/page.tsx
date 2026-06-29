@@ -221,7 +221,7 @@ export default function WizardPage() {
                                         부스터 패키지 출시 예정
                                         <IconRocket size={24} />
                                     </Button>
-                                    <p className="text-white/40 text-xs font-black uppercase tracking-widest">Coming Soon · 베타 종료 후 제공 예정</p>
+                                    <p className="text-white/40 text-xs font-black uppercase tracking-widest">Archived · 실험 종료로 제공 계획 없음</p>
                                 </div>
                             </div>
                         </section>
